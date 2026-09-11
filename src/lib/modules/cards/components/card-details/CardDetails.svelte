@@ -47,7 +47,7 @@
 		<div class="flex items-start justify-between gap-3">
 			<div>
 				<p class="text-sm font-bold text-slate-900">{card.alias}</p>
-				<p class="mt-1 text-sm text-slate-500">{card.bankName} · •••• {card.lastFourDigits}</p>
+				<p class="mt-1 text-sm text-slate-500">{card.isDefault ? 'Efectivo' : `${card.bankName} · •••• ${card.lastFourDigits}`}</p>
 			</div>
 			<span class="rounded-full px-2.5 py-1 text-xs font-bold {card.kind === 'credit' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}">{card.kind === 'credit' ? 'Crédito' : 'Débito'}</span>
 		</div>
@@ -102,7 +102,7 @@
 			{#if installmentFeedback?.message}<p class="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{installmentFeedback.message}</p>{/if}
 
 				{#if card.interestFreeInstallmentPurchases.length === 0}
-				<p class="rounded-md border border-slate-200 px-4 py-6 text-center text-sm font-semibold text-slate-500">No hay compras MSI registradas con esta tarjeta.</p>
+				<p class="rounded-md border border-slate-200 px-4 py-6 text-center text-sm font-semibold text-slate-500">No hay compras MSI registradas con esta cuenta.</p>
 			{:else}
 				<div class="grid gap-3">
 					{#each card.interestFreeInstallmentPurchases as purchase (purchase.id)}

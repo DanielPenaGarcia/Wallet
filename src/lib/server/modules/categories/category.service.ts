@@ -17,6 +17,38 @@ import {
 import type { CreateCategoryInput } from './inputs/create-category.input';
 import type { UpdateCategoryInput } from './inputs/update-category.input';
 
+type CategoryColorRecord = {
+	id: string;
+	parentId: string | null;
+	color: string;
+};
+
+function effectiveCategoryColor(categoryId: string, categories: CategoryColorRecord[]) {
+	const recordsById = new Map(categories.map((category) => [category.id, category]));
+	let current = recordsById.get(categoryId);
+	let color = current?.color;
+	let guard = 0;
+
+	while (current?.parentId && guard < categories.length) {
+		const parent = recordsById.get(current.parentId);
+		if (!parent) break;
+		color = parent.color;
+		current = parent;
+		guard += 1;
+	}
+
+	return toCategory({
+		id: categoryId,
+		name: '',
+		color: color ?? '#64748b',
+		parentId: null,
+		active: true,
+		registeredAt: new Date().toISOString(),
+		updatedAt: null,
+		deletedAt: null
+	}).color;
+}
+
 export async function getCategoryTree(): Promise<CategoryNode[]> {
 	return toCategoryTree(await listActiveCategoryRecords());
 }
@@ -27,15 +59,18 @@ export async function getCategoryOptions(): Promise<Category[]> {
 
 export async function createCategory(input: CreateCategoryInput): Promise<void> {
 	const categories = await listActiveCategoryRecords();
-	if (input.parentId !== null && !(await findActiveCategoryById(input.parentId))) {
-		throw new ParentCategoryNotFoundError();
+	let color = input.color;
+	if (input.parentId !== null) {
+		const parent = await findActiveCategoryById(input.parentId);
+		if (!parent) throw new ParentCategoryNotFoundError();
+		color = effectiveCategoryColor(parent.id, categories);
 	}
 	const duplicated = categories.some(
 		(category) =>
 			category.parentId === input.parentId && normalizeName(category.name) === normalizeName(input.name)
 	);
 	if (duplicated) throw new CategoryNameAlreadyExistsError();
-	await insertCategory(input);
+	await insertCategory({ ...input, color });
 }
 
 export async function updateCategory(input: UpdateCategoryInput): Promise<void> {
@@ -49,7 +84,11 @@ export async function updateCategory(input: UpdateCategoryInput): Promise<void> 
 			normalizeName(category.name) === normalizeName(input.name)
 	);
 	if (duplicated) throw new CategoryNameAlreadyExistsError();
-	await updateCategoryRecord(input);
+	const parent = current.parentId === null ? null : await findActiveCategoryById(current.parentId);
+	await updateCategoryRecord({
+		...input,
+		color: parent ? effectiveCategoryColor(parent.id, categories) : input.color
+	});
 }
 
 export async function deleteCategory(id: string): Promise<void> {

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isCardColor } from '$lib/modules/cards/utils/card-color';
+import { isCardColor, normalizeCardColor } from '$lib/modules/cards/utils/card-color';
 import { currencyCodeSchema } from '$lib/shared/schemas/currency-code.schema';
 import { moneyAmountSchema } from '$lib/shared/schemas/money-amount.schema';
 import type { CardColor } from '../types/card.types';
@@ -9,7 +9,11 @@ const moneySchema = moneyAmountSchema();
 const commonCardFields = {
 	alias: z.string().trim().min(1, 'El alias es obligatorio.').max(60),
 	bankId: z.string().trim().min(1, 'Selecciona un banco.'),
-	color: z.custom<CardColor>(isCardColor, 'Selecciona un color válido.'),
+	color: z
+		.string()
+		.trim()
+		.refine(isCardColor, 'Ingresa un color hexadecimal o RGB válido.')
+		.transform((value) => normalizeCardColor(value) as CardColor),
 	lastFourDigits: z.string().trim().regex(/^\d{4}$/, 'Ingresa exactamente cuatro dígitos.'),
 	currencyCode: currencyCodeSchema(),
 	initialBalance: moneySchema

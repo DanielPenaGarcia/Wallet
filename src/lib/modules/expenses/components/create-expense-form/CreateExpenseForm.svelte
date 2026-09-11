@@ -4,13 +4,13 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
+	import CategorySelectField from '$lib/modules/categories/components/category-select-field/CategorySelectField.svelte';
 	import type {
 		ExpenseAmountKind,
 		ExpenseClassification,
 		ExpenseFrequency,
 		ExpenseIntervalUnit
 	} from '../../types/expense.types';
-	import { getCategoryPath } from '../../utils/category-path';
 	import {
 		expenseClassificationOptions
 	} from '../../utils/expense-form-options';
@@ -39,9 +39,6 @@
 
 	let selectedClassification = $derived(
 		expenseClassificationOptions.find((option) => option.value === classification)?.label ?? 'Selecciona una clasificación'
-	);
-	let selectedCategory = $derived(
-		categoryId ? getCategoryPath(categories.find((category) => category.id === categoryId), categories) : 'Selecciona una categoría'
 	);
 
 	function fieldError(field: string) {
@@ -74,16 +71,7 @@
 		customIntervalUnitError={fieldError('customIntervalUnit')}
 	/>
 
-	<div class="grid gap-2 sm:col-span-2">
-		<Label for="expense-category">Categoría</Label>
-		<Select.Root type="single" name="categoryId" required bind:value={categoryId} items={categories.map((category) => ({ value: category.id, label: getCategoryPath(category, categories) }))}>
-			<Select.Trigger id="expense-category" class="h-11 w-full border-slate-300 px-3" aria-invalid={fieldError('categoryId') ? 'true' : undefined}><span class="truncate">{selectedCategory}</span></Select.Trigger>
-			<Select.Content>
-				{#each categories as category}<Select.Item value={category.id} label={getCategoryPath(category, categories)}>{getCategoryPath(category, categories)}</Select.Item>{/each}
-			</Select.Content>
-		</Select.Root>
-		{#if fieldError('categoryId')}<span class="text-xs text-red-700">{fieldError('categoryId')}</span>{/if}
-	</div>
+	<CategorySelectField id="expense-category" name="categoryId" label="Categoría" {categories} required bind:value={categoryId} error={fieldError('categoryId')} class="sm:col-span-2" />
 
 	<div class="grid gap-2">
 		<Label for="expense-amount">Cantidad</Label>

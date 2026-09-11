@@ -1,4 +1,5 @@
 import type { CardListItem } from '$lib/modules/cards/types/card-list-item.types';
+import { isDefaultPersonalAccount } from '$lib/modules/cards/constants/default-account';
 import type { InterestFreeInstallmentPurchase } from '$lib/modules/cards/types/interest-free-installment.types';
 import { normalizeCardColor } from '$lib/modules/cards/utils/card-color';
 import { splitAmountIntoInstallments } from '$lib/modules/cards/utils/installment-amounts';
@@ -137,6 +138,29 @@ function interestFreeInstallmentPurchases(
 		});
 }
 
+function debitBalanceFromMovements(
+	cardId: string,
+	initialBalance: number,
+	movements: CardMovementOutput[]
+) {
+	return movements.reduce((balance, movement) => {
+		if (movement.type === 'income' && movement.destinationCardId === cardId) {
+			return balance + movement.amount;
+		}
+
+		if (movement.type === 'expense' && movement.sourceCardId === cardId) {
+			return balance - movement.amount;
+		}
+
+		if (movement.type === 'transfer') {
+			if (movement.sourceCardId === cardId) return balance - movement.amount;
+			if (movement.destinationCardId === cardId) return balance + movement.amount;
+		}
+
+		return balance;
+	}, initialBalance);
+}
+
 export function toCardListItem(
 	record: CardWithBankRecord,
 	movements: CardMovementOutput[] = [],
@@ -154,10 +178,11 @@ export function toCardListItem(
 		record.kind === 'credit'
 			? consumedCreditInCurrentCycle(record.id, record.statementDay, movements)
 			: null;
+	const debitInitialBalance = record.debitInitialBalance ?? 0;
 	const currentBalance =
 		record.kind === 'credit'
 			? (cashExpenseAmount ?? 0) + pendingInterestFreeAmount
-			: (record.debitBalance ?? 0);
+			: debitBalanceFromMovements(record.id, debitInitialBalance, movements);
 
 	return {
 		id: record.id,
@@ -165,13 +190,14 @@ export function toCardListItem(
 		alias: record.alias,
 		bankId: record.bankId,
 		bankName: record.bankName,
+		isDefault: isDefaultPersonalAccount(record.id),
 		color: normalizeCardColor(record.color),
 		lastFourDigits: record.lastFourDigits,
 		currencyCode: record.currencyCode,
 		initialBalance:
 			record.kind === 'credit'
 				? (record.creditInitialBalance ?? 0)
-				: (record.debitInitialBalance ?? 0),
+				: debitInitialBalance,
 		currentBalance,
 		cashExpenseAmount,
 		interestFreeOutstandingAmount: record.kind === 'credit' ? pendingInterestFreeAmount : null,

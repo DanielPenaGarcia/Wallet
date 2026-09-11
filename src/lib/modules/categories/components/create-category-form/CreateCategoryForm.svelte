@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ActionButton } from '$lib/components/ui/action-button';
+	import { ColorInput } from '$lib/components/ui/color-input';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import type { CreateCategoryFormProps } from './props';
@@ -29,10 +30,14 @@
 		{#if fieldError('name')}<span class="text-xs text-red-700">{fieldError('name')}</span>{/if}
 	</div>
 
-	<div class="grid gap-2">
-		<Label for="category-color">Color</Label>
-		<Input id="category-color" name="color" type="color" value={createFeedback?.values?.color ?? '#16a34a'} class="h-11 cursor-pointer border-slate-300 p-1" />
-	</div>
+	{#if parent}
+		<input type="hidden" name="color" value={parent.color} />
+	{:else}
+		<div class="grid gap-2">
+			<Label for="category-color">Color</Label>
+			<ColorInput id="category-color" name="color" value={createFeedback?.values?.color ?? '#16a34a'} fallback="#16a34a" error={fieldError('color')} />
+		</div>
+	{/if}
 
 	{#if createFeedback?.message}<p class="text-sm font-semibold text-red-700">{createFeedback.message}</p>{/if}
 

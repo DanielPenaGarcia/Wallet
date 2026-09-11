@@ -13,7 +13,7 @@
 	<div class="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4">
 		<div>
 			<h2 class="text-lg font-bold text-slate-900">Bancos registrados</h2>
-			<p class="mt-1 text-sm text-slate-500">Catálogo disponible para relacionar tarjetas.</p>
+			<p class="mt-1 text-sm text-slate-500">Catálogo disponible para relacionar cuentas bancarias.</p>
 		</div>
 		<ActionButton type="button" intent="icon-primary" onclick={onCreate} aria-label="Agregar banco" title="Agregar banco"><PlusIcon /></ActionButton>
 	</div>
@@ -21,7 +21,7 @@
 		<div class="px-6 py-12 text-center">
 			<Building2Icon class="mx-auto size-9 text-blue-700" />
 			<p class="mt-3 font-bold text-slate-700">Aún no hay bancos</p>
-			<p class="mt-1 text-sm text-slate-500">Registra el primero antes de crear una tarjeta.</p>
+			<p class="mt-1 text-sm text-slate-500">Registra el primero antes de crear una cuenta bancaria.</p>
 		</div>
 	{:else}
 		<ul class="divide-y divide-slate-100">

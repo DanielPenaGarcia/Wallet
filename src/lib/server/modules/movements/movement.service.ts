@@ -1,7 +1,11 @@
 import type { Movement } from '$lib/modules/movements/types/movement.types';
 import { findActiveCardById } from '$lib/server/modules/cards/card.repository';
 import { findActiveCategoryById } from '$lib/server/modules/categories/category.repository';
-import { findActiveExpenseById } from '$lib/server/modules/expenses/expense.repository';
+import {
+	deleteExpensePaymentsByMovementId,
+	findActiveExpenseById,
+	insertExpensePayment
+} from '$lib/server/modules/expenses/expense.repository';
 import {
 	ActiveMovementCardNotFoundError,
 	InvalidMovementPaymentModeError,
@@ -22,6 +26,10 @@ import {
 import type { CreateMovementInput } from './inputs/create-movement.input';
 import type { UpdateMovementInput } from './inputs/update-movement.input';
 
+type CreateMovementOptions = {
+	registerExpensePayment?: boolean;
+};
+
 async function getValidatedCardCurrency(input: CreateMovementInput): Promise<string> {
 	if (input.type === 'income') {
 		const destinationCard = await findActiveCardById(input.destinationCardId ?? '');
@@ -35,7 +43,7 @@ async function getValidatedCardCurrency(input: CreateMovementInput): Promise<str
 	if (input.type === 'expense') {
 		if (input.paymentMode === 'installments' && sourceCard.kind !== 'credit') {
 			throw new InvalidMovementPaymentModeError(
-				'Las compras a meses solo pueden registrarse con una tarjeta de crédito.'
+				'Las compras a meses solo pueden registrarse con una cuenta de crédito.'
 			);
 		}
 		if (
@@ -60,7 +68,7 @@ async function getValidatedCardCurrency(input: CreateMovementInput): Promise<str
 	}
 	if (sourceCard.currencyCode !== destinationCard.currencyCode) {
 		throw new InvalidMovementTransferError(
-			'Por ahora las transferencias requieren cuentas o tarjetas con la misma moneda.'
+			'Por ahora las transferencias requieren cuentas con la misma moneda.'
 		);
 	}
 	return sourceCard.currencyCode;
@@ -70,8 +78,39 @@ export async function getMovements(filter: MovementFilter = {}): Promise<Movemen
 	return (await listActiveMovements(filter)).map(toMovement);
 }
 
-export async function createMovement(input: CreateMovementInput): Promise<string> {
-	return insertMovement(input, await getValidatedCardCurrency(input));
+async function registerExpensePaymentFromMovement(
+	movementId: string,
+	input: CreateMovementInput
+): Promise<void> {
+	if (input.type !== 'expense' || input.classificationKind !== 'expense' || !input.classificationId) {
+		return;
+	}
+
+	const expense = await findActiveExpenseById(input.classificationId);
+	if (!expense) return;
+
+	await insertExpensePayment({
+		expenseId: input.classificationId,
+		mode: 'card',
+		amount: input.amount,
+		currencyCode: expense.currencyCode,
+		note: input.title,
+		cardId: input.sourceCardId ?? null,
+		movementId,
+		paidAt: input.occurredAt
+	});
+}
+
+export async function createMovement(
+	input: CreateMovementInput,
+	options: CreateMovementOptions = {}
+): Promise<string> {
+	const currencyCode = await getValidatedCardCurrency(input);
+	const movementId = await insertMovement(input, currencyCode);
+	if (options.registerExpensePayment !== false) {
+		await registerExpensePaymentFromMovement(movementId, input);
+	}
+	return movementId;
 }
 
 export async function createMovements(inputs: CreateMovementInput[]): Promise<string[]> {
@@ -86,7 +125,10 @@ export async function updateMovement(input: UpdateMovementInput): Promise<void> 
 	const movement = await findActiveMovementById(input.id);
 	if (!movement) throw new MovementNotFoundError();
 	if (movement.type !== input.type) throw new InvalidMovementTypeChangeError();
-	await updateMovementRecord(input, await getValidatedCardCurrency(input));
+	const currencyCode = await getValidatedCardCurrency(input);
+	await updateMovementRecord(input, currencyCode);
+	await deleteExpensePaymentsByMovementId(input.id);
+	await registerExpensePaymentFromMovement(input.id, input);
 }
 
 export async function deleteMovement(id: string): Promise<void> {

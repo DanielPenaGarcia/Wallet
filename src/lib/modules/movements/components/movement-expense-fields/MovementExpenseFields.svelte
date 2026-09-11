@@ -4,9 +4,9 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
 	import type { CardListItem } from '$lib/modules/cards/types/card-list-item.types';
+	import CategorySelectField from '$lib/modules/categories/components/category-select-field/CategorySelectField.svelte';
 	import type { Category } from '$lib/modules/categories/types/category.types';
 	import type { Expense } from '$lib/modules/expenses/types/expense.types';
-	import { getCategoryPath } from '$lib/modules/expenses/utils/category-path';
 	import type {
 		MovementClassificationKind,
 		MovementPaymentMode
@@ -44,11 +44,7 @@
 	let canUseInterestFreeInstallments = $derived(selectedSourceCard?.kind === 'credit');
 	let previousClassificationKind = untrack(() => classificationKind);
 	let selectedClassification = $derived(
-		classificationKind === 'expense'
-			? (expenses.find((expense) => expense.id === classificationId)?.name ?? 'Selecciona un gasto')
-			: classificationId
-				? getCategoryPath(categories.find((category) => category.id === classificationId), categories)
-				: 'Selecciona una categoría'
+		expenses.find((expense) => expense.id === classificationId)?.name ?? 'Selecciona un gasto'
 	);
 
 	$effect(() => {
@@ -71,7 +67,7 @@
 	<MovementCardField
 		id={`${idPrefix}-source-card`}
 		name="sourceCardId"
-		label="Cuenta o tarjeta de origen"
+		label="Cuenta de origen"
 		{cards}
 		bind:value={sourceCardId}
 		error={fieldError('sourceCardId')}
@@ -109,17 +105,25 @@
 	</Select.Root>
 </div>
 
-<div class="grid gap-2">
-	<Label for={`${idPrefix}-classification-id`}>{classificationKind === 'expense' ? 'Gasto' : 'Categoría'}</Label>
-	<Select.Root type="single" name="classificationId" required bind:value={classificationId} items={classificationKind === 'expense' ? expenses.map((expense) => ({ value: expense.id, label: expense.name })) : categories.map((category) => ({ value: category.id, label: getCategoryPath(category, categories) }))}>
-		<Select.Trigger id={`${idPrefix}-classification-id`} class="h-11 w-full border-slate-300 px-3" aria-invalid={fieldError('classificationId') ? 'true' : undefined}><span class="truncate">{selectedClassification}</span></Select.Trigger>
-		<Select.Content>
-			{#if classificationKind === 'expense'}
+{#if classificationKind === 'expense'}
+	<div class="grid gap-2">
+		<Label for={`${idPrefix}-classification-id`}>Gasto</Label>
+		<Select.Root type="single" name="classificationId" required bind:value={classificationId} items={expenses.map((expense) => ({ value: expense.id, label: expense.name }))}>
+			<Select.Trigger id={`${idPrefix}-classification-id`} class="h-11 w-full border-slate-300 px-3" aria-invalid={fieldError('classificationId') ? 'true' : undefined}><span class="truncate">{selectedClassification}</span></Select.Trigger>
+			<Select.Content>
 				{#each expenses as expense}<Select.Item value={expense.id} label={expense.name}>{expense.name}</Select.Item>{/each}
-			{:else}
-				{#each categories as category}<Select.Item value={category.id} label={getCategoryPath(category, categories)}>{getCategoryPath(category, categories)}</Select.Item>{/each}
-			{/if}
-		</Select.Content>
-	</Select.Root>
-	{#if fieldError('classificationId')}<span class="text-xs text-red-700">{fieldError('classificationId')}</span>{/if}
-</div>
+			</Select.Content>
+		</Select.Root>
+		{#if fieldError('classificationId')}<span class="text-xs text-red-700">{fieldError('classificationId')}</span>{/if}
+	</div>
+{:else}
+	<CategorySelectField
+		id={`${idPrefix}-classification-id`}
+		name="classificationId"
+		label="Categoría"
+		{categories}
+		required
+		bind:value={classificationId}
+		error={fieldError('classificationId')}
+	/>
+{/if}

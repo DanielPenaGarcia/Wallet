@@ -10,11 +10,12 @@
 	import SearchIcon from '@lucide/svelte/icons/search';
 	import XIcon from '@lucide/svelte/icons/x';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
+	import { untrack } from 'svelte';
 	import { ActionButton } from '$lib/components/ui/action-button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
-	import { getCategoryPath } from '$lib/modules/expenses/utils/category-path';
+	import CategorySelectField from '$lib/modules/categories/components/category-select-field/CategorySelectField.svelte';
 	import { formatCurrencyFromMinorUnits } from '$lib/shared/utils/format-currency';
 	import { formatDateTime } from '$lib/shared/utils/format-date-time';
 	import type { Movement } from '../../types/movement.types';
@@ -35,16 +36,12 @@
 	}: MovementListProps = $props();
 	let selectingMovements = $state(false);
 	let selectedMovementIds = $state<string[]>([]);
+	let categoryFilterValue = $state(untrack(() => filters.categoryId || allFilterValue));
 	let selectedCount = $derived(selectedMovementIds.length);
 	let selectedCardLabel = $derived(
 		filters.cardId
-			? (cards.find((card) => card.id === filters.cardId)?.alias ?? 'Tarjeta seleccionada')
-			: 'Todas las tarjetas'
-	);
-	let selectedCategoryLabel = $derived(
-		filters.categoryId
-			? getCategoryPath(categories.find((category) => category.id === filters.categoryId), categories)
-			: 'Todas las categorías'
+			? (cards.find((card) => card.id === filters.cardId)?.alias ?? 'Cuenta seleccionada')
+			: 'Todas las cuentas'
 	);
 	let hasActiveFilters = $derived(
 		Boolean(filters.startDate || filters.endDate || filters.cardId || filters.categoryId)
@@ -96,7 +93,7 @@
 	<form method="GET" class="grid gap-4 border-b border-slate-200 bg-slate-50 px-5 py-4">
 		<div>
 			<p class="text-sm font-bold text-slate-900">Filtros</p>
-			<p class="mt-1 text-xs text-slate-500">Consulta por periodo, tarjeta o categoría.</p>
+			<p class="mt-1 text-xs text-slate-500">Consulta por periodo, cuenta o categoría.</p>
 		</div>
 		<div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
 			<div class="grid gap-2">
@@ -108,33 +105,29 @@
 				<Input id="movement-period-end" name="endDate" type="date" value={filters.endDate} class="h-11 border-slate-300 bg-white" />
 			</div>
 			<div class="grid gap-2">
-				<Label for="movement-card-filter">Tarjeta</Label>
-				<Select.Root type="single" name="cardId" value={filters.cardId || allFilterValue} items={[{ value: allFilterValue, label: 'Todas las tarjetas' }, ...cards.map((card) => ({ value: card.id, label: `${card.alias} •••• ${card.lastFourDigits}` }))]}>
+				<Label for="movement-card-filter">Cuenta</Label>
+				<Select.Root type="single" name="cardId" value={filters.cardId || allFilterValue} items={[{ value: allFilterValue, label: 'Todas las cuentas' }, ...cards.map((card) => ({ value: card.id, label: card.isDefault ? `${card.alias} · Efectivo` : `${card.alias} •••• ${card.lastFourDigits}` }))]}>
 					<Select.Trigger id="movement-card-filter" class="h-11 w-full border-slate-300 bg-white px-3">
 						<span class="truncate">{selectedCardLabel}</span>
 					</Select.Trigger>
 					<Select.Content>
-						<Select.Item value={allFilterValue} label="Todas las tarjetas">Todas las tarjetas</Select.Item>
+						<Select.Item value={allFilterValue} label="Todas las cuentas">Todas las cuentas</Select.Item>
 						{#each cards as card (card.id)}
-							<Select.Item value={card.id} label={`${card.alias} •••• ${card.lastFourDigits}`}>{card.alias} •••• {card.lastFourDigits}</Select.Item>
+							<Select.Item value={card.id} label={card.isDefault ? `${card.alias} · Efectivo` : `${card.alias} •••• ${card.lastFourDigits}`}>{card.isDefault ? `${card.alias} · Efectivo` : `${card.alias} •••• ${card.lastFourDigits}`}</Select.Item>
 						{/each}
 					</Select.Content>
 				</Select.Root>
 			</div>
-			<div class="grid gap-2">
-				<Label for="movement-category-filter">Categoría</Label>
-				<Select.Root type="single" name="categoryId" value={filters.categoryId || allFilterValue} items={[{ value: allFilterValue, label: 'Todas las categorías' }, ...categories.map((category) => ({ value: category.id, label: getCategoryPath(category, categories) }))]}>
-					<Select.Trigger id="movement-category-filter" class="h-11 w-full border-slate-300 bg-white px-3">
-						<span class="truncate">{selectedCategoryLabel}</span>
-					</Select.Trigger>
-					<Select.Content>
-						<Select.Item value={allFilterValue} label="Todas las categorías">Todas las categorías</Select.Item>
-						{#each categories as category (category.id)}
-							<Select.Item value={category.id} label={getCategoryPath(category, categories)}>{getCategoryPath(category, categories)}</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
-			</div>
+			<CategorySelectField
+				id="movement-category-filter"
+				name="categoryId"
+				label="Categoría"
+				{categories}
+				allowAll
+				allValue={allFilterValue}
+				allLabel="Todas las categorías"
+				bind:value={categoryFilterValue}
+			/>
 		</div>
 		<div class="flex flex-wrap gap-2">
 			<ActionButton type="submit" intent="secondary"><SearchIcon />Consultar</ActionButton>

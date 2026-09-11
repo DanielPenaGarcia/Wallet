@@ -12,6 +12,7 @@ import {
 } from './card.errors';
 import { toCardListItem } from './card.mapper';
 import {
+	ensureDefaultPersonalAccount,
 	deleteCreditInstallmentPayment,
 	findActiveCardById,
 	findActiveInterestFreeInstallmentMovement,
@@ -27,8 +28,10 @@ import {
 import type { CreateCardInput } from './inputs/create-card.input';
 import type { PayCreditInstallmentInput } from './inputs/pay-credit-installment.input';
 import type { UpdateCardInput } from './inputs/update-card.input';
+import { isDefaultPersonalAccount } from '$lib/modules/cards/constants/default-account';
 
 export async function getCards(): Promise<CardListItem[]> {
+	await ensureDefaultPersonalAccount();
 	const [cards, movements] = await Promise.all([listCardsWithBank(), listActiveMovementsForCards()]);
 	const paidInstallments = await listCreditInstallmentPaymentsByMovementIds(
 		movements
@@ -52,6 +55,7 @@ export async function updateCard(input: UpdateCardInput): Promise<void> {
 }
 
 export async function deleteCard(id: string): Promise<void> {
+	if (isDefaultPersonalAccount(id)) throw new CardNotFoundError();
 	if (!(await findActiveCardById(id))) throw new CardNotFoundError();
 	await softDeleteCardRecord(id);
 }

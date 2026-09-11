@@ -4,13 +4,13 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
+	import CategorySelectField from '$lib/modules/categories/components/category-select-field/CategorySelectField.svelte';
 	import type {
 		ExpenseAmountKind,
 		ExpenseClassification,
 		ExpenseFrequency,
 		ExpenseIntervalUnit
 	} from '../../types/expense.types';
-	import { getCategoryPath } from '../../utils/category-path';
 	import {
 		expenseClassificationOptions
 	} from '../../utils/expense-form-options';
@@ -59,13 +59,7 @@
 		customIntervalCountError={fieldError('customIntervalCount')}
 		customIntervalUnitError={fieldError('customIntervalUnit')}
 	/>
-	<div class="grid gap-2 sm:col-span-2">
-		<Label for="edit-expense-category">Categoría</Label>
-		<Select.Root type="single" name="categoryId" required bind:value={categoryId} items={categories.map((category) => ({ value: category.id, label: getCategoryPath(category, categories) }))}>
-			<Select.Trigger id="edit-expense-category" class="h-11 w-full border-slate-300 px-3"><span class="truncate">{getCategoryPath(categories.find((item) => item.id === categoryId), categories)}</span></Select.Trigger>
-			<Select.Content>{#each categories as category}<Select.Item value={category.id} label={getCategoryPath(category, categories)}>{getCategoryPath(category, categories)}</Select.Item>{/each}</Select.Content>
-		</Select.Root>
-	</div>
+	<CategorySelectField id="edit-expense-category" name="categoryId" label="Categoría" {categories} required bind:value={categoryId} error={fieldError('categoryId')} class="sm:col-span-2" />
 	<div class="grid gap-2">
 		<Label for="edit-expense-amount">Cantidad</Label>
 		<Input id="edit-expense-amount" name="amount" required type="number" min="0.01" step="0.01" value={editFeedback?.values?.amount ?? (expense.amount / 100).toFixed(2)} class="h-11 border-slate-300" aria-invalid={fieldError('amount') ? 'true' : undefined} />

@@ -156,3 +156,7 @@ export async function insertExpensePayment(
 		registeredAt
 	});
 }
+
+export async function deleteExpensePaymentsByMovementId(movementId: string): Promise<void> {
+	await db.delete(expensePayments).where(eq(expensePayments.movementId, movementId));
+}

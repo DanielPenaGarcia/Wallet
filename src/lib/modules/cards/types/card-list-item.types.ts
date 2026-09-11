@@ -7,6 +7,7 @@ export type CardListItem = {
 	alias: string;
 	bankId: string;
 	bankName: string;
+	isDefault: boolean;
 	color: CardColor;
 	lastFourDigits: string;
 	currencyCode: string;

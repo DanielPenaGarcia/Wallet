@@ -7,8 +7,9 @@
 
 	const pageLabels = [
 		{ href: '/dashboard', label: 'Dashboard' },
-		{ href: '/tarjetas', label: 'Tarjetas' },
+		{ href: '/cuentas', label: 'Cuentas' },
 		{ href: '/movimientos', label: 'Movimientos' },
+		{ href: '/apartados', label: 'Apartados' },
 		{ href: '/finanzas', label: 'Finanzas' },
 		{ href: '/configuracion', label: 'Configuración' }
 	] as const;

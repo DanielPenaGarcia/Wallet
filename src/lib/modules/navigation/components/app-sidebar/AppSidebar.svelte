@@ -5,8 +5,9 @@
 
 	const navigationItems = [
 		{ label: 'Dashboard', href: '/dashboard', icon: 'dashboard', accent: 'blue' },
-		{ label: 'Tarjetas', href: '/tarjetas', icon: 'cards', accent: 'green' },
+		{ label: 'Cuentas', href: '/cuentas', icon: 'cards', accent: 'green' },
 		{ label: 'Movimientos', href: '/movimientos', icon: 'movements', accent: 'blue' },
+		{ label: 'Apartados', href: '/apartados', icon: 'reserves', accent: 'blue' },
 		{ label: 'Finanzas', href: '/finanzas', icon: 'finance', accent: 'red' },
 		{ label: 'Configuración', href: '/configuracion', icon: 'settings', accent: 'blue' }
 	] as const;
@@ -75,6 +76,8 @@
 								<svg viewBox="0 0 24 24" class="size-5" aria-hidden="true"><path d="M4 19V9m5 10V5m6 14v-7m5 7V3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /><path d="M3 19h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
 							{:else if item.icon === 'movements'}
 								<svg viewBox="0 0 24 24" class="size-5" aria-hidden="true"><path d="M7 7h11m0 0-3-3m3 3-3 3M17 17H6m0 0 3 3m-3-3 3-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+							{:else if item.icon === 'reserves'}
+								<svg viewBox="0 0 24 24" class="size-5" aria-hidden="true"><path d="M7 11h10m-8 4h6M6 4h12a1 1 0 0 1 1 1v15l-3-2-3 2-3-2-3 2-3-2V5a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
 							{:else}
 								<svg viewBox="0 0 24 24" class="size-5" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1 1.56V21h-4v-.08A1.7 1.7 0 0 0 9 19.37a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.63 15a1.7 1.7 0 0 0-1.55-1H3v-4h.08A1.7 1.7 0 0 0 4.63 9a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.63a1.7 1.7 0 0 0 1-1.55V3h4v.08A1.7 1.7 0 0 0 15 4.63a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.37 9a1.7 1.7 0 0 0 1.55 1H21v4h-.08A1.7 1.7 0 0 0 19.4 15Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" /></svg>
 							{/if}

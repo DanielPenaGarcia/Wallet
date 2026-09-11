@@ -13,7 +13,7 @@ export class BankNotFoundError extends Error {
 
 export class BankHasCardsError extends Error {
 	constructor() {
-		super('No puedes eliminar el banco porque está relacionado con una o más tarjetas.');
+		super('No puedes eliminar el banco porque está relacionado con una o más cuentas.');
 		this.name = 'BankHasCardsError';
 	}
 }

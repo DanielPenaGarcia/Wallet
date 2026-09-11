@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { ActionButton } from '$lib/components/ui/action-button';
+	import { ColorInput } from '$lib/components/ui/color-input';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
@@ -15,6 +16,7 @@
 			: null
 	);
 	let idPrefix = $derived(mode === 'create' ? 'create-card' : `edit-card-${card?.id ?? ''}`);
+	let isDefaultAccount = $derived(Boolean(card?.isDefault));
 	let kind = $state<CardKind>(
 		untrack(() => matchingFeedback?.values?.kind ?? card?.kind ?? 'credit')
 	);
@@ -41,7 +43,7 @@
 	{#if mode === 'edit' && card}<input type="hidden" name="id" value={card.id} />{/if}
 
 	<div class="grid gap-2">
-		<Label for={`${idPrefix}-kind`}>Tipo de tarjeta</Label>
+		<Label for={`${idPrefix}-kind`}>Tipo de cuenta</Label>
 		{#if mode === 'create'}
 			<Select.Root type="single" name="kind" required bind:value={kind} items={cardTypes}>
 				<Select.Trigger id={`${idPrefix}-kind`} class="h-11 w-full border-slate-300 px-3"><span>{kind === 'credit' ? 'Crédito' : 'Débito'}</span></Select.Trigger>
@@ -74,7 +76,7 @@
 
 	<div class="grid gap-2">
 		<Label for={`${idPrefix}-color`}>Color</Label>
-		<input id={`${idPrefix}-color`} name="color" type="color" value={matchingFeedback?.values?.color ?? card?.color ?? '#2563eb'} class="h-11 w-full cursor-pointer rounded-md border border-slate-300 bg-transparent p-1 shadow-xs outline-none focus-visible:border-blue-600 focus-visible:ring-3 focus-visible:ring-blue-600/50" />
+		<ColorInput id={`${idPrefix}-color`} name="color" value={matchingFeedback?.values?.color ?? card?.color ?? '#2563eb'} fallback="#2563eb" error={fieldError('color')} />
 	</div>
 
 	<div class="grid gap-2">
@@ -113,7 +115,7 @@
 		</div>
 	{:else}
 		<div class="grid gap-2">
-			<Label for={`${idPrefix}-account`}>Cuenta relacionada</Label>
+			<Label for={`${idPrefix}-account`}>Referencia</Label>
 			<Input id={`${idPrefix}-account`} name="accountId" required maxlength={80} value={matchingFeedback?.values?.accountId ?? card?.accountId ?? ''} placeholder="Ej. Cuenta principal" class="h-11 border-slate-300" aria-invalid={fieldError('accountId') ? 'true' : undefined} />
 			{#if fieldError('accountId')}<span class="text-xs text-red-700">{fieldError('accountId')}</span>{/if}
 		</div>
@@ -124,7 +126,7 @@
 		{#if mode === 'create' && matchingFeedback?.success}<p class="mb-3 text-sm font-semibold text-emerald-700">{matchingFeedback.success}</p>{/if}
 		<div class="flex justify-end gap-2">
 			{#if onCancel}<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>{/if}
-			<ActionButton type="submit" disabled={banks.length === 0}>{mode === 'create' ? 'Guardar tarjeta' : 'Guardar cambios'}</ActionButton>
+			<ActionButton type="submit" disabled={banks.length === 0 || isDefaultAccount}>{mode === 'create' ? 'Guardar cuenta' : 'Guardar cambios'}</ActionButton>
 		</div>
 	</div>
 </form>

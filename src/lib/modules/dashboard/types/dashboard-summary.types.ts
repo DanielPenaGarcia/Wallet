@@ -6,6 +6,7 @@ export type DashboardExpenseReserve = {
 	amountKind: 'fixed' | 'estimated';
 	amountLabel: string;
 	frequencyLabel: string;
+	nextDueDateIso: string;
 	nextDueDateLabel: string;
 	paymentsUntilDue: number;
 	reserveAmount: number;
@@ -28,6 +29,7 @@ export type DashboardCreditCardReserve = {
 	cashExpenseAmountLabel: string;
 	nextInterestFreeInstallmentsAmount: number;
 	nextInterestFreeInstallmentsAmountLabel: string;
+	nextDueDateIso: string;
 	nextDueDateLabel: string;
 	semimonthsUntilDue: number;
 	reserveAmount: number;
@@ -40,6 +42,8 @@ export type DashboardSummary = {
 	nextIncomeAmountLabel: string | null;
 	reserveTotal: number;
 	reserveTotalLabel: string;
+	debitBalanceTotal: number;
+	debitBalanceTotalLabel: string;
 	availableAfterReserve: number | null;
 	availableAfterReserveLabel: string | null;
 	currencyCode: string;

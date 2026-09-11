@@ -16,7 +16,7 @@ export const payExpenseSchema = z
 			context.addIssue({
 				code: 'custom',
 				path: ['cardId'],
-				message: 'Selecciona la tarjeta con la que pagaste.'
+				message: 'Selecciona la cuenta con la que pagaste.'
 			});
 		}
 	})

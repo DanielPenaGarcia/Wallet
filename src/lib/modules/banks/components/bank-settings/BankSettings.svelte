@@ -35,7 +35,7 @@
 
 <Dialog.Root bind:open={createOpen}>
 	<Dialog.Content>
-		<Dialog.Header><Dialog.Title>Nuevo banco</Dialog.Title><Dialog.Description>Agrega un banco al catálogo disponible para tarjetas.</Dialog.Description></Dialog.Header>
+		<Dialog.Header><Dialog.Title>Nuevo banco</Dialog.Title><Dialog.Description>Agrega un banco al catálogo disponible para cuentas bancarias.</Dialog.Description></Dialog.Header>
 		<BankForm mode="create" {feedback} onCancel={() => (createOpen = false)} />
 	</Dialog.Content>
 </Dialog.Root>

@@ -11,12 +11,13 @@
 		cards,
 		value = $bindable(),
 		error,
-		placeholder = 'Selecciona una cuenta o tarjeta',
+		placeholder = 'Selecciona una cuenta',
 		class: className = ''
 	}: CardSelectFieldProps = $props();
 
 	function cardLabel(card: CardListItem) {
-		return `${card.alias} •••• ${card.lastFourDigits} · ${card.currencyCode}`;
+		if (card.isDefault) return `${card.alias} · Efectivo · ${card.currencyCode}`;
+		return `${card.alias} · •••• ${card.lastFourDigits} · ${card.currencyCode}`;
 	}
 
 	let selectedCard = $derived(cards.find((card) => card.id === value));

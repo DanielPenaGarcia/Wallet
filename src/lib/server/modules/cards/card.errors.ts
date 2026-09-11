@@ -6,14 +6,14 @@ export class ActiveBankNotFoundError extends Error {
 
 export class CardNotFoundError extends Error {
 	constructor() {
-		super('La tarjeta ya no está disponible.');
+		super('La cuenta ya no está disponible.');
 		this.name = 'CardNotFoundError';
 	}
 }
 
 export class InvalidCardKindChangeError extends Error {
 	constructor() {
-		super('El tipo de tarjeta no puede cambiarse después de registrarla.');
+		super('El tipo de cuenta no puede cambiarse después de registrarla.');
 		this.name = 'InvalidCardKindChangeError';
 	}
 }

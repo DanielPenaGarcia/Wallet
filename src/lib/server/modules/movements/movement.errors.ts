@@ -9,8 +9,8 @@ export class ActiveMovementCardNotFoundError extends Error {
 	constructor(role: 'source' | 'destination') {
 		super(
 			role === 'source'
-				? 'La cuenta o tarjeta de origen ya no está disponible.'
-				: 'La cuenta o tarjeta de destino ya no está disponible.'
+				? 'La cuenta de origen ya no está disponible.'
+				: 'La cuenta de destino ya no está disponible.'
 		);
 		this.name = 'ActiveMovementCardNotFoundError';
 	}

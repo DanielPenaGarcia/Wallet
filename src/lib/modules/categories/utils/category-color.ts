@@ -1,11 +1,12 @@
 import type { CategoryColor } from '../types/category.types';
+import { isColorInput, normalizeColorInput } from '$lib/shared/utils/color';
 
 export const fallbackCategoryColor: CategoryColor = '#64748b';
 
 export function isCategoryColor(value: string): value is CategoryColor {
-	return /^#[0-9a-fA-F]{6}$/.test(value);
+	return isColorInput(value);
 }
 
 export function normalizeCategoryColor(value: string): CategoryColor {
-	return isCategoryColor(value) ? value : fallbackCategoryColor;
+	return normalizeColorInput(value, fallbackCategoryColor) as CategoryColor;
 }

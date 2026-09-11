@@ -1,6 +1,10 @@
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import {
+	DEFAULT_PERSONAL_ACCOUNT_ID,
+	DEFAULT_PERSONAL_BANK_ID
+} from '$lib/modules/cards/constants/default-account';
+import {
 	banks,
 	cards,
 	creditCardInstallmentPayments,
@@ -10,6 +14,56 @@ import {
 import type { CreateCardInput } from './inputs/create-card.input';
 import type { PayCreditInstallmentInput } from './inputs/pay-credit-installment.input';
 import type { UpdateCardInput } from './inputs/update-card.input';
+
+const defaultPersonalRegisteredAt = '1970-01-01T00:00:00.000Z';
+
+export async function ensureDefaultPersonalAccount() {
+	db.transaction((transaction) => {
+		transaction
+			.insert(banks)
+			.values({
+				id: DEFAULT_PERSONAL_BANK_ID,
+				name: 'Personal',
+				shortName: 'Efectivo',
+				countryCode: 'MX',
+				active: false,
+				registeredAt: defaultPersonalRegisteredAt,
+				timeZone: 'America/Hermosillo',
+				weekendDays: '[0,6]',
+				holidays: '[]'
+			})
+			.onConflictDoNothing()
+			.run();
+
+		transaction
+			.insert(cards)
+			.values({
+				id: DEFAULT_PERSONAL_ACCOUNT_ID,
+				kind: 'debit',
+				registeredAt: defaultPersonalRegisteredAt,
+				alias: 'Personal',
+				bankId: DEFAULT_PERSONAL_BANK_ID,
+				color: '#16a34a',
+				lastFourDigits: '0000',
+				currencyCode: 'MXN',
+				active: true
+			})
+			.onConflictDoNothing()
+			.run();
+
+		transaction
+			.insert(debitCards)
+			.values({
+				cardId: DEFAULT_PERSONAL_ACCOUNT_ID,
+				accountId: 'Efectivo',
+				initialLedgerBalance: 0,
+				ledgerBalance: 0,
+				availableBalance: 0
+			})
+			.onConflictDoNothing()
+			.run();
+	});
+}
 
 export async function insertCard(input: CreateCardInput) {
 	const id = crypto.randomUUID();

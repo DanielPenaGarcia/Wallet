@@ -15,6 +15,10 @@ import { lastDayOfMonth, startOfLocalDay, toIsoDate } from '$lib/shared/utils/lo
 import { getCards } from '$lib/server/modules/cards/card.service';
 import { getExpenses } from '$lib/server/modules/expenses/expense.service';
 import { getJobIncomes } from '$lib/server/modules/incomes/income.service';
+import {
+	listReserveMovementsForCycles,
+	type ReserveMovementRecord
+} from '$lib/server/modules/reserves/reserve.repository';
 
 const dateFormatter = new Intl.DateTimeFormat('es-MX', {
 	weekday: 'long',
@@ -271,7 +275,31 @@ function listSemimonthlyDatesThrough(startDate: Date, endDate: Date) {
 	return dates.sort((left, right) => left.getTime() - right.getTime());
 }
 
-function creditCardReserve(card: CardListItem, today: Date) {
+function reservedAmount(
+	reserveMovements: ReserveMovementRecord[],
+	input: {
+		reserveKind: ReserveMovementRecord['reserveKind'];
+		targetId: string;
+		cycleDueOn: string;
+		currencyCode: string;
+	}
+) {
+	return reserveMovements
+		.filter(
+			(reserveMovement) =>
+				reserveMovement.reserveKind === input.reserveKind &&
+				reserveMovement.targetId === input.targetId &&
+				reserveMovement.cycleDueOn === input.cycleDueOn &&
+				reserveMovement.currencyCode === input.currencyCode
+		)
+		.reduce((total, reserveMovement) => total + reserveMovement.amount, 0);
+}
+
+function creditCardReserve(
+	card: CardListItem,
+	today: Date,
+	reserveMovements: ReserveMovementRecord[]
+) {
 	if (card.kind !== 'credit' || card.paymentDueDay === null) return null;
 
 	const cashExpenseAmount = card.cashExpenseAmount ?? 0;
@@ -286,8 +314,18 @@ function creditCardReserve(card: CardListItem, today: Date) {
 	if (payableAmount <= 0) return null;
 
 	const dueDate = nextCreditCardDueDate(card.paymentDueDay, today);
+	const nextDueDateIso = toIsoDate(dueDate);
 	const semimonthsUntilDue = Math.max(listSemimonthlyDatesThrough(today, dueDate).length, 1);
-	const reserveAmount = Math.ceil(payableAmount / semimonthsUntilDue);
+	const reserveAmount = Math.max(
+		Math.ceil(payableAmount / semimonthsUntilDue) -
+			reservedAmount(reserveMovements, {
+				reserveKind: 'credit',
+				targetId: card.id,
+				cycleDueOn: nextDueDateIso,
+				currencyCode: card.currencyCode
+			}),
+		0
+	);
 
 	return {
 		cardId: card.id,
@@ -303,12 +341,19 @@ function creditCardReserve(card: CardListItem, today: Date) {
 			nextInterestFreeInstallmentsAmount,
 			card.currencyCode
 		),
+		nextDueDateIso,
 		nextDueDateLabel: dateFormatter.format(dueDate),
 		semimonthsUntilDue,
 		reserveAmount,
 		reserveAmountLabel: formatCurrencyFromMinorUnits(reserveAmount, card.currencyCode),
 		currencyCode: card.currencyCode
 	};
+}
+
+function debitBalanceTotal(cards: CardListItem[], currencyCode: string) {
+	return cards
+		.filter((card) => card.kind === 'debit' && card.currencyCode === currencyCode)
+		.reduce((total, card) => total + card.currentBalance, 0);
 }
 
 export async function getDashboardSummary(referenceDate = new Date()): Promise<DashboardSummary> {
@@ -320,13 +365,44 @@ export async function getDashboardSummary(referenceDate = new Date()): Promise<D
 	const today = startOfLocalDay(referenceDate);
 	const nextIncomePayment = getNextIncomePayment(incomes, today);
 	const currencyCode = nextIncomePayment?.currencyCode ?? expenses[0]?.currencyCode ?? cards[0]?.currencyCode ?? 'MXN';
+	const expenseDueDates = new Map(
+		expenses.map((expense) => [expense.id, currentCycleDueDate(expense, today)])
+	);
+	const creditDueDates = cards
+		.filter((card) => card.kind === 'credit' && card.paymentDueDay !== null)
+		.map((card) => nextCreditCardDueDate(card.paymentDueDay ?? 1, today));
+	const reserveMovements = await listReserveMovementsForCycles([
+		...Array.from(expenseDueDates.values()).map(toIsoDate),
+		...creditDueDates.map(toIsoDate)
+	]);
 
 	const reserves = expenses.map((expense) => {
-		const dueDate = currentCycleDueDate(expense, today);
+		const dueDate = expenseDueDates.get(expense.id) ?? currentCycleDueDate(expense, today);
+		const nextDueDateIso = toIsoDate(dueDate);
 		const incomePaymentDates = listIncomePaymentDatesThrough(incomes, today, dueDate);
 		const paymentsUntilDue = Math.max(incomePaymentDates.length, 1);
-		const monthlyReserveAmount = Math.ceil(expense.amount / monthlyReserveDivisor(expense));
-		const reserveAmount = semimonthlyReserveAmount(monthlyReserveAmount, dueDate, today);
+		const rawMonthlyReserveAmount = Math.ceil(expense.amount / monthlyReserveDivisor(expense));
+		const monthlyReserveAmount = Math.max(
+			rawMonthlyReserveAmount -
+				reservedAmount(reserveMovements, {
+					reserveKind: 'monthly',
+					targetId: expense.id,
+					cycleDueOn: nextDueDateIso,
+					currencyCode: expense.currencyCode
+				}),
+			0
+		);
+		const rawReserveAmount = semimonthlyReserveAmount(rawMonthlyReserveAmount, dueDate, today);
+		const reserveAmount = Math.max(
+			rawReserveAmount -
+				reservedAmount(reserveMovements, {
+					reserveKind: 'semimonthly',
+					targetId: expense.id,
+					cycleDueOn: nextDueDateIso,
+					currencyCode: expense.currencyCode
+				}),
+			0
+		);
 		const status: 'paid' | 'pending' = isCurrentCyclePaid(expense, dueDate) ? 'paid' : 'pending';
 
 		return {
@@ -341,6 +417,7 @@ export async function getDashboardSummary(referenceDate = new Date()): Promise<D
 				expense.customIntervalCount,
 				expense.customIntervalUnit
 			),
+			nextDueDateIso,
 			nextDueDateLabel: dateFormatter.format(dueDate),
 			paymentsUntilDue,
 			reserveAmount,
@@ -361,24 +438,28 @@ export async function getDashboardSummary(referenceDate = new Date()): Promise<D
 		.filter((reserve) => reserve.currencyCode === currencyCode)
 		.reduce((total, reserve) => total + reserve.reserveAmount, 0);
 	const creditCardReserves = cards
-		.map((card) => creditCardReserve(card, today))
+		.map((card) => creditCardReserve(card, today, reserveMovements))
 		.filter((reserve) => reserve !== null);
 	const creditCardReserveTotal = creditCardReserves
 		.filter((reserve) => reserve.currencyCode === currencyCode)
 		.reduce((total, reserve) => total + reserve.reserveAmount, 0);
 	const totalReserve = reserveTotal + creditCardReserveTotal;
+	const currentDebitBalance = debitBalanceTotal(cards, currencyCode);
+	const reserveAfterDebit = Math.max(totalReserve - currentDebitBalance, 0);
 	const nextIncomeAmount =
 		nextIncomePayment === null ? 0 : currentIncomeAmount(incomes, nextIncomePayment.dateIso, currencyCode);
 	const availableAfterReserve =
 		nextIncomePayment === null || nextIncomePayment.amountLabel === 'Varias monedas'
 			? null
-			: nextIncomeAmount - totalReserve;
+			: nextIncomeAmount - reserveAfterDebit;
 
 	return {
 		nextIncomeDateLabel: nextIncomePayment?.dateLabel ?? null,
 		nextIncomeAmountLabel: nextIncomePayment?.amountLabel ?? null,
-		reserveTotal: totalReserve,
-		reserveTotalLabel: formatCurrencyFromMinorUnits(totalReserve, currencyCode),
+		reserveTotal: reserveAfterDebit,
+		reserveTotalLabel: formatCurrencyFromMinorUnits(reserveAfterDebit, currencyCode),
+		debitBalanceTotal: currentDebitBalance,
+		debitBalanceTotalLabel: formatCurrencyFromMinorUnits(currentDebitBalance, currencyCode),
 		availableAfterReserve,
 		availableAfterReserveLabel:
 			availableAfterReserve === null

@@ -5,6 +5,7 @@ import {
 	expenseFrequencies,
 	expenseIntervalUnits
 } from '$lib/modules/expenses/types/expense.types';
+import { reserveMovementKinds } from '$lib/modules/reserves/types/reserve-movement.types';
 
 export const banks = sqliteTable('banks', {
 	id: text('id').primaryKey(),
@@ -170,6 +171,20 @@ export const movements = sqliteTable('movements', {
 	registeredAt: text('registered_at').notNull(),
 	updatedAt: text('updated_at'),
 	deletedAt: text('deleted_at')
+});
+
+export const reserveMovements = sqliteTable('reserve_movements', {
+	id: text('id').primaryKey(),
+	reserveKind: text('reserve_kind', { enum: reserveMovementKinds }).notNull(),
+	targetId: text('target_id').notNull(),
+	movementId: text('movement_id')
+		.notNull()
+		.references(() => movements.id, { onDelete: 'cascade' }),
+	amount: integer('amount').notNull(),
+	currencyCode: text('currency_code').notNull(),
+	cycleDueOn: text('cycle_due_on').notNull(),
+	reservedAt: text('reserved_at').notNull(),
+	registeredAt: text('registered_at').notNull()
 });
 
 export const creditCardInstallmentPayments = sqliteTable(

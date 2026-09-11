@@ -38,14 +38,14 @@
 			name="mode"
 			required
 			bind:value={mode}
-			items={[{ value: 'paid', label: 'Pagado' }, { value: 'card', label: 'Pagar utilizando una tarjeta' }]}
+			items={[{ value: 'paid', label: 'Pagado' }, { value: 'card', label: 'Pagar utilizando una cuenta' }]}
 		>
 			<Select.Trigger id={`pay-expense-${expense.id}-mode`} class="h-11 w-full border-slate-300 px-3">
-				<span>{mode === 'card' ? 'Pagar utilizando una tarjeta' : 'Pagado'}</span>
+				<span>{mode === 'card' ? 'Pagar utilizando una cuenta' : 'Pagado'}</span>
 			</Select.Trigger>
 			<Select.Content>
 				<Select.Item value="paid" label="Pagado">Pagado</Select.Item>
-				<Select.Item value="card" label="Pagar utilizando una tarjeta">Pagar utilizando una tarjeta</Select.Item>
+				<Select.Item value="card" label="Pagar utilizando una cuenta">Pagar utilizando una cuenta</Select.Item>
 			</Select.Content>
 		</Select.Root>
 	</div>
@@ -86,11 +86,11 @@
 		<CardSelectField
 			id={`pay-expense-${expense.id}-card`}
 			name="cardId"
-			label="Tarjeta"
+			label="Cuenta"
 			{cards}
 			bind:value={cardId}
 			error={fieldError('cardId')}
-			placeholder="Selecciona una tarjeta"
+			placeholder="Selecciona una cuenta"
 		/>
 	{/if}
 

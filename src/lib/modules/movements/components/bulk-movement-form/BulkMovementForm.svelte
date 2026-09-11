@@ -89,7 +89,7 @@
 		if (!(form instanceof HTMLFormElement) || !selectedType) return;
 		if (!form.reportValidity()) return;
 		if (needsBatchSourceCard && !sourceCardId) {
-			currentMessage = 'Selecciona la tarjeta origen del lote.';
+			currentMessage = 'Selecciona la cuenta origen del lote.';
 			return;
 		}
 		const data = Object.fromEntries(new FormData(form));
@@ -166,7 +166,7 @@
 				<MovementCardField
 					id={`bulk-${selectedType}-batch-source`}
 					name="sourceCardId"
-					label="Tarjeta origen del lote"
+					label="Cuenta origen del lote"
 					{cards}
 					bind:value={sourceCardId}
 				/>
@@ -215,10 +215,10 @@
 						<Label for={`bulk-income-reason-${draftKey}`}>Razón</Label>
 						<Input id={`bulk-income-reason-${draftKey}`} name="reason" required maxlength={160} placeholder="Ej. Pago de nómina" class="h-11 border-slate-300" />
 					</div>
-					<MovementCardField id={`bulk-income-destination-${draftKey}`} name="destinationCardId" label="Cuenta o tarjeta de destino" {cards} bind:value={destinationCardId} />
+					<MovementCardField id={`bulk-income-destination-${draftKey}`} name="destinationCardId" label="Cuenta de destino" {cards} bind:value={destinationCardId} />
 				{:else}
 					<input type="hidden" name="sourceCardId" value={sourceCardId} />
-					<MovementCardField id={`bulk-transfer-destination-${draftKey}`} name="destinationCardId" label="Cuenta o tarjeta de destino" {cards} bind:value={destinationCardId} />
+					<MovementCardField id={`bulk-transfer-destination-${draftKey}`} name="destinationCardId" label="Cuenta de destino" {cards} bind:value={destinationCardId} />
 				{/if}
 
 				{#if currentMessage}<p class="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 sm:col-span-2">{currentMessage}</p>{/if}

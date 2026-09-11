@@ -36,7 +36,7 @@ const commonFields = {
 const expenseMovementSchema = z.object({
 	type: z.literal('expense'),
 	...commonFields,
-	sourceCardId: z.string().trim().min(1, 'Selecciona la cuenta o tarjeta de origen.'),
+	sourceCardId: z.string().trim().min(1, 'Selecciona la cuenta de origen.'),
 	paymentMode: z.enum(movementPaymentModes),
 	installmentCount: installmentCountSchema,
 	interestFree: z
@@ -51,14 +51,14 @@ const incomeMovementSchema = z.object({
 	type: z.literal('income'),
 	...commonFields,
 	reason: z.string().trim().min(1, 'La razón del ingreso es obligatoria.').max(160),
-	destinationCardId: z.string().trim().min(1, 'Selecciona la cuenta o tarjeta de destino.')
+	destinationCardId: z.string().trim().min(1, 'Selecciona la cuenta de destino.')
 });
 
 const transferMovementSchema = z.object({
 	type: z.literal('transfer'),
 	...commonFields,
-	sourceCardId: z.string().trim().min(1, 'Selecciona la cuenta o tarjeta de origen.'),
-	destinationCardId: z.string().trim().min(1, 'Selecciona la cuenta o tarjeta de destino.')
+	sourceCardId: z.string().trim().min(1, 'Selecciona la cuenta de origen.'),
+	destinationCardId: z.string().trim().min(1, 'Selecciona la cuenta de destino.')
 });
 
 export const createMovementSchema = z

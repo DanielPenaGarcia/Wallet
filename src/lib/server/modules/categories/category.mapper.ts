@@ -32,5 +32,12 @@ export function toCategoryTree(records: CategoryRecord[]): CategoryNode[] {
 		else roots.push(node);
 	}
 
+	function inheritColor(node: CategoryNode, parentColor: CategoryColor | null) {
+		if (parentColor !== null) node.color = parentColor;
+		for (const child of node.children) inheritColor(child, node.color);
+	}
+
+	for (const root of roots) inheritColor(root, null);
+
 	return roots;
 }
