@@ -1,0 +1,325 @@
+import type { DashboardSummary } from '$lib/modules/dashboard/types/dashboard-summary.types';
+import type { CardListItem } from '$lib/modules/cards/types/card-list-item.types';
+import type { Expense } from '$lib/modules/expenses/types/expense.types';
+import { formatExpenseAmount } from '$lib/modules/expenses/utils/format-expense-amount';
+import { getExpenseFrequencyLabel } from '$lib/modules/expenses/utils/expense-form-options';
+import { getNextIncomePayment } from '$lib/modules/incomes/utils/next-income-payment';
+import {
+	lastSemimonthlyPaymentDay,
+	listIncomePaymentDatesThrough,
+	paymentAmountForIncome,
+} from '$lib/modules/incomes/utils/income-payment-schedule';
+import type { JobIncome } from '$lib/modules/incomes/types/job-income.types';
+import { formatCurrencyFromMinorUnits } from '$lib/shared/utils/format-currency';
+import { lastDayOfMonth, startOfLocalDay, toIsoDate } from '$lib/shared/utils/local-date';
+import { getCards } from '$lib/server/modules/cards/card.service';
+import { getExpenses } from '$lib/server/modules/expenses/expense.service';
+import { getJobIncomes } from '$lib/server/modules/incomes/income.service';
+
+const dateFormatter = new Intl.DateTimeFormat('es-MX', {
+	weekday: 'long',
+	day: 'numeric',
+	month: 'long'
+});
+
+function clampDay(year: number, month: number, day: number) {
+	return Math.min(day, lastDayOfMonth(year, month));
+}
+
+function addInterval(date: Date, expense: Expense) {
+	const nextDate = new Date(date);
+
+	if (expense.frequency === 'daily') {
+		nextDate.setDate(date.getDate() + 1);
+		return nextDate;
+	}
+
+	if (expense.frequency === 'weekly') {
+		nextDate.setDate(date.getDate() + 7);
+		return nextDate;
+	}
+
+	if (expense.frequency === 'semimonthly') {
+		if (date.getDate() <= 15) {
+			return new Date(
+				date.getFullYear(),
+				date.getMonth(),
+				lastSemimonthlyPaymentDay(date.getFullYear(), date.getMonth())
+			);
+		}
+		return new Date(date.getFullYear(), date.getMonth() + 1, 15);
+	}
+
+	if (expense.frequency === 'yearly') {
+		return new Date(
+			date.getFullYear() + 1,
+			date.getMonth(),
+			clampDay(date.getFullYear() + 1, date.getMonth(), date.getDate())
+		);
+	}
+
+	if (expense.frequency === 'custom' && expense.customIntervalCount && expense.customIntervalUnit) {
+		if (expense.customIntervalUnit === 'days') {
+			nextDate.setDate(date.getDate() + expense.customIntervalCount);
+			return nextDate;
+		}
+
+		if (expense.customIntervalUnit === 'weeks') {
+			nextDate.setDate(date.getDate() + expense.customIntervalCount * 7);
+			return nextDate;
+		}
+
+		if (expense.customIntervalUnit === 'months') {
+			return new Date(
+				date.getFullYear(),
+				date.getMonth() + expense.customIntervalCount,
+				clampDay(date.getFullYear(), date.getMonth() + expense.customIntervalCount, date.getDate())
+			);
+		}
+
+		return new Date(
+			date.getFullYear() + expense.customIntervalCount,
+			date.getMonth(),
+			clampDay(date.getFullYear() + expense.customIntervalCount, date.getMonth(), date.getDate())
+		);
+	}
+
+	return new Date(
+		date.getFullYear(),
+		date.getMonth() + 1,
+		clampDay(date.getFullYear(), date.getMonth() + 1, date.getDate())
+	);
+}
+
+function dueDateFromAnchor(anchor: Date, expense: Expense) {
+	const anchorDate = startOfLocalDay(anchor);
+	const dueDay = expense.paymentDueDay ?? anchorDate.getDate();
+
+	if (expense.frequency === 'one_time') return anchorDate;
+	if (expense.frequency === 'daily' || expense.frequency === 'weekly') return anchorDate;
+
+	if (expense.frequency === 'semimonthly') {
+		const day =
+			anchorDate.getDate() <= 15
+				? 15
+				: lastSemimonthlyPaymentDay(anchorDate.getFullYear(), anchorDate.getMonth());
+		return new Date(anchorDate.getFullYear(), anchorDate.getMonth(), day);
+	}
+
+	return new Date(
+		anchorDate.getFullYear(),
+		anchorDate.getMonth(),
+		clampDay(anchorDate.getFullYear(), anchorDate.getMonth(), dueDay)
+	);
+}
+
+function nextUnpaidDueDate(expense: Expense, today: Date) {
+	const dueDay = expense.paymentDueDay ?? today.getDate();
+
+	if (
+		expense.frequency === 'custom' &&
+		expense.customIntervalUnit === 'months' &&
+		expense.customIntervalCount !== null &&
+		expense.customIntervalCount > 1
+	) {
+		const nextDueMonth =
+			today.getDate() <= dueDay
+				? today.getMonth() + expense.customIntervalCount - 1
+				: today.getMonth() + expense.customIntervalCount;
+		return new Date(
+			today.getFullYear(),
+			nextDueMonth,
+			clampDay(today.getFullYear(), nextDueMonth, dueDay)
+		);
+	}
+
+	return dueDateFromAnchor(today, expense);
+}
+
+function nextDueDate(expense: Expense, today: Date) {
+	const latestPayment = expense.paymentHistory[0];
+	if (!latestPayment) {
+		let dueDate = nextUnpaidDueDate(expense, today);
+		let guard = 0;
+
+		while (dueDate < today && guard < 260) {
+			dueDate = dueDateFromAnchor(addInterval(dueDate, expense), expense);
+			guard += 1;
+		}
+
+		return dueDate;
+	}
+
+	const anchorSource = latestPayment.paidAt;
+	let dueDate = dueDateFromAnchor(new Date(anchorSource), expense);
+	let guard = 0;
+
+	while (dueDate < today && guard < 260) {
+		dueDate = dueDateFromAnchor(addInterval(dueDate, expense), expense);
+		guard += 1;
+	}
+
+	return dueDate;
+}
+
+function currentIncomeAmount(incomes: JobIncome[], dateIso: string, currencyCode: string) {
+	const paymentDate = new Date(`${dateIso}T00:00:00`);
+
+	return incomes
+		.filter((income) => income.active && income.currencyCode === currencyCode)
+		.filter((income) =>
+			listIncomePaymentDatesThrough([income], paymentDate, paymentDate).some(
+				(date) => toIsoDate(date) === dateIso
+			)
+		)
+		.reduce((total, income) => total + paymentAmountForIncome(income), 0);
+}
+
+function nextCreditCardDueDate(paymentDueDay: number, today: Date) {
+	const year = today.getFullYear();
+	const month = today.getMonth();
+	const dueDateThisMonth = new Date(year, month, clampDay(year, month, paymentDueDay));
+
+	if (dueDateThisMonth >= today) return dueDateThisMonth;
+
+	return new Date(year, month + 1, clampDay(year, month + 1, paymentDueDay));
+}
+
+function listSemimonthlyDatesThrough(startDate: Date, endDate: Date) {
+	const dates: Date[] = [];
+	const start = startOfLocalDay(startDate);
+	const end = startOfLocalDay(endDate);
+	let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+	let guard = 0;
+
+	while (cursor <= end && guard < 60) {
+		const fifteenth = new Date(cursor.getFullYear(), cursor.getMonth(), 15);
+		const lastSemimonth = new Date(
+			cursor.getFullYear(),
+			cursor.getMonth(),
+			lastSemimonthlyPaymentDay(cursor.getFullYear(), cursor.getMonth())
+		);
+
+		for (const date of [fifteenth, lastSemimonth]) {
+			if (date >= start && date <= end) dates.push(date);
+		}
+
+		cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+		guard += 1;
+	}
+
+	return dates.sort((left, right) => left.getTime() - right.getTime());
+}
+
+function creditCardReserve(card: CardListItem, today: Date) {
+	if (card.kind !== 'credit' || card.paymentDueDay === null) return null;
+
+	const cashExpenseAmount = card.cashExpenseAmount ?? 0;
+	const nextInterestFreeInstallmentsAmount = card.interestFreeInstallmentPurchases.reduce(
+		(total, purchase) => {
+			const nextInstallment = purchase.installments.find((installment) => !installment.paid);
+			return total + (nextInstallment?.amount ?? 0);
+		},
+		0
+	);
+	const payableAmount = cashExpenseAmount + nextInterestFreeInstallmentsAmount;
+	if (payableAmount <= 0) return null;
+
+	const dueDate = nextCreditCardDueDate(card.paymentDueDay, today);
+	const semimonthsUntilDue = Math.max(listSemimonthlyDatesThrough(today, dueDate).length, 1);
+	const reserveAmount = Math.ceil(payableAmount / semimonthsUntilDue);
+
+	return {
+		cardId: card.id,
+		alias: card.alias,
+		bankName: card.bankName,
+		lastFourDigits: card.lastFourDigits,
+		payableAmount,
+		payableAmountLabel: formatCurrencyFromMinorUnits(payableAmount, card.currencyCode),
+		cashExpenseAmount,
+		cashExpenseAmountLabel: formatCurrencyFromMinorUnits(cashExpenseAmount, card.currencyCode),
+		nextInterestFreeInstallmentsAmount,
+		nextInterestFreeInstallmentsAmountLabel: formatCurrencyFromMinorUnits(
+			nextInterestFreeInstallmentsAmount,
+			card.currencyCode
+		),
+		nextDueDateLabel: dateFormatter.format(dueDate),
+		semimonthsUntilDue,
+		reserveAmount,
+		reserveAmountLabel: formatCurrencyFromMinorUnits(reserveAmount, card.currencyCode),
+		currencyCode: card.currencyCode
+	};
+}
+
+export async function getDashboardSummary(referenceDate = new Date()): Promise<DashboardSummary> {
+	const [expenses, incomes, cards] = await Promise.all([
+		getExpenses(),
+		getJobIncomes(),
+		getCards()
+	]);
+	const today = startOfLocalDay(referenceDate);
+	const nextIncomePayment = getNextIncomePayment(incomes, today);
+	const currencyCode = nextIncomePayment?.currencyCode ?? expenses[0]?.currencyCode ?? cards[0]?.currencyCode ?? 'MXN';
+
+	const reserves = expenses.map((expense) => {
+		const dueDate = nextDueDate(expense, today);
+		const incomePaymentDates = listIncomePaymentDatesThrough(incomes, today, dueDate);
+		const paymentsUntilDue = Math.max(incomePaymentDates.length, 1);
+		const reserveAmount = Math.ceil(expense.amount / paymentsUntilDue);
+
+		return {
+			expenseId: expense.id,
+			name: expense.name,
+			categoryName: expense.categoryName,
+			categoryColor: expense.categoryColor,
+			amountKind: expense.amountKind,
+			amountLabel: formatExpenseAmount(expense.amount, expense.currencyCode, expense.amountKind),
+			frequencyLabel: getExpenseFrequencyLabel(
+				expense.frequency,
+				expense.customIntervalCount,
+				expense.customIntervalUnit
+			),
+			nextDueDateLabel: dateFormatter.format(dueDate),
+			paymentsUntilDue,
+			reserveAmount,
+			reserveAmountLabel: formatCurrencyFromMinorUnits(reserveAmount, expense.currencyCode),
+			currencyCode: expense.currencyCode
+		};
+	});
+
+	const reserveTotal = reserves
+		.filter((reserve) => reserve.currencyCode === currencyCode)
+		.reduce((total, reserve) => total + reserve.reserveAmount, 0);
+	const creditCardReserves = cards
+		.map((card) => creditCardReserve(card, today))
+		.filter((reserve) => reserve !== null);
+	const creditCardReserveTotal = creditCardReserves
+		.filter((reserve) => reserve.currencyCode === currencyCode)
+		.reduce((total, reserve) => total + reserve.reserveAmount, 0);
+	const totalReserve = reserveTotal + creditCardReserveTotal;
+	const nextIncomeAmount =
+		nextIncomePayment === null ? 0 : currentIncomeAmount(incomes, nextIncomePayment.dateIso, currencyCode);
+	const availableAfterReserve =
+		nextIncomePayment === null || nextIncomePayment.amountLabel === 'Varias monedas'
+			? null
+			: nextIncomeAmount - totalReserve;
+
+	return {
+		nextIncomeDateLabel: nextIncomePayment?.dateLabel ?? null,
+		nextIncomeAmountLabel: nextIncomePayment?.amountLabel ?? null,
+		reserveTotal: totalReserve,
+		reserveTotalLabel: formatCurrencyFromMinorUnits(totalReserve, currencyCode),
+		availableAfterReserve,
+		availableAfterReserveLabel:
+			availableAfterReserve === null
+				? null
+				: formatCurrencyFromMinorUnits(availableAfterReserve, currencyCode),
+		currencyCode,
+		expenseCount: reserves.length,
+		estimatedExpenseCount: reserves.filter((reserve) => reserve.amountKind === 'estimated').length,
+		reserves: reserves.sort((left, right) => right.reserveAmount - left.reserveAmount),
+		creditCardReserves: creditCardReserves.sort(
+			(left, right) => right.reserveAmount - left.reserveAmount
+		)
+	};
+}

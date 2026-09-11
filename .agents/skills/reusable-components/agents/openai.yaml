@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reusable Components"
+  short_description: "Detecta y reutiliza componentes existentes"
+  default_prompt: "Usa $reusable-components para implementar este cambio sin duplicar funcionalidad reutilizable."

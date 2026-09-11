@@ -1,0 +1,1 @@
+ALTER TABLE `expenses` ADD `amount_kind` text DEFAULT 'fixed' NOT NULL;

@@ -1,0 +1,1 @@
+ALTER TABLE `job_incomes` ADD `deleted_at` text;
