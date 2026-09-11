@@ -9,9 +9,11 @@ export type MovementSectionProps = {
 	cards: CardListItem[];
 	expenses: Expense[];
 	categories: Category[];
-	period: {
+	filters: {
 		startDate: string;
 		endDate: string;
+		cardId: string;
+		categoryId: string;
 	};
 	feedback?: MovementFormFeedback | null;
 };

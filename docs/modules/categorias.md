@@ -39,6 +39,10 @@ Cada categoría conserva:
 
 Las consultas de la pantalla muestran únicamente registros activos. La eliminación establece el registro como inactivo y guarda la fecha de eliminación; no borra la fila de la base de datos.
 
+## Uso en la aplicación
+
+Las categorías ya se utilizan para clasificar gastos y movimientos. En movimientos, el filtro por categoría incluye tanto la categoría directa del movimiento como la categoría del gasto relacionado.
+
 ## Pendiente
 
-El módulo todavía no permite restaurar categorías inactivas, mover una categoría a otro padre ni consultar su historial de cambios. La clasificación de movimientos comenzará a utilizar este catálogo cuando se implemente el registro de gastos y movimientos.
+El módulo todavía no permite restaurar categorías inactivas, mover una categoría a otro padre ni consultar su historial de cambios.

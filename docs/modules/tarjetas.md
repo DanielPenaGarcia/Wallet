@@ -19,6 +19,11 @@ Actualmente el usuario puede:
 - Distinguir cada tarjeta por alias, banco, últimos cuatro dígitos, color y tipo.
 - Consultar el saldo disponible de una tarjeta de débito.
 - Consultar el saldo utilizado y el crédito disponible de una tarjeta de crédito.
+- Consultar el detalle de una tarjeta.
+- Editar tarjetas sin cambiar su tipo.
+- Eliminar tarjetas lógicamente.
+- Consultar compras a meses sin intereses de tarjetas de crédito.
+- Marcar y desmarcar mensualidades MSI como pagadas.
 
 ## Relación con bancos
 
@@ -80,20 +85,39 @@ La pantalla muestra únicamente tarjetas activas. Cada tarjeta aparece en una fi
 - Color configurado como apoyo visual.
 - Saldo disponible, para débito.
 - Saldo utilizado y crédito disponible, para crédito.
+- Acciones para ver detalles, editar o eliminar.
 
 El color no sustituye la información textual ni se utiliza por sí solo para comunicar el tipo o el estado de la tarjeta.
+
+## Detalle de tarjetas
+
+El detalle muestra los datos principales de la tarjeta:
+
+- Alias, banco, últimos cuatro dígitos y tipo.
+- Saldo utilizado o disponible, según el tipo.
+- Gasto de contado, cuando aplica.
+- Resto pendiente de meses sin intereses, cuando aplica.
+- Línea de crédito, cuando aplica.
+- Día de corte y día límite de pago, para tarjetas de crédito.
+
+En tarjetas de crédito, el detalle incluye las compras MSI pendientes agrupadas por compra. Cada compra puede expandirse para consultar sus mensualidades, el importe de cada una y si ya está pagada.
+
+Las mensualidades pueden marcarse como pagadas o desmarcarse. Para desmarcar una mensualidad pagada, primero deben desmarcarse las mensualidades posteriores que también estén pagadas.
+
+## Edición y eliminación
+
+La edición permite corregir los datos de una tarjeta existente, pero no cambiar su tipo entre débito y crédito. Las validaciones de alta se mantienen en la edición.
+
+La eliminación es lógica: la tarjeta deja de aparecer en listas activas y no puede seleccionarse en nuevos movimientos, pero su registro se conserva para historial.
 
 ## Funcionalidad pendiente
 
 El modelo de dominio y las reglas contemplan más operaciones que aún no están conectadas a la interfaz ni a la persistencia. Todavía no es posible:
 
-- Consultar el detalle completo de una tarjeta.
-- Editar, activar o desactivar tarjetas.
 - Actualizar saldos después del alta.
 - Configurar festivos, cierres extraordinarios o políticas de ajuste del calendario bancario.
-- Registrar compras normales, pagos o compras a meses sin intereses.
-- Administrar mensualidades y estados de cuenta.
+- Registrar pagos directos a tarjeta o estados de cuenta oficiales.
 - Capturar el pago mínimo o el pago para no generar intereses informado por el banco.
-- Calcular y mostrar el próximo pago estimado.
+- Recalcular saldos automáticamente desde todos los movimientos.
 
-Hasta que esas operaciones se implementen, el módulo funciona como registro inicial y resumen de saldos de tarjetas activas.
+Hasta que esas operaciones se implementen, el módulo funciona como registro, consulta operativa de MSI y resumen de saldos de tarjetas activas.

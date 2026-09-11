@@ -150,8 +150,10 @@ function nextDueDate(expense: Expense, today: Date) {
 		return dueDate;
 	}
 
-	const anchorSource = latestPayment.paidAt;
-	let dueDate = dueDateFromAnchor(new Date(anchorSource), expense);
+	if (expense.frequency === 'one_time') return null;
+
+	const paidCycleDueDate = dueDateFromAnchor(new Date(latestPayment.paidAt), expense);
+	let dueDate = dueDateFromAnchor(addInterval(paidCycleDueDate, expense), expense);
 	let guard = 0;
 
 	while (dueDate < today && guard < 260) {
@@ -160,6 +162,64 @@ function nextDueDate(expense: Expense, today: Date) {
 	}
 
 	return dueDate;
+}
+
+function currentCycleDueDate(expense: Expense, today: Date) {
+	const latestPayment = expense.paymentHistory[0];
+	if (expense.frequency === 'one_time' && latestPayment) {
+		return dueDateFromAnchor(new Date(latestPayment.paidAt), expense);
+	}
+
+	return nextUnpaidDueDate(expense, today);
+}
+
+function isCurrentCyclePaid(expense: Expense, dueDate: Date) {
+	const latestPayment = expense.paymentHistory[0];
+	if (!latestPayment) return false;
+	if (expense.frequency === 'one_time') return true;
+
+	const paidCycleDueDate = dueDateFromAnchor(new Date(latestPayment.paidAt), expense);
+	return paidCycleDueDate >= dueDate;
+}
+
+function monthlyReserveDivisor(expense: Expense) {
+	if (
+		expense.frequency === 'custom' &&
+		expense.customIntervalUnit === 'months' &&
+		expense.customIntervalCount !== null &&
+		expense.customIntervalCount > 1
+	) {
+		return expense.customIntervalCount;
+	}
+
+	if (
+		expense.frequency === 'custom' &&
+		expense.customIntervalUnit === 'years' &&
+		expense.customIntervalCount !== null &&
+		expense.customIntervalCount > 0
+	) {
+		return expense.customIntervalCount * 12;
+	}
+
+	if (expense.frequency === 'yearly') return 12;
+
+	return 1;
+}
+
+function semimonthlyReserveAmount(monthlyReserveAmount: number, dueDate: Date, today: Date) {
+	const dueDateIsThisMonth =
+		dueDate.getFullYear() === today.getFullYear() && dueDate.getMonth() === today.getMonth();
+	const lastSemimonthDate = new Date(
+		today.getFullYear(),
+		today.getMonth(),
+		lastSemimonthlyPaymentDay(today.getFullYear(), today.getMonth())
+	);
+
+	if (dueDateIsThisMonth && dueDate < lastSemimonthDate) {
+		return monthlyReserveAmount;
+	}
+
+	return Math.ceil(monthlyReserveAmount / 2);
 }
 
 function currentIncomeAmount(incomes: JobIncome[], dateIso: string, currencyCode: string) {
@@ -262,10 +322,12 @@ export async function getDashboardSummary(referenceDate = new Date()): Promise<D
 	const currencyCode = nextIncomePayment?.currencyCode ?? expenses[0]?.currencyCode ?? cards[0]?.currencyCode ?? 'MXN';
 
 	const reserves = expenses.map((expense) => {
-		const dueDate = nextDueDate(expense, today);
+		const dueDate = currentCycleDueDate(expense, today);
 		const incomePaymentDates = listIncomePaymentDatesThrough(incomes, today, dueDate);
 		const paymentsUntilDue = Math.max(incomePaymentDates.length, 1);
-		const reserveAmount = Math.ceil(expense.amount / paymentsUntilDue);
+		const monthlyReserveAmount = Math.ceil(expense.amount / monthlyReserveDivisor(expense));
+		const reserveAmount = semimonthlyReserveAmount(monthlyReserveAmount, dueDate, today);
+		const status: 'paid' | 'pending' = isCurrentCyclePaid(expense, dueDate) ? 'paid' : 'pending';
 
 		return {
 			expenseId: expense.id,
@@ -283,11 +345,19 @@ export async function getDashboardSummary(referenceDate = new Date()): Promise<D
 			paymentsUntilDue,
 			reserveAmount,
 			reserveAmountLabel: formatCurrencyFromMinorUnits(reserveAmount, expense.currencyCode),
+			monthlyReserveAmount,
+			monthlyReserveAmountLabel: formatCurrencyFromMinorUnits(
+				monthlyReserveAmount,
+				expense.currencyCode
+			),
+			status,
+			statusLabel: status === 'paid' ? 'Pagado' : 'Pendiente',
 			currencyCode: expense.currencyCode
 		};
 	});
+	const semimonthlyReserves = reserves.filter((reserve) => reserve.status === 'pending');
 
-	const reserveTotal = reserves
+	const reserveTotal = semimonthlyReserves
 		.filter((reserve) => reserve.currencyCode === currencyCode)
 		.reduce((total, reserve) => total + reserve.reserveAmount, 0);
 	const creditCardReserves = cards
@@ -317,7 +387,13 @@ export async function getDashboardSummary(referenceDate = new Date()): Promise<D
 		currencyCode,
 		expenseCount: reserves.length,
 		estimatedExpenseCount: reserves.filter((reserve) => reserve.amountKind === 'estimated').length,
-		reserves: reserves.sort((left, right) => right.reserveAmount - left.reserveAmount),
+		reserves: reserves.sort((left, right) => {
+			if (left.status !== right.status) return left.status === 'pending' ? -1 : 1;
+			return right.monthlyReserveAmount - left.monthlyReserveAmount;
+		}),
+		semimonthlyReserves: semimonthlyReserves.sort(
+			(left, right) => right.reserveAmount - left.reserveAmount
+		),
 		creditCardReserves: creditCardReserves.sort(
 			(left, right) => right.reserveAmount - left.reserveAmount
 		)

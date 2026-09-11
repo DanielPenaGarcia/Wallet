@@ -13,7 +13,7 @@
 	import TransferMovementForm from '../transfer-movement-form/TransferMovementForm.svelte';
 	import type { MovementSectionProps } from './props';
 
-	let { movements, cards, expenses, categories, period, feedback = null }: MovementSectionProps = $props();
+	let { movements, cards, expenses, categories, filters, feedback = null }: MovementSectionProps = $props();
 	let createOpen = $state(
 		untrack(() => feedback?.action === 'create-movement' && Boolean(feedback.errors || feedback.message))
 	);
@@ -66,7 +66,7 @@
 
 {#if feedback?.success}<p class="mb-5 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">{feedback.success}</p>{/if}
 
-<MovementList {movements} {period} onCreate={openCreate} onBulkCreate={openBulkCreate} onExport={openExport} onEdit={(movement) => (editingMovement = movement)} onDelete={(movement) => (deletingMovement = movement)} />
+<MovementList {movements} {cards} {categories} {filters} onCreate={openCreate} onBulkCreate={openBulkCreate} onExport={openExport} onEdit={(movement) => (editingMovement = movement)} onDelete={(movement) => (deletingMovement = movement)} />
 
 <Dialog.Root open={createOpen} onOpenChange={createDialogChanged}>
 	<Dialog.Content class="sm:max-w-2xl">

@@ -112,20 +112,20 @@
 
 	<section class="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
 		<div class="border-b border-slate-200 px-5 py-4">
-			<h2 class="text-lg font-bold text-slate-900">Reservas por gasto</h2>
+			<h2 class="text-lg font-bold text-slate-900">Reservas de la quincena</h2>
 			<p class="mt-1 text-sm text-slate-500">
-				Cada monto se divide entre los pagos de ingreso que quedan antes de su próximo límite de pago.
+				Solo muestra gastos pendientes; cada reserva es la mitad del monto mensual.
 			</p>
 		</div>
 
-		{#if data.summary.reserves.length === 0}
+		{#if data.summary.semimonthlyReserves.length === 0}
 			<div class="px-6 py-12 text-center">
-				<p class="font-bold text-slate-700">Aún no hay gastos activos</p>
-				<p class="mt-1 text-sm text-slate-500">Registra gastos en Finanzas para ver tu reserva sugerida.</p>
+				<p class="font-bold text-slate-700">No hay reservas pendientes para esta quincena</p>
+				<p class="mt-1 text-sm text-slate-500">Los gastos pagados aparecen solo en la reserva mensual.</p>
 			</div>
 		{:else}
 			<div class="overflow-x-auto">
-				<table class="w-full min-w-[820px] text-left text-sm">
+				<table class="w-full min-w-[760px] text-left text-sm">
 					<thead class="border-b border-slate-200 bg-slate-50 text-xs font-bold tracking-wide text-slate-500 uppercase">
 						<tr>
 							<th class="px-5 py-3">Gasto</th>
@@ -133,8 +133,55 @@
 							<th class="px-4 py-3">Frecuencia</th>
 							<th class="px-4 py-3 text-right">Monto</th>
 							<th class="px-4 py-3">Límite</th>
-							<th class="px-4 py-3 text-center">Pagos</th>
-							<th class="px-5 py-3 text-right">Apartar</th>
+							<th class="px-5 py-3 text-right">Apartar quincena</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-slate-100">
+						{#each data.summary.semimonthlyReserves as reserve (reserve.expenseId)}
+							<tr class="align-middle">
+								<td class="px-5 py-4">
+									<div class="flex items-center gap-3">
+										<span class="size-3 shrink-0 rounded-full ring-2 ring-white shadow-sm" style:background-color={reserve.categoryColor}></span>
+										<p class="truncate font-bold text-slate-900">{reserve.name}</p>
+									</div>
+								</td>
+								<td class="px-4 py-4 text-slate-700">{reserve.categoryName}</td>
+								<td class="px-4 py-4 text-slate-700">{reserve.frequencyLabel}</td>
+								<td class="px-4 py-4 text-right font-semibold text-slate-800">{reserve.amountLabel}</td>
+								<td class="px-4 py-4 font-semibold text-slate-800">{reserve.nextDueDateLabel}</td>
+								<td class="px-5 py-4 text-right text-lg font-bold text-blue-800">{reserve.reserveAmountLabel}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
+	</section>
+
+	<section class="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
+		<div class="border-b border-slate-200 px-5 py-4">
+			<h2 class="text-lg font-bold text-slate-900">Reservas del mes</h2>
+			<p class="mt-1 text-sm text-slate-500">
+				Muestra el total mensual de cada gasto y si el ciclo actual está pendiente o pagado.
+			</p>
+		</div>
+
+		{#if data.summary.reserves.length === 0}
+			<div class="px-6 py-12 text-center">
+				<p class="font-bold text-slate-700">Aún no hay gastos activos</p>
+				<p class="mt-1 text-sm text-slate-500">Registra gastos en Finanzas para ver tu reserva mensual.</p>
+			</div>
+		{:else}
+			<div class="overflow-x-auto">
+				<table class="w-full min-w-[860px] text-left text-sm">
+					<thead class="border-b border-slate-200 bg-slate-50 text-xs font-bold tracking-wide text-slate-500 uppercase">
+						<tr>
+							<th class="px-5 py-3">Gasto</th>
+							<th class="px-4 py-3">Categoría</th>
+							<th class="px-4 py-3">Frecuencia</th>
+							<th class="px-4 py-3">Límite</th>
+							<th class="px-4 py-3">Estado</th>
+							<th class="px-5 py-3 text-right">Reserva mensual</th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-slate-100">
@@ -148,10 +195,13 @@
 								</td>
 								<td class="px-4 py-4 text-slate-700">{reserve.categoryName}</td>
 								<td class="px-4 py-4 text-slate-700">{reserve.frequencyLabel}</td>
-								<td class="px-4 py-4 text-right font-semibold text-slate-800">{reserve.amountLabel}</td>
 								<td class="px-4 py-4 font-semibold text-slate-800">{reserve.nextDueDateLabel}</td>
-								<td class="px-4 py-4 text-center font-semibold text-slate-800">{reserve.paymentsUntilDue}</td>
-								<td class="px-5 py-4 text-right text-lg font-bold text-blue-800">{reserve.reserveAmountLabel}</td>
+								<td class="px-4 py-4">
+									<span class="rounded-full px-2.5 py-1 text-xs font-bold {reserve.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+										{reserve.statusLabel}
+									</span>
+								</td>
+								<td class="px-5 py-4 text-right text-lg font-bold text-slate-900">{reserve.monthlyReserveAmountLabel}</td>
 							</tr>
 						{/each}
 					</tbody>

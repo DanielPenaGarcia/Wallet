@@ -13,15 +13,42 @@
 	import { ActionButton } from '$lib/components/ui/action-button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import * as Select from '$lib/components/ui/select';
+	import { getCategoryPath } from '$lib/modules/expenses/utils/category-path';
 	import { formatCurrencyFromMinorUnits } from '$lib/shared/utils/format-currency';
 	import { formatDateTime } from '$lib/shared/utils/format-date-time';
 	import type { Movement } from '../../types/movement.types';
 	import type { MovementListProps } from './props';
 
-	let { movements, period, onCreate, onBulkCreate, onExport, onEdit, onDelete }: MovementListProps = $props();
+	const allFilterValue = 'all';
+
+	let {
+		movements,
+		cards,
+		categories,
+		filters,
+		onCreate,
+		onBulkCreate,
+		onExport,
+		onEdit,
+		onDelete
+	}: MovementListProps = $props();
 	let selectingMovements = $state(false);
 	let selectedMovementIds = $state<string[]>([]);
 	let selectedCount = $derived(selectedMovementIds.length);
+	let selectedCardLabel = $derived(
+		filters.cardId
+			? (cards.find((card) => card.id === filters.cardId)?.alias ?? 'Tarjeta seleccionada')
+			: 'Todas las tarjetas'
+	);
+	let selectedCategoryLabel = $derived(
+		filters.categoryId
+			? getCategoryPath(categories.find((category) => category.id === filters.categoryId), categories)
+			: 'Todas las categorías'
+	);
+	let hasActiveFilters = $derived(
+		Boolean(filters.startDate || filters.endDate || filters.cardId || filters.categoryId)
+	);
 
 	function cardLabel(alias: string | null, lastFourDigits: string | null) {
 		return alias && lastFourDigits ? `${alias} •••• ${lastFourDigits}` : 'Cuenta no disponible';
@@ -66,18 +93,52 @@
 			<ActionButton type="button" onclick={onCreate}><PlusIcon />Nuevo movimiento</ActionButton>
 		</div>
 	</div>
-	<form method="GET" class="grid gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
-		<div class="grid gap-2">
-			<Label for="movement-period-start">Fecha inicio</Label>
-			<Input id="movement-period-start" name="startDate" type="date" value={period.startDate} class="h-11 border-slate-300 bg-white" />
+	<form method="GET" class="grid gap-4 border-b border-slate-200 bg-slate-50 px-5 py-4">
+		<div>
+			<p class="text-sm font-bold text-slate-900">Filtros</p>
+			<p class="mt-1 text-xs text-slate-500">Consulta por periodo, tarjeta o categoría.</p>
 		</div>
-		<div class="grid gap-2">
-			<Label for="movement-period-end">Fecha fin</Label>
-			<Input id="movement-period-end" name="endDate" type="date" value={period.endDate} class="h-11 border-slate-300 bg-white" />
+		<div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+			<div class="grid gap-2">
+				<Label for="movement-period-start">Fecha inicio</Label>
+				<Input id="movement-period-start" name="startDate" type="date" value={filters.startDate} class="h-11 border-slate-300 bg-white" />
+			</div>
+			<div class="grid gap-2">
+				<Label for="movement-period-end">Fecha fin</Label>
+				<Input id="movement-period-end" name="endDate" type="date" value={filters.endDate} class="h-11 border-slate-300 bg-white" />
+			</div>
+			<div class="grid gap-2">
+				<Label for="movement-card-filter">Tarjeta</Label>
+				<Select.Root type="single" name="cardId" value={filters.cardId || allFilterValue} items={[{ value: allFilterValue, label: 'Todas las tarjetas' }, ...cards.map((card) => ({ value: card.id, label: `${card.alias} •••• ${card.lastFourDigits}` }))]}>
+					<Select.Trigger id="movement-card-filter" class="h-11 w-full border-slate-300 bg-white px-3">
+						<span class="truncate">{selectedCardLabel}</span>
+					</Select.Trigger>
+					<Select.Content>
+						<Select.Item value={allFilterValue} label="Todas las tarjetas">Todas las tarjetas</Select.Item>
+						{#each cards as card (card.id)}
+							<Select.Item value={card.id} label={`${card.alias} •••• ${card.lastFourDigits}`}>{card.alias} •••• {card.lastFourDigits}</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
+			</div>
+			<div class="grid gap-2">
+				<Label for="movement-category-filter">Categoría</Label>
+				<Select.Root type="single" name="categoryId" value={filters.categoryId || allFilterValue} items={[{ value: allFilterValue, label: 'Todas las categorías' }, ...categories.map((category) => ({ value: category.id, label: getCategoryPath(category, categories) }))]}>
+					<Select.Trigger id="movement-category-filter" class="h-11 w-full border-slate-300 bg-white px-3">
+						<span class="truncate">{selectedCategoryLabel}</span>
+					</Select.Trigger>
+					<Select.Content>
+						<Select.Item value={allFilterValue} label="Todas las categorías">Todas las categorías</Select.Item>
+						{#each categories as category (category.id)}
+							<Select.Item value={category.id} label={getCategoryPath(category, categories)}>{getCategoryPath(category, categories)}</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
+			</div>
 		</div>
 		<div class="flex flex-wrap gap-2">
 			<ActionButton type="submit" intent="secondary"><SearchIcon />Consultar</ActionButton>
-			{#if period.startDate || period.endDate}
+			{#if hasActiveFilters}
 				<ActionButton type="button" intent="secondary" onclick={() => (window.location.href = '/movimientos')}><XIcon />Limpiar</ActionButton>
 			{/if}
 		</div>

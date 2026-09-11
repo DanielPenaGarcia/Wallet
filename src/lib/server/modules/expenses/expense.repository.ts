@@ -1,6 +1,6 @@
-import { asc, desc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, or } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { cards, categories, expenseAmountChanges, expensePayments, expenses } from '$lib/server/db/schema';
+import { cards, categories, expenseAmountChanges, expensePayments, expenses, movements } from '$lib/server/db/schema';
 import type { CreateExpenseInput } from './inputs/create-expense.input';
 import type { PayExpenseInput } from './inputs/pay-expense.input';
 import type { UpdateExpenseInput } from './inputs/update-expense.input';
@@ -129,7 +129,13 @@ export async function listPaymentsByExpenseIds(expenseIds: string[]) {
 		})
 		.from(expensePayments)
 		.leftJoin(cards, eq(expensePayments.cardId, cards.id))
-		.where(inArray(expensePayments.expenseId, expenseIds))
+		.leftJoin(movements, eq(expensePayments.movementId, movements.id))
+		.where(
+			and(
+				inArray(expensePayments.expenseId, expenseIds),
+				or(eq(expensePayments.mode, 'paid'), eq(movements.active, true))
+			)
+		)
 		.orderBy(desc(expensePayments.paidAt));
 }
 

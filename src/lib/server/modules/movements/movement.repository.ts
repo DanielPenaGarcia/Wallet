@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, or } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import { db } from '$lib/server/db';
 import { cards, categories, expenses, movements } from '$lib/server/db/schema';
@@ -8,9 +8,11 @@ import type { UpdateMovementInput } from './inputs/update-movement.input';
 const sourceCards = alias(cards, 'source_cards');
 const destinationCards = alias(cards, 'destination_cards');
 
-export type MovementPeriodFilter = {
+export type MovementFilter = {
 	startsAt?: string;
 	endsAt?: string;
+	cardId?: string;
+	categoryId?: string;
 };
 
 function movementValues(input: CreateMovementInput, currencyCode: string) {
@@ -35,10 +37,18 @@ function movementValues(input: CreateMovementInput, currencyCode: string) {
 	};
 }
 
-export async function listActiveMovements(period: MovementPeriodFilter = {}) {
+export async function listActiveMovements(filter: MovementFilter = {}) {
 	const conditions = [eq(movements.active, true)];
-	if (period.startsAt) conditions.push(gte(movements.occurredAt, period.startsAt));
-	if (period.endsAt) conditions.push(lte(movements.occurredAt, period.endsAt));
+	if (filter.startsAt) conditions.push(gte(movements.occurredAt, filter.startsAt));
+	if (filter.endsAt) conditions.push(lte(movements.occurredAt, filter.endsAt));
+	if (filter.cardId) {
+		conditions.push(
+			or(eq(movements.sourceCardId, filter.cardId), eq(movements.destinationCardId, filter.cardId))!
+		);
+	}
+	if (filter.categoryId) {
+		conditions.push(or(eq(movements.categoryId, filter.categoryId), eq(expenses.categoryId, filter.categoryId))!);
+	}
 
 	return db
 		.select({

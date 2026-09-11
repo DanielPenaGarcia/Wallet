@@ -15,7 +15,7 @@ import {
 	findActiveMovementById,
 	insertMovement,
 	listActiveMovements,
-	type MovementPeriodFilter,
+	type MovementFilter,
 	softDeleteMovementRecord,
 	updateMovementRecord
 } from './movement.repository';
@@ -66,8 +66,8 @@ async function getValidatedCardCurrency(input: CreateMovementInput): Promise<str
 	return sourceCard.currencyCode;
 }
 
-export async function getMovements(period: MovementPeriodFilter = {}): Promise<Movement[]> {
-	return (await listActiveMovements(period)).map(toMovement);
+export async function getMovements(filter: MovementFilter = {}): Promise<Movement[]> {
+	return (await listActiveMovements(filter)).map(toMovement);
 }
 
 export async function createMovement(input: CreateMovementInput): Promise<string> {

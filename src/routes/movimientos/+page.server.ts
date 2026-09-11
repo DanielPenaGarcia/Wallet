@@ -62,33 +62,42 @@ function dateParam(url: URL, name: string) {
 	return dateParamPattern.test(value) ? value : '';
 }
 
+function optionalFilterParam(url: URL, name: string) {
+	const value = url.searchParams.get(name)?.trim() ?? '';
+	return value && value !== 'all' ? value : '';
+}
+
 function dateAtTime(date: string, time: string) {
 	return new Date(`${date}T${time}`).toISOString();
 }
 
-function movementPeriodFromUrl(url: URL) {
+function movementFiltersFromUrl(url: URL) {
 	const startDate = dateParam(url, 'startDate');
 	const explicitEndDate = dateParam(url, 'endDate');
 	const endDate = startDate && !explicitEndDate ? toIsoDate(new Date()) : explicitEndDate;
+	const cardId = optionalFilterParam(url, 'cardId');
+	const categoryId = optionalFilterParam(url, 'categoryId');
 
 	return {
-		values: { startDate, endDate },
+		values: { startDate, endDate, cardId, categoryId },
 		filter: {
 			startsAt: startDate ? dateAtTime(startDate, '00:00:00.000') : undefined,
-			endsAt: endDate ? dateAtTime(endDate, '23:59:59.999') : undefined
+			endsAt: endDate ? dateAtTime(endDate, '23:59:59.999') : undefined,
+			cardId: cardId || undefined,
+			categoryId: categoryId || undefined
 		}
 	};
 }
 
 export async function load({ url }) {
-	const period = movementPeriodFromUrl(url);
+	const movementFilters = movementFiltersFromUrl(url);
 	const [movements, cards, expenses, categories] = await Promise.all([
-		getMovements(period.filter),
+		getMovements(movementFilters.filter),
 		getCards(),
 		getExpenses(),
 		getCategoryOptions()
 	]);
-	return { movements, cards, expenses, categories, period: period.values };
+	return { movements, cards, expenses, categories, filters: movementFilters.values };
 }
 
 function isMovementBusinessError(error: unknown) {

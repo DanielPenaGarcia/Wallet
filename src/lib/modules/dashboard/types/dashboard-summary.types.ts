@@ -10,6 +10,10 @@ export type DashboardExpenseReserve = {
 	paymentsUntilDue: number;
 	reserveAmount: number;
 	reserveAmountLabel: string;
+	monthlyReserveAmount: number;
+	monthlyReserveAmountLabel: string;
+	status: 'pending' | 'paid';
+	statusLabel: string;
 	currencyCode: string;
 };
 
@@ -42,5 +46,6 @@ export type DashboardSummary = {
 	expenseCount: number;
 	estimatedExpenseCount: number;
 	reserves: DashboardExpenseReserve[];
+	semimonthlyReserves: DashboardExpenseReserve[];
 	creditCardReserves: DashboardCreditCardReserve[];
 };

@@ -14,7 +14,7 @@
 		cards={data.cards}
 		expenses={data.expenses}
 		categories={data.categories}
-		period={data.period}
+		filters={data.filters}
 		feedback={form as MovementFormFeedback | null}
 	/>
 </div>

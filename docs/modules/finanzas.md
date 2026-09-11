@@ -47,7 +47,9 @@ La pestaña permite consultar los gastos activos y registrar uno nuevo con:
 
 Una frecuencia personalizada combina un número con días, semanas, meses o años; por ejemplo, `cada 2 meses`. La lista identifica la categoría mediante su color y muestra la clasificación, la frecuencia y si el importe es aproximado. Los cambios de importe se conservan en una bitácora.
 
-Los gastos pueden editarse y eliminarse lógicamente. La eliminación los retira de la lista activa sin borrar su registro histórico.
+Los gastos pueden editarse, pagarse y eliminarse lógicamente. La eliminación los retira de la lista activa sin borrar su registro histórico.
+
+El pago de un gasto registra la fecha de pago, el modo de pago y, cuando aplica, la tarjeta asociada. Esos pagos alimentan el dashboard para distinguir gastos pendientes y pagados dentro del ciclo actual.
 
 Las reglas completas se encuentran en [Reglas de gastos](../rules/gastos.md).
 
@@ -67,4 +69,4 @@ El porcentaje representa una regla de planeación para el futuro motor de distri
 
 - Registrar aportaciones y dar seguimiento al progreso de los objetivos.
 - Relacionar ingresos recibidos con el dinero realmente disponible.
-- Incorporar estos registros al motor de distribución financiera.
+- Convertir las reservas sugeridas en apartados reales y conciliables.
