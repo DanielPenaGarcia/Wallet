@@ -8,7 +8,7 @@
 
 <form method="POST" action="?/deleteCategory" class="grid gap-4">
 	<input type="hidden" name="id" value={category.id} />
-	<p class="text-slate-600">La categoría dejará de estar disponible, pero conservará su historial y sus relaciones anteriores.</p>
+	<p class="text-slate-600">La categoría se eliminará del catálogo. Si tiene subcategorías, también se eliminarán.</p>
 	{#if deleteFeedback?.message}<p class="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{deleteFeedback.message}</p>{/if}
 	<div class="flex justify-end gap-2">
 		<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>

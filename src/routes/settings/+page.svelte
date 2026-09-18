@@ -12,5 +12,10 @@
 		<p class="mt-2 text-sm text-slate-600">Administra los catálogos base de la aplicación.</p>
 	</div>
 
-	<SettingsTabs banks={data.banks} feedback={form ?? null} />
+	<SettingsTabs
+		banks={data.banks}
+		categories={data.categories}
+		categoryTree={data.categoryTree}
+		feedback={form ?? null}
+	/>
 </section>

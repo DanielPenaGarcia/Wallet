@@ -1,16 +1,13 @@
-import type { IsoDateTime } from '$lib/shared/types/date.types';
-
 export type CategoryColor = `#${string}`;
 
 export type Category = {
 	id: string;
 	name: string;
-	color: CategoryColor;
+	color: CategoryColor | null;
 	parentId: string | null;
-	active: boolean;
-	registeredAt: IsoDateTime;
-	updatedAt: IsoDateTime;
-	deletedAt: IsoDateTime | null;
+	isEssential: boolean;
+	createdAt: string;
+	updatedAt: string;
 };
 
 export type CategoryNode = Category & {

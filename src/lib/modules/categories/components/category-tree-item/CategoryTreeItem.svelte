@@ -18,7 +18,7 @@
 		onEdit,
 		onDelete
 	}: CategoryTreeItemProps = $props();
-	let isChild = $derived(depth > 0);
+	let isChild = $derived(category.parentId !== null);
 	let hasChildren = $derived(category.children.length > 0);
 	let isExpanded = $derived(searching || expandedIds.includes(category.id));
 </script>
@@ -40,13 +40,18 @@
 		{:else}
 			<span class="size-8 shrink-0"></span>
 		{/if}
-		{#if !isChild}<span class="size-3 shrink-0 rounded-full ring-2 ring-white shadow-sm" style:background-color={category.color}></span>{/if}
+		{#if !isChild}<span class="size-3 shrink-0 rounded-full ring-2 ring-white shadow-sm" style:background-color={category.color ?? '#64748b'}></span>{/if}
 		<div class="min-w-0 flex-1">
-			<p class="truncate font-semibold text-slate-800">{category.name}</p>
+			<div class="flex flex-wrap items-center gap-2">
+				<p class="truncate font-semibold text-slate-800">{category.name}</p>
+				{#if category.isEssential}<span class="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">Esencial</span>{/if}
+			</div>
 			{#if category.children.length > 0}<p class="text-xs text-slate-400">{category.children.length} {category.children.length === 1 ? 'subcategoría' : 'subcategorías'}</p>{/if}
 		</div>
-		{#if !isChild}<span class="font-mono text-xs text-slate-400">{category.color.toUpperCase()}</span>{/if}
-		<ActionButton type="button" intent="icon-primary" onclick={() => onAddChild(category)} aria-label={`Crear subcategoría dentro de ${category.name}`} title="Agregar subcategoría"><PlusIcon /></ActionButton>
+		{#if !isChild && category.color}<span class="font-mono text-xs text-slate-400">{category.color.toUpperCase()}</span>{/if}
+		{#if !isChild}
+			<ActionButton type="button" intent="icon-primary" onclick={() => onAddChild(category)} aria-label={`Crear subcategoría dentro de ${category.name}`} title="Agregar subcategoría"><PlusIcon /></ActionButton>
+		{/if}
 		<ActionButton type="button" intent="icon" onclick={() => onEdit(category)} aria-label={`Editar ${category.name}`} title="Editar categoría"><PencilIcon /></ActionButton>
 		<ActionButton type="button" intent="icon-danger" onclick={() => onDelete(category)} aria-label={`Eliminar ${category.name}`} title="Eliminar categoría"><Trash2Icon /></ActionButton>
 	</div>

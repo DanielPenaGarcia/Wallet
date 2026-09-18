@@ -31,13 +31,27 @@
 	</div>
 
 	{#if parent}
-		<input type="hidden" name="color" value={parent.color} />
+		<input type="hidden" name="color" value="" />
 	{:else}
 		<div class="grid gap-2">
 			<Label for="category-color">Color</Label>
 			<ColorInput id="category-color" name="color" value={createFeedback?.values?.color ?? '#16a34a'} fallback="#16a34a" error={fieldError('color')} />
 		</div>
 	{/if}
+
+	<label class="flex items-start gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700">
+		<input
+			name="isEssential"
+			type="checkbox"
+			value="true"
+			checked={createFeedback?.values?.isEssential ?? false}
+			class="mt-0.5 size-4 rounded border-slate-300 accent-blue-700"
+		/>
+		<span>
+			<span class="block font-semibold text-slate-900">Es esencial</span>
+			<span class="block text-xs leading-5 text-slate-500">Marca esta opción si el gasto asociado vale la pena o es necesario.</span>
+		</span>
+	</label>
 
 	{#if createFeedback?.message}<p class="text-sm font-semibold text-red-700">{createFeedback.message}</p>{/if}
 

@@ -14,3 +14,7 @@
 The entity can be registered, edited, listed, and deleted from the settings page.
 
 Registration and edit forms capture `name`, `alias`, and `color`. The `color` value is normalized to hexadecimal when the input is a valid hex or rgb color.
+
+## Server Module
+
+Bank business rules are owned by the server module at `src/lib/server/banks`. The service validates unique names, normalizes input values, checks that records exist before update or delete operations, and delegates persistence through the bank repository contract.

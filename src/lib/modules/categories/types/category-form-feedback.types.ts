@@ -6,7 +6,8 @@ export type CategoryFormFeedback = {
 	values?: {
 		id?: string;
 		name: string;
-		color: string;
+		color?: string | null;
 		parentId: string | null;
+		isEssential: boolean;
 	};
 };
