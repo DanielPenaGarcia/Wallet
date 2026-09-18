@@ -20,5 +20,5 @@ export const DEFAULT_STOREFRONT_THEME = DEFAULT_THEME;
 export { contrastRatio };
 
 export function toThemeCssVariables(theme: ThemeColors): string {
-  return toSharedThemeCssVariables(theme, "storefront");
+  return toSharedThemeCssVariables(theme);
 }

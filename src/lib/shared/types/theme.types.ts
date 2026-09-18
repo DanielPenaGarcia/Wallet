@@ -15,4 +15,5 @@ export interface ThemeColors extends BaseThemeColors {
   tertiaryForeground: string;
   tertiaryHover: string;
   tertiaryActive: string;
+  backgroundForeground: string;
 }

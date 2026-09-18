@@ -4,9 +4,12 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Label } from '$lib/components/ui/label';
 	import {
-		applyColorPaletteCssVariables,
+		buildColorPaletteCssVariables,
 		buildColorPaletteTokens,
-		colorPaletteStorageKey
+		colorPaletteStorageKey,
+		colorPaletteStyleElementId,
+		toColorPaletteCssVariables,
+		toColorPaletteRootStyle
 	} from '$lib/shared/utils/color-palette';
 	import type { ColorPaletteRole } from '$lib/modules/color-palettes/types/color-palette.types';
 	import type { ApplicationSettingsProps } from './props';
@@ -18,8 +21,22 @@
 		const initialPaletteId = selectedColorPaletteId ?? colorPalettes[0]?.id ?? '';
 		return browser ? localStorage.getItem(colorPaletteStorageKey) ?? initialPaletteId : initialPaletteId;
 	}));
+	let restoredStoredPalette = $state(false);
 	let selectedPalette = $derived(colorPalettes.find((palette) => palette.id === selectedPaletteId) ?? colorPalettes[0] ?? null);
 	let selectedTokens = $derived(selectedPalette ? buildColorPaletteTokens(selectedPalette) : null);
+
+	$effect(() => {
+		if (!browser || restoredStoredPalette) return;
+
+		const storedPaletteId = localStorage.getItem(colorPaletteStorageKey);
+		if (storedPaletteId && colorPalettes.some((palette) => palette.id === storedPaletteId)) {
+			selectedPaletteId = storedPaletteId;
+		} else if (storedPaletteId) {
+			localStorage.removeItem(colorPaletteStorageKey);
+		}
+
+		restoredStoredPalette = true;
+	});
 
 	$effect(() => {
 		if (selectedPaletteId && colorPalettes.some((palette) => palette.id === selectedPaletteId)) return;
@@ -27,9 +44,14 @@
 	});
 
 	$effect(() => {
-		if (!browser || !selectedPalette) return;
+		if (!browser || !restoredStoredPalette || !selectedPalette) return;
 		localStorage.setItem(colorPaletteStorageKey, selectedPalette.id);
-		applyColorPaletteCssVariables(document.documentElement.style, selectedPalette);
+
+		const styleElement = document.getElementById(colorPaletteStyleElementId);
+		if (!styleElement) return;
+		styleElement.textContent = toColorPaletteRootStyle(
+			toColorPaletteCssVariables(buildColorPaletteCssVariables(selectedPalette))
+		);
 	});
 
 	function previewColors(role: ColorPaletteRole) {

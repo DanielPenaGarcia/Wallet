@@ -11,6 +11,7 @@ const black = '#000000' satisfies HexColor;
 const destructive = '#dc2626' satisfies HexColor;
 
 export const colorPaletteStorageKey = 'wallet:color-palette-id';
+export const colorPaletteStyleElementId = 'app-theme';
 
 type RgbColor = {
 	red: number;
@@ -173,4 +174,14 @@ export function applyColorPaletteCssVariables(
 	palette: Pick<ColorPalette, ColorPaletteRole>
 ) {
 	applyCssVariables(style, buildColorPaletteCssVariables(palette));
+}
+
+export function toColorPaletteCssVariables(variables: ColorPaletteCssVariables): string {
+	return Object.entries(variables)
+		.map(([name, value]) => `${name}:${value}`)
+		.join(';');
+}
+
+export function toColorPaletteRootStyle(cssVariables: string): string {
+	return `html:root{${cssVariables}}`;
 }

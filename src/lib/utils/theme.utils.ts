@@ -144,30 +144,33 @@ export function buildThemeColors(
     tertiaryForeground,
     tertiaryHover: tertiaryStates.hover,
     tertiaryActive: tertiaryStates.active,
-    background: backgroundForeground,
+    backgroundForeground,
+    background,
   };
 }
 
 export const DEFAULT_THEME = buildThemeColors();
 
-export function toThemeCssVariables(
-  theme: ThemeColors,
-  prefix = "theme",
-): string {
+export function toThemeCssVariables(theme: ThemeColors): string {
   return [
     ["primary", theme.primary],
-    ["primary-foreground", theme.primaryForeground],
+    ["on-primary", theme.primaryForeground],
     ["primary-hover", theme.primaryHover],
-    ["primary-active", theme.primaryActive],
+    ["primary-pressed", theme.primaryActive],
+
     ["secondary", theme.secondary],
-    ["secondary-foreground", theme.secondaryForeground],
+    ["on-secondary", theme.secondaryForeground],
     ["secondary-hover", theme.secondaryHover],
-    ["secondary-active", theme.secondaryActive],
+    ["secondary-pressed", theme.secondaryActive],
+
     ["tertiary", theme.tertiary],
-    ["tertiary-foreground", theme.tertiaryForeground],
+    ["on-tertiary", theme.tertiaryForeground],
     ["tertiary-hover", theme.tertiaryHover],
-    ["tertiary-active", theme.tertiaryActive],
+    ["tertiary-pressed", theme.tertiaryActive],
+
+    ["background", theme.background],
+    ["on-background", theme.backgroundForeground],
   ]
-    .map(([name, value]) => `--${prefix}-${name}:${value}`)
+    .map(([name, value]) => `--${name}:${value}`)
     .join(";");
 }
