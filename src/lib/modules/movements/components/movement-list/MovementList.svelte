@@ -189,8 +189,8 @@
 							<p class="text-xs text-slate-500">{formatDateTime(movement.occurredAt)}</p>
 						</div>
 						<div class="flex items-center gap-1 sm:ml-2">
-							<ActionButton type="button" intent="icon" onclick={() => onEdit(movement)} aria-label={`Editar movimiento ${movement.title}`} title="Editar movimiento"><PencilIcon /></ActionButton>
-							<ActionButton type="button" intent="icon-danger" onclick={() => onDelete(movement)} aria-label={`Eliminar movimiento ${movement.title}`} title="Eliminar movimiento"><Trash2Icon /></ActionButton>
+							<ActionButton type="button" variant="ghost" size="icon-sm" onclick={() => onEdit(movement)} aria-label={`Editar movimiento ${movement.title}`} title="Editar movimiento"><PencilIcon /></ActionButton>
+							<ActionButton type="button" intent="danger" size="icon-sm" onclick={() => onDelete(movement)} aria-label={`Eliminar movimiento ${movement.title}`} title="Eliminar movimiento"><Trash2Icon /></ActionButton>
 						</div>
 					</li>
 				{/each}

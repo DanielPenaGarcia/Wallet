@@ -85,7 +85,7 @@
 	<Dialog.Content>
 		<Dialog.Header>
 			<Dialog.Title>Eliminar {deletingCategory?.name ?? 'categoría'}</Dialog.Title>
-			<Dialog.Description>Esta acción es lógica y no borra el historial guardado.</Dialog.Description>
+			<Dialog.Description>Esta acción elimina la categoría del catálogo.</Dialog.Description>
 		</Dialog.Header>
 		{#if deletingCategory}<DeleteCategoryForm category={deletingCategory} {feedback} onCancel={() => (deleteOpen = false)} />{/if}
 	</Dialog.Content>

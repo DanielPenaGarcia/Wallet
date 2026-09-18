@@ -186,7 +186,7 @@
 								{#if expandedDraftId === draft.id}<p class="mt-1 text-xs text-slate-500">{draftDetail(draft)} · {draft.occurredAt}</p>{/if}
 							</div>
 							<p class="text-sm font-bold text-slate-900">{draftAmountLabel(draft)}</p>
-							<ActionButton type="button" intent="icon-danger" onclick={() => removeDraft(draft.id)} aria-label={`Quitar ${draft.title}`} title="Quitar"><Trash2Icon /></ActionButton>
+							<ActionButton type="button" intent="danger" size="icon-sm" onclick={() => removeDraft(draft.id)} aria-label={`Quitar ${draft.title}`} title="Quitar"><Trash2Icon /></ActionButton>
 						</div>
 					</li>
 				{/each}

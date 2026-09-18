@@ -55,8 +55,8 @@
 						<p class="text-xs font-semibold tracking-wide text-slate-500 uppercase">De cada ingreso</p>
 					</div>
 					<div class="flex items-center gap-1 sm:ml-2">
-						<ActionButton type="button" intent="icon" onclick={() => onEdit(goal)} aria-label={`Editar objetivo ${goal.name}`} title="Editar objetivo"><PencilIcon /></ActionButton>
-						<ActionButton type="button" intent="icon-danger" onclick={() => onDelete(goal)} aria-label={`Eliminar objetivo ${goal.name}`} title="Eliminar objetivo"><Trash2Icon /></ActionButton>
+						<ActionButton type="button" variant="ghost" size="icon-sm" onclick={() => onEdit(goal)} aria-label={`Editar objetivo ${goal.name}`} title="Editar objetivo"><PencilIcon /></ActionButton>
+						<ActionButton type="button" intent="danger" size="icon-sm" onclick={() => onDelete(goal)} aria-label={`Eliminar objetivo ${goal.name}`} title="Eliminar objetivo"><Trash2Icon /></ActionButton>
 					</div>
 				</li>
 			{/each}

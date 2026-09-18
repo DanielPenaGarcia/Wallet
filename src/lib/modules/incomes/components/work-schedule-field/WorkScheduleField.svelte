@@ -193,7 +193,8 @@
 					</div>
 					<ActionButton
 						type="button"
-						intent="icon-danger"
+						intent="danger"
+						size="icon-sm"
 						onclick={() => removeTimeBlock(block.id)}
 						disabled={timeBlocks.length === 1}
 						aria-label={`Eliminar tramo ${index + 1}`}

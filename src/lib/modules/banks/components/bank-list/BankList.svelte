@@ -52,8 +52,8 @@
 							</td>
 							<td class="px-5 py-4">
 								<div class="flex justify-end gap-1">
-									<ActionButton type="button" intent="icon" onclick={() => onEdit(bank)} aria-label={`Editar banco ${bank.name}`} title="Editar banco"><PencilIcon /></ActionButton>
-									<ActionButton type="button" intent="icon-danger" onclick={() => onDelete(bank)} aria-label={`Eliminar banco ${bank.name}`} title="Eliminar banco"><Trash2Icon /></ActionButton>
+									<ActionButton type="button" variant="ghost" size="icon-sm" onclick={() => onEdit(bank)} aria-label={`Editar banco ${bank.name}`} title="Editar banco"><PencilIcon /></ActionButton>
+									<ActionButton type="button" intent="danger" size="icon-sm" onclick={() => onDelete(bank)} aria-label={`Eliminar banco ${bank.name}`} title="Eliminar banco"><Trash2Icon /></ActionButton>
 								</div>
 							</td>
 						</tr>

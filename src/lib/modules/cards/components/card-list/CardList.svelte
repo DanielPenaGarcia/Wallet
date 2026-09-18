@@ -30,9 +30,9 @@
 							<span class="rounded-full px-2.5 py-1 text-xs font-bold {card.kind === 'credit' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}">
 								{card.kind === 'credit' ? 'Crédito' : 'Débito'}
 							</span>
-							{#if onViewDetails}<ActionButton type="button" intent="icon" onclick={() => onViewDetails(card)} aria-label={`Ver detalles de ${card.alias}`} title="Ver detalles"><EyeIcon /></ActionButton>{/if}
-							{#if onEdit && !card.isDefault}<ActionButton type="button" intent="icon" onclick={() => onEdit(card)} aria-label={`Editar cuenta ${card.alias}`} title="Editar cuenta"><PencilIcon /></ActionButton>{/if}
-							{#if onDelete && !card.isDefault}<ActionButton type="button" intent="icon-danger" onclick={() => onDelete(card)} aria-label={`Eliminar cuenta ${card.alias}`} title="Eliminar cuenta"><Trash2Icon /></ActionButton>{/if}
+							{#if onViewDetails}<ActionButton type="button" variant="ghost" size="icon-sm" onclick={() => onViewDetails(card)} aria-label={`Ver detalles de ${card.alias}`} title="Ver detalles"><EyeIcon /></ActionButton>{/if}
+							{#if onEdit && !card.isDefault}<ActionButton type="button" variant="ghost" size="icon-sm" onclick={() => onEdit(card)} aria-label={`Editar cuenta ${card.alias}`} title="Editar cuenta"><PencilIcon /></ActionButton>{/if}
+							{#if onDelete && !card.isDefault}<ActionButton type="button" intent="danger" size="icon-sm" onclick={() => onDelete(card)} aria-label={`Eliminar cuenta ${card.alias}`} title="Eliminar cuenta"><Trash2Icon /></ActionButton>{/if}
 						</div>
 					</div>
 					<div class="mt-6 border-t border-slate-100 pt-4">

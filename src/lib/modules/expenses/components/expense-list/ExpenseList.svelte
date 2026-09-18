@@ -63,10 +63,10 @@
 						<p class="text-xs font-semibold tracking-wide text-slate-500 uppercase">{getExpenseFrequencyLabel(expense.frequency, expense.customIntervalCount, expense.customIntervalUnit)}</p>
 					</div>
 					<div class="flex gap-1 sm:ml-2">
-						<ActionButton type="button" intent="icon-primary" aria-label={`Pagar ${expense.name}`} title="Pagar gasto" onclick={() => (payingExpense = expense)}><CreditCardIcon /></ActionButton>
-						<ActionButton type="button" intent="icon" aria-label={`Ver historial de ${expense.name}`} title="Ver historial" onclick={() => (historyExpense = expense)}><HistoryIcon /></ActionButton>
-						<ActionButton type="button" intent="icon" aria-label={`Editar ${expense.name}`} title="Editar gasto" onclick={() => (editingExpense = expense)}><PencilIcon /></ActionButton>
-						<ActionButton type="button" intent="icon-danger" aria-label={`Eliminar ${expense.name}`} title="Eliminar gasto" onclick={() => (deletingExpense = expense)}><Trash2Icon /></ActionButton>
+						<ActionButton type="button" size="icon-sm" aria-label={`Pagar ${expense.name}`} title="Pagar gasto" onclick={() => (payingExpense = expense)}><CreditCardIcon /></ActionButton>
+						<ActionButton type="button" variant="ghost" size="icon-sm" aria-label={`Ver historial de ${expense.name}`} title="Ver historial" onclick={() => (historyExpense = expense)}><HistoryIcon /></ActionButton>
+						<ActionButton type="button" variant="ghost" size="icon-sm" aria-label={`Editar ${expense.name}`} title="Editar gasto" onclick={() => (editingExpense = expense)}><PencilIcon /></ActionButton>
+						<ActionButton type="button" intent="danger" size="icon-sm" aria-label={`Eliminar ${expense.name}`} title="Eliminar gasto" onclick={() => (deletingExpense = expense)}><Trash2Icon /></ActionButton>
 					</div>
 				</li>
 			{/each}
