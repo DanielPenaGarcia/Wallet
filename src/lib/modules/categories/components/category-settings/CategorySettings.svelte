@@ -50,7 +50,7 @@
 </script>
 
 {#if feedback?.success}
-	<p class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">{feedback.success}</p>
+	<p class="rounded-md border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary">{feedback.success}</p>
 {/if}
 
 <CategoryList

@@ -117,7 +117,7 @@
 											<WalletCardsIcon class="size-5" />
 										</span>
 									{:else}
-										<span class="size-3 shrink-0 rounded-full ring-2 ring-white shadow-sm" style:background-color={row.categoryColor}></span>
+										<span class="size-3 shrink-0 rounded-full ring-2 ring-surface shadow-sm" style:background-color={row.categoryColor}></span>
 									{/if}
 									<p class="truncate font-bold text-on-surface">{row.name}</p>
 								</div>

@@ -10,18 +10,23 @@ import {
 	ParentCategoryNotFoundError
 } from '$lib/server/categories/category.errors';
 import { categoryService } from '$lib/server/categories/category.service';
+import { colorPaletteService } from '$lib/server/color-palettes/color-palette.service';
 import { colorInputToHex } from '$lib/shared/utils/color';
 
 export async function load() {
-	const [banks, categories] = await Promise.all([
+	const [banks, categories, colorPalettes, selectedColorPalette] = await Promise.all([
 		bankService.getBanks(),
-		categoryService.getCategories()
+		categoryService.getCategories(),
+		colorPaletteService.getColorPalettes(),
+		colorPaletteService.getDefaultColorPalette()
 	]);
 
 	return {
 		banks,
 		categories,
-		categoryTree: categoryService.buildCategoryTree(categories)
+		categoryTree: categoryService.buildCategoryTree(categories),
+		colorPalettes,
+		selectedColorPaletteId: selectedColorPalette?.id ?? null
 	};
 }
 

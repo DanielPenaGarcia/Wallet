@@ -41,16 +41,16 @@
 			{required}
 			bind:value={textValue}
 			placeholder="#16a34a o rgb(22, 163, 74)"
-			class="h-11 border-slate-300 font-mono"
+			class="h-11 border-outline font-mono"
 			aria-invalid={error ? 'true' : undefined}
 		/>
 		<input
 			type="color"
 			value={swatchValue}
 			oninput={pickColor}
-			class="h-11 w-14 shrink-0 cursor-pointer rounded-md border border-slate-300 bg-transparent p-1 shadow-xs outline-none focus-visible:border-blue-600 focus-visible:ring-3 focus-visible:ring-blue-600/50"
+			class="h-11 w-14 shrink-0 cursor-pointer rounded-md border border-outline bg-transparent p-1 shadow-xs outline-none focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/50"
 			aria-label="Seleccionar color"
 		/>
 	</div>
-	{#if error}<span class="text-xs text-red-700">{error}</span>{/if}
+	{#if error}<span class="text-xs text-destructive">{error}</span>{/if}
 </div>

@@ -39,10 +39,10 @@
 	/>
 	<div class="grid gap-2 sm:col-span-2">
 		<Label for={`${idPrefix}-reason`}>Razón del ingreso</Label>
-		<Input id={`${idPrefix}-reason`} name="reason" required maxlength={160} value={matchingFeedback?.values?.reason ?? movement?.reason ?? ''} placeholder="Ej. Pago de nómina" class="h-11 border-slate-300" aria-invalid={fieldError('reason') ? 'true' : undefined} />
-		{#if fieldError('reason')}<span class="text-xs text-red-700">{fieldError('reason')}</span>{/if}
+		<Input id={`${idPrefix}-reason`} name="reason" required maxlength={160} value={matchingFeedback?.values?.reason ?? movement?.reason ?? ''} placeholder="Ej. Pago de nómina" class="h-11 border-outline" aria-invalid={fieldError('reason') ? 'true' : undefined} />
+		{#if fieldError('reason')}<span class="text-xs text-destructive">{fieldError('reason')}</span>{/if}
 	</div>
 	<MovementCardField id={`${idPrefix}-destination-card`} name="destinationCardId" label="Cuenta de destino" {cards} bind:value={destinationCardId} error={fieldError('destinationCardId')} />
-	{#if matchingFeedback?.message}<p class="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 sm:col-span-2">{matchingFeedback.message}</p>{/if}
+	{#if matchingFeedback?.message}<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive sm:col-span-2">{matchingFeedback.message}</p>{/if}
 	<MovementFormActions {mode} submitLabel="Guardar movimiento" disabled={cards.length === 0} {onBack} {onCancel} />
 </form>

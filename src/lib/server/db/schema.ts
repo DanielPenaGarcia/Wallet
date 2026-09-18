@@ -19,3 +19,16 @@ export const categories = sqliteTable('categories', {
 	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 });
+
+export const colorPalettes = sqliteTable('color_palettes', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	primary: text('primary').notNull(),
+	secondary: text('secondary').notNull(),
+	tertiary: text('tertiary').notNull(),
+	background: text('background').notNull(),
+	surface: text('surface').notNull(),
+	isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
+	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
+});

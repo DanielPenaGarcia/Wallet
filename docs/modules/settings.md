@@ -4,7 +4,13 @@ The `settings` section is available from the sidebar and opens `/settings`.
 
 ## Tabs
 
-The page uses the shared tabs component. It includes `Bancos` for registered `Bank` records and `Categorías` for expense category records.
+The page uses the shared tabs component. It includes `Aplicación` for application-level settings, `Bancos` for registered `Bank` records, and `Categorías` for expense category records.
+
+## Application
+
+The application section is the home for global application settings. Color palettes are stored in the database and expose base colors for `primary`, `secondary`, `tertiary`, `background`, and `surface`. Interaction and foreground tokens are calculated from those base hexadecimal values.
+
+The section displays a color palette selector sourced from the database and a preview of the selected palette's base, hover, pressed, and foreground tokens. The selected palette id is persisted in browser storage under `wallet:color-palette-id`; the root layout applies the cached palette before the page paints so a reload keeps the selected theme without briefly flashing the default palette.
 
 ## Banks
 

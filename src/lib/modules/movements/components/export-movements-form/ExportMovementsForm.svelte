@@ -69,15 +69,15 @@
 <form class="grid gap-4 sm:grid-cols-2" onsubmit={copyJson}>
 	<div class="grid gap-2">
 		<Label for="export-movements-start">Desde</Label>
-		<Input id="export-movements-start" bind:value={startDate} type="date" class="h-11 border-slate-300" />
+		<Input id="export-movements-start" bind:value={startDate} type="date" class="h-11 border-outline" />
 	</div>
 	<div class="grid gap-2">
 		<Label for="export-movements-end">Hasta</Label>
-		<Input id="export-movements-end" bind:value={endDate} type="date" class="h-11 border-slate-300" />
+		<Input id="export-movements-end" bind:value={endDate} type="date" class="h-11 border-outline" />
 	</div>
 
 	{#if message}
-		<p class="rounded-md px-3 py-2 text-sm font-semibold {messageKind === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-700'} sm:col-span-2">{message}</p>
+		<p class="rounded-md px-3 py-2 text-sm font-semibold {messageKind === 'success' ? 'bg-secondary/10 text-secondary' : 'bg-destructive/10 text-destructive'} sm:col-span-2">{message}</p>
 	{/if}
 
 	<div class="flex justify-end sm:col-span-2">

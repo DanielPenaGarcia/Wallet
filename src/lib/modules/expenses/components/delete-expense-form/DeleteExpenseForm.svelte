@@ -10,11 +10,11 @@
 
 <form method="POST" action="?/deleteExpense" class="grid gap-4">
 	<input type="hidden" name="id" value={expense.id} />
-	<p class="text-slate-600">
+	<p class="text-on-surface-variant">
 		El gasto dejará de aparecer en la lista, pero su registro y la bitácora de montos se conservarán.
 	</p>
 	{#if deleteFeedback?.message}
-		<p class="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+		<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">
 			{deleteFeedback.message}
 		</p>
 	{/if}

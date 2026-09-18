@@ -26,11 +26,11 @@
 
 </script>
 
-<section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-	<div class="flex flex-col gap-4 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+<section class="overflow-hidden rounded-lg border border-outline bg-surface shadow-sm">
+	<div class="flex flex-col gap-4 border-b border-outline px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
-			<h2 class="text-lg font-bold text-slate-900">Gastos registrados</h2>
-			<p class="mt-1 text-sm text-slate-500">Importes organizados por clasificación, frecuencia y categoría.</p>
+			<h2 class="text-lg font-bold text-on-surface">Gastos registrados</h2>
+			<p class="mt-1 text-sm text-on-surface-muted">Importes organizados por clasificación, frecuencia y categoría.</p>
 		</div>
 		<ActionButton type="button" onclick={onCreate}>
 			<PlusIcon />
@@ -39,19 +39,19 @@
 	</div>
 	{#if expenses.length === 0}
 		<div class="px-6 py-12 text-center">
-			<p class="font-bold text-slate-700">Aún no hay gastos</p>
-			<p class="mt-1 text-sm text-slate-500">Registra el primero para comenzar a organizar tus egresos.</p>
+			<p class="font-bold text-on-surface-variant">Aún no hay gastos</p>
+			<p class="mt-1 text-sm text-on-surface-muted">Registra el primero para comenzar a organizar tus egresos.</p>
 		</div>
 	{:else}
-		<ul class="divide-y divide-slate-100">
+		<ul class="divide-y divide-outline">
 			{#each expenses as expense (expense.id)}
 				<li class="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center">
-					<span class="size-3 shrink-0 rounded-full ring-2 ring-white shadow-sm" style:background-color={expense.categoryColor}></span>
+					<span class="size-3 shrink-0 rounded-full ring-2 ring-surface shadow-sm" style:background-color={expense.categoryColor}></span>
 					<div class="min-w-0 flex-1">
-						<p class="font-bold text-slate-900">{expense.name}</p>
-						<p class="mt-1 text-sm text-slate-500">{expense.categoryName} · {expenseClassificationOptions.find((option) => option.value === expense.classification)?.label}</p>
+						<p class="font-bold text-on-surface">{expense.name}</p>
+						<p class="mt-1 text-sm text-on-surface-muted">{expense.categoryName} · {expenseClassificationOptions.find((option) => option.value === expense.classification)?.label}</p>
 						{#if expense.statementDay || expense.paymentDueDay}
-							<p class="mt-1 text-xs text-slate-500">
+							<p class="mt-1 text-xs text-on-surface-muted">
 								{#if expense.statementDay}Corte: día {expense.statementDay}{/if}
 								{#if expense.statementDay && expense.paymentDueDay}<span class="mx-1">·</span>{/if}
 								{#if expense.paymentDueDay}Pago límite: día {expense.paymentDueDay}{/if}
@@ -59,8 +59,8 @@
 						{/if}
 					</div>
 					<div class="sm:text-right">
-						<p class="text-lg font-bold text-red-700">{formatExpenseAmount(expense.amount, expense.currencyCode, expense.amountKind)}</p>
-						<p class="text-xs font-semibold tracking-wide text-slate-500 uppercase">{getExpenseFrequencyLabel(expense.frequency, expense.customIntervalCount, expense.customIntervalUnit)}</p>
+						<p class="text-lg font-bold text-destructive">{formatExpenseAmount(expense.amount, expense.currencyCode, expense.amountKind)}</p>
+						<p class="text-xs font-semibold tracking-wide text-on-surface-muted uppercase">{getExpenseFrequencyLabel(expense.frequency, expense.customIntervalCount, expense.customIntervalUnit)}</p>
 					</div>
 					<div class="flex gap-1 sm:ml-2">
 						<ActionButton type="button" size="icon-sm" aria-label={`Pagar ${expense.name}`} title="Pagar gasto" onclick={() => (payingExpense = expense)}><CreditCardIcon /></ActionButton>

@@ -30,10 +30,10 @@
 			maxlength={100}
 			value={matchingFeedback?.values?.name ?? bank?.name ?? ''}
 			placeholder="Ej. Nu"
-			class="h-11 border-slate-300"
+			class="h-11 border-outline"
 			aria-invalid={fieldError('name') ? 'true' : undefined}
 		/>
-		{#if fieldError('name')}<span class="text-xs text-red-700">{fieldError('name')}</span>{/if}
+		{#if fieldError('name')}<span class="text-xs text-destructive">{fieldError('name')}</span>{/if}
 	</div>
 
 	<div class="grid gap-2">
@@ -45,10 +45,10 @@
 			maxlength={40}
 			value={matchingFeedback?.values?.alias ?? bank?.alias ?? ''}
 			placeholder="Ej. NU"
-			class="h-11 border-slate-300"
+			class="h-11 border-outline"
 			aria-invalid={fieldError('alias') ? 'true' : undefined}
 		/>
-		{#if fieldError('alias')}<span class="text-xs text-red-700">{fieldError('alias')}</span>{/if}
+		{#if fieldError('alias')}<span class="text-xs text-destructive">{fieldError('alias')}</span>{/if}
 	</div>
 
 	<div class="grid gap-2">
@@ -61,7 +61,7 @@
 		/>
 	</div>
 
-	{#if matchingFeedback?.message}<p class="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{matchingFeedback.message}</p>{/if}
+	{#if matchingFeedback?.message}<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{matchingFeedback.message}</p>{/if}
 
 	<div class="flex justify-end gap-2">
 		{#if onCancel}<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>{/if}

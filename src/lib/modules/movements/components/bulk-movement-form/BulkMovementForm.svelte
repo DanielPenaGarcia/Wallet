@@ -149,20 +149,20 @@
 	<MovementTypePicker onSelect={(type) => changeType(type)} />
 {:else}
 	<div class="grid gap-5">
-		<div class="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+		<div class="flex flex-col gap-3 rounded-md border border-outline bg-surface-subtle px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
 			<div>
-				<p class="text-sm font-bold text-slate-900">{selectedType === 'expense' ? 'Gastos' : selectedType === 'income' ? 'Ingresos' : 'Transferencias'}</p>
-				<p class="mt-1 text-xs text-slate-500">{drafts.length} {drafts.length === 1 ? 'movimiento en el lote' : 'movimientos en el lote'}</p>
+				<p class="text-sm font-bold text-on-surface">{selectedType === 'expense' ? 'Gastos' : selectedType === 'income' ? 'Ingresos' : 'Transferencias'}</p>
+				<p class="mt-1 text-xs text-on-surface-muted">{drafts.length} {drafts.length === 1 ? 'movimiento en el lote' : 'movimientos en el lote'}</p>
 			</div>
 			<ActionButton type="button" intent="secondary" onclick={() => changeType(null)}>Cambiar tipo</ActionButton>
 		</div>
 
 		{#if feedback?.action === 'bulk-create-movements' && feedback.message}
-			<p class="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{feedback.message}</p>
+			<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{feedback.message}</p>
 		{/if}
 
 		{#if needsBatchSourceCard}
-			<div class="rounded-md border border-slate-200 bg-white p-3">
+			<div class="rounded-md border border-outline bg-surface p-3">
 				<MovementCardField
 					id={`bulk-${selectedType}-batch-source`}
 					name="sourceCardId"
@@ -176,16 +176,16 @@
 		{#if drafts.length > 0}
 			<ol class="space-y-2">
 				{#each drafts as draft (draft.id)}
-					<li class="rounded-md border border-slate-200">
+					<li class="rounded-md border border-outline">
 						<div class="flex items-center gap-2 px-3 py-2">
-							<button type="button" class="grid size-8 place-items-center rounded-md text-slate-500 hover:bg-slate-100" onclick={() => (expandedDraftId = expandedDraftId === draft.id ? null : draft.id)} aria-label="Alternar detalle">
+							<button type="button" class="grid size-8 place-items-center rounded-md text-on-surface-muted hover:bg-surface-hover" onclick={() => (expandedDraftId = expandedDraftId === draft.id ? null : draft.id)} aria-label="Alternar detalle">
 								{#if expandedDraftId === draft.id}<ChevronDownIcon class="size-4" />{:else}<ChevronRightIcon class="size-4" />{/if}
 							</button>
 							<div class="min-w-0 flex-1">
-								<p class="truncate text-sm font-bold text-slate-900">{draft.title}</p>
-								{#if expandedDraftId === draft.id}<p class="mt-1 text-xs text-slate-500">{draftDetail(draft)} · {draft.occurredAt}</p>{/if}
+								<p class="truncate text-sm font-bold text-on-surface">{draft.title}</p>
+								{#if expandedDraftId === draft.id}<p class="mt-1 text-xs text-on-surface-muted">{draftDetail(draft)} · {draft.occurredAt}</p>{/if}
 							</div>
-							<p class="text-sm font-bold text-slate-900">{draftAmountLabel(draft)}</p>
+							<p class="text-sm font-bold text-on-surface">{draftAmountLabel(draft)}</p>
 							<ActionButton type="button" intent="danger" size="icon-sm" onclick={() => removeDraft(draft.id)} aria-label={`Quitar ${draft.title}`} title="Quitar"><Trash2Icon /></ActionButton>
 						</div>
 					</li>
@@ -194,7 +194,7 @@
 		{/if}
 
 		{#key draftKey}
-			<form method="dialog" class="grid gap-4 border-t border-slate-200 pt-5 sm:grid-cols-2" onsubmit={addDraft}>
+			<form method="dialog" class="grid gap-4 border-t border-outline pt-5 sm:grid-cols-2" onsubmit={addDraft}>
 				<input type="hidden" name="type" value={selectedType} />
 				<MovementCommonFields idPrefix={`bulk-${selectedType}-${draftKey}`} />
 
@@ -213,7 +213,7 @@
 				{:else if selectedType === 'income'}
 					<div class="grid gap-2 sm:col-span-2">
 						<Label for={`bulk-income-reason-${draftKey}`}>Razón</Label>
-						<Input id={`bulk-income-reason-${draftKey}`} name="reason" required maxlength={160} placeholder="Ej. Pago de nómina" class="h-11 border-slate-300" />
+						<Input id={`bulk-income-reason-${draftKey}`} name="reason" required maxlength={160} placeholder="Ej. Pago de nómina" class="h-11 border-outline" />
 					</div>
 					<MovementCardField id={`bulk-income-destination-${draftKey}`} name="destinationCardId" label="Cuenta de destino" {cards} bind:value={destinationCardId} />
 				{:else}
@@ -221,14 +221,14 @@
 					<MovementCardField id={`bulk-transfer-destination-${draftKey}`} name="destinationCardId" label="Cuenta de destino" {cards} bind:value={destinationCardId} />
 				{/if}
 
-				{#if currentMessage}<p class="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 sm:col-span-2">{currentMessage}</p>{/if}
+				{#if currentMessage}<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive sm:col-span-2">{currentMessage}</p>{/if}
 				<div class="flex justify-end sm:col-span-2">
 					<ActionButton type="submit">Agregar al lote</ActionButton>
 				</div>
 			</form>
 		{/key}
 
-		<form method="POST" action="?/bulkCreateMovements" class="flex justify-end gap-2 border-t border-slate-200 pt-4">
+		<form method="POST" action="?/bulkCreateMovements" class="flex justify-end gap-2 border-t border-outline pt-4">
 			<input type="hidden" name="movements" value={serializedDrafts} />
 			<ActionButton type="submit" disabled={drafts.length === 0}>Registrar lote</ActionButton>
 		</form>

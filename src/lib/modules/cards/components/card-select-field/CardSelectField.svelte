@@ -27,7 +27,7 @@
 <div class={`grid gap-2 ${className}`}>
 	<Label for={id}>{label}</Label>
 	<Select.Root type="single" {name} required bind:value items={items}>
-		<Select.Trigger id={id} class="h-11 w-full border-slate-300 px-3" aria-invalid={error ? 'true' : undefined}>
+		<Select.Trigger id={id} class="h-11 w-full border-outline px-3" aria-invalid={error ? 'true' : undefined}>
 			<span class="truncate">{selectedCard ? cardLabel(selectedCard) : placeholder}</span>
 		</Select.Trigger>
 		<Select.Content>
@@ -36,5 +36,5 @@
 			{/each}
 		</Select.Content>
 	</Select.Root>
-	{#if error}<span class="text-xs text-red-700">{error}</span>{/if}
+	{#if error}<span class="text-xs text-destructive">{error}</span>{/if}
 </div>

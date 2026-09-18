@@ -40,6 +40,6 @@
 	/>
 	<MovementCardField id={`${idPrefix}-source-card`} name="sourceCardId" label="Cuenta de origen" {cards} bind:value={sourceCardId} error={fieldError('sourceCardId')} />
 	<MovementCardField id={`${idPrefix}-destination-card`} name="destinationCardId" label="Cuenta de destino" {cards} bind:value={destinationCardId} error={fieldError('destinationCardId')} />
-	{#if matchingFeedback?.message}<p class="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 sm:col-span-2">{matchingFeedback.message}</p>{/if}
+	{#if matchingFeedback?.message}<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive sm:col-span-2">{matchingFeedback.message}</p>{/if}
 	<MovementFormActions {mode} submitLabel="Guardar transferencia" disabled={cards.length < 2} {onBack} {onCancel} />
 </form>

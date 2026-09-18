@@ -24,9 +24,9 @@
 <form method="POST" action="?/payExpense" class="grid gap-4">
 	<input type="hidden" name="expenseId" value={expense.id} />
 
-	<div class="rounded-md border border-slate-200 bg-slate-50 px-3 py-3">
-		<p class="font-bold text-slate-900">{expense.name}</p>
-		<p class="mt-1 text-sm text-slate-500">
+	<div class="rounded-md border border-outline bg-surface-subtle px-3 py-3">
+		<p class="font-bold text-on-surface">{expense.name}</p>
+		<p class="mt-1 text-sm text-on-surface-muted">
 			{formatExpenseAmount(expense.amount, expense.currencyCode, expense.amountKind)}
 		</p>
 	</div>
@@ -40,7 +40,7 @@
 			bind:value={mode}
 			items={[{ value: 'paid', label: 'Pagado' }, { value: 'card', label: 'Pagar utilizando una cuenta' }]}
 		>
-			<Select.Trigger id={`pay-expense-${expense.id}-mode`} class="h-11 w-full border-slate-300 px-3">
+			<Select.Trigger id={`pay-expense-${expense.id}-mode`} class="h-11 w-full border-outline px-3">
 				<span>{mode === 'card' ? 'Pagar utilizando una cuenta' : 'Pagado'}</span>
 			</Select.Trigger>
 			<Select.Content>
@@ -61,10 +61,10 @@
 				step="0.01"
 				required
 				value={values?.amount ?? (expense.amount / 100).toFixed(2)}
-				class="h-11 border-slate-300"
+				class="h-11 border-outline"
 				aria-invalid={fieldError('amount') ? 'true' : undefined}
 			/>
-			{#if fieldError('amount')}<span class="text-xs text-red-700">{fieldError('amount')}</span>{/if}
+			{#if fieldError('amount')}<span class="text-xs text-destructive">{fieldError('amount')}</span>{/if}
 		</div>
 
 		<div class="grid gap-2">
@@ -75,10 +75,10 @@
 				type="datetime-local"
 				required
 				value={values?.paidAt ?? currentDateTimeLocal()}
-				class="h-11 border-slate-300"
+				class="h-11 border-outline"
 				aria-invalid={fieldError('paidAt') ? 'true' : undefined}
 			/>
-			{#if fieldError('paidAt')}<span class="text-xs text-red-700">{fieldError('paidAt')}</span>{/if}
+			{#if fieldError('paidAt')}<span class="text-xs text-destructive">{fieldError('paidAt')}</span>{/if}
 		</div>
 	</div>
 
@@ -102,14 +102,14 @@
 			maxlength={180}
 			value={values?.note ?? ''}
 			placeholder={mode === 'card' ? 'Ej. Cargo domiciliado' : 'Ej. Se cobró en efectivo o nómina'}
-			class="h-11 border-slate-300"
+			class="h-11 border-outline"
 			aria-invalid={fieldError('note') ? 'true' : undefined}
 		/>
-		{#if fieldError('note')}<span class="text-xs text-red-700">{fieldError('note')}</span>{/if}
+		{#if fieldError('note')}<span class="text-xs text-destructive">{fieldError('note')}</span>{/if}
 	</div>
 
 	{#if payFeedback?.message}
-		<p class="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{payFeedback.message}</p>
+		<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{payFeedback.message}</p>
 	{/if}
 
 	<div class="flex justify-end gap-2">

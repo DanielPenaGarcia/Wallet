@@ -14,7 +14,7 @@
 <div class="grid gap-2">
 	<Label for={id}>Tipo de importe</Label>
 	<Select.Root type="single" name="amountKind" required bind:value items={expenseAmountKindOptions}>
-		<Select.Trigger {id} class="h-11 w-full border-slate-300 px-3" aria-invalid={error ? 'true' : undefined}>
+		<Select.Trigger {id} class="h-11 w-full border-outline px-3" aria-invalid={error ? 'true' : undefined}>
 			<span>{selectedLabel}</span>
 		</Select.Trigger>
 		<Select.Content>
@@ -23,5 +23,5 @@
 			{/each}
 		</Select.Content>
 	</Select.Root>
-	{#if error}<span class="text-xs text-red-700">{error}</span>{/if}
+	{#if error}<span class="text-xs text-destructive">{error}</span>{/if}
 </div>

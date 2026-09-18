@@ -70,6 +70,6 @@
 		bind:classificationId
 	/>
 
-	{#if matchingFeedback?.message}<p class="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 sm:col-span-2">{matchingFeedback.message}</p>{/if}
+	{#if matchingFeedback?.message}<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive sm:col-span-2">{matchingFeedback.message}</p>{/if}
 	<MovementFormActions {mode} submitLabel="Guardar movimiento" disabled={cards.length === 0 || (expenses.length === 0 && categories.length === 0)} {onBack} {onCancel} />
 </form>

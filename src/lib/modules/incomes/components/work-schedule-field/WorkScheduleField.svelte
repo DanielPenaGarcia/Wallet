@@ -139,11 +139,11 @@
 	<input type="hidden" name="schedule" value={scheduleValue} />
 
 	<div class="grid gap-2">
-		<span class="text-sm font-medium text-slate-900">Días</span>
+		<span class="text-sm font-medium text-on-surface">Días</span>
 		<div class="grid grid-cols-4 gap-2 sm:grid-cols-7">
 			{#each dayOptions as day}
 				<label
-					class="flex h-12 cursor-pointer items-center justify-center rounded-md border text-sm font-bold transition {selectedDays.includes(day.value) ? 'border-blue-700 bg-blue-50 text-blue-800' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'}"
+					class="flex h-12 cursor-pointer items-center justify-center rounded-md border text-sm font-bold transition {selectedDays.includes(day.value) ? 'border-primary bg-primary/10 text-primary' : 'border-outline bg-surface text-on-surface-variant hover:border-outline'}"
 					title={day.label}
 				>
 					<input
@@ -161,7 +161,7 @@
 
 	<div class="grid gap-2">
 		<div class="flex items-center justify-between gap-3">
-			<span class="text-sm font-medium text-slate-900">Tramos</span>
+			<span class="text-sm font-medium text-on-surface">Tramos</span>
 			<ActionButton type="button" intent="secondary" onclick={addTimeBlock}>
 				<PlusIcon />
 				Agregar tramo
@@ -178,7 +178,7 @@
 							type="time"
 							required
 							bind:value={block.startsAt}
-							class="h-11 w-full rounded-md border border-slate-300 bg-white px-2.5 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+							class="h-11 w-full rounded-md border border-outline bg-surface px-2.5 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
 						/>
 					</div>
 					<div class="grid gap-1">
@@ -188,7 +188,7 @@
 							type="time"
 							required
 							bind:value={block.endsAt}
-							class="h-11 w-full rounded-md border border-slate-300 bg-white px-2.5 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+							class="h-11 w-full rounded-md border border-outline bg-surface px-2.5 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
 						/>
 					</div>
 					<ActionButton
@@ -207,9 +207,9 @@
 		</div>
 	</div>
 
-	<p class="rounded-md bg-slate-50 px-3 py-2 text-xs font-semibold leading-5 text-slate-600">
+	<p class="rounded-md bg-surface-subtle px-3 py-2 text-xs font-semibold leading-5 text-on-surface-variant">
 		{scheduleValue || 'Selecciona al menos un día y un tramo.'}
 	</p>
 
-	{#if error}<span class="text-xs text-red-700">{error}</span>{/if}
+	{#if error}<span class="text-xs text-destructive">{error}</span>{/if}
 </div>

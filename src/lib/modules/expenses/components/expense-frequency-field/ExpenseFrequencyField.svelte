@@ -36,7 +36,7 @@
 <div class="grid gap-2">
 	<Label for={`${idPrefix}-frequency`}>Frecuencia</Label>
 	<Select.Root type="single" name="frequency" required bind:value={frequency} items={expenseFrequencyOptions}>
-		<Select.Trigger id={`${idPrefix}-frequency`} class="h-11 w-full border-slate-300 px-3" aria-invalid={frequencyError ? 'true' : undefined} aria-describedby={frequencyError ? `${idPrefix}-frequency-error` : undefined}>
+		<Select.Trigger id={`${idPrefix}-frequency`} class="h-11 w-full border-outline px-3" aria-invalid={frequencyError ? 'true' : undefined} aria-describedby={frequencyError ? `${idPrefix}-frequency-error` : undefined}>
 			<span>{selectedFrequency}</span>
 		</Select.Trigger>
 		<Select.Content>
@@ -45,7 +45,7 @@
 			{/each}
 		</Select.Content>
 	</Select.Root>
-	{#if frequencyError}<span id={`${idPrefix}-frequency-error`} class="text-xs text-red-700">{frequencyError}</span>{/if}
+	{#if frequencyError}<span id={`${idPrefix}-frequency-error`} class="text-xs text-destructive">{frequencyError}</span>{/if}
 </div>
 
 {#if frequency === 'custom'}
@@ -62,17 +62,17 @@
 			value={customIntervalCount}
 			oninput={updateCustomIntervalCount}
 			placeholder="Ej. 2"
-			class="h-11 border-slate-300"
+			class="h-11 border-outline"
 			aria-invalid={customIntervalCountError ? 'true' : undefined}
 			aria-describedby={customIntervalCountError ? `${idPrefix}-custom-interval-count-error` : undefined}
 		/>
-		{#if customIntervalCountError}<span id={`${idPrefix}-custom-interval-count-error`} class="text-xs text-red-700">{customIntervalCountError}</span>{/if}
+		{#if customIntervalCountError}<span id={`${idPrefix}-custom-interval-count-error`} class="text-xs text-destructive">{customIntervalCountError}</span>{/if}
 	</div>
 
 	<div class="grid gap-2">
 		<Label for={`${idPrefix}-custom-interval-unit`}>Periodo</Label>
 		<Select.Root type="single" name="customIntervalUnit" required bind:value={customIntervalUnit} items={expenseIntervalUnitOptions}>
-			<Select.Trigger id={`${idPrefix}-custom-interval-unit`} class="h-11 w-full border-slate-300 px-3" aria-invalid={customIntervalUnitError ? 'true' : undefined} aria-describedby={customIntervalUnitError ? `${idPrefix}-custom-interval-unit-error` : undefined}>
+			<Select.Trigger id={`${idPrefix}-custom-interval-unit`} class="h-11 w-full border-outline px-3" aria-invalid={customIntervalUnitError ? 'true' : undefined} aria-describedby={customIntervalUnitError ? `${idPrefix}-custom-interval-unit-error` : undefined}>
 				<span>{selectedUnit}</span>
 			</Select.Trigger>
 			<Select.Content>
@@ -81,6 +81,6 @@
 				{/each}
 			</Select.Content>
 		</Select.Root>
-		{#if customIntervalUnitError}<span id={`${idPrefix}-custom-interval-unit-error`} class="text-xs text-red-700">{customIntervalUnitError}</span>{/if}
+		{#if customIntervalUnitError}<span id={`${idPrefix}-custom-interval-unit-error`} class="text-xs text-destructive">{customIntervalUnitError}</span>{/if}
 	</div>
 {/if}

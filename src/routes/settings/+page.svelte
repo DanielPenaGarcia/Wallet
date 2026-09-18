@@ -7,15 +7,17 @@
 
 <section class="grid gap-6">
 	<div>
-		<p class="text-sm font-semibold text-blue-700">Settings</p>
-		<h2 class="mt-1 text-2xl font-bold text-slate-950">Configuración</h2>
-		<p class="mt-2 text-sm text-slate-600">Administra los catálogos base de la aplicación.</p>
+		<p class="text-sm font-semibold text-primary">Settings</p>
+		<h2 class="mt-1 text-2xl font-bold text-on-background">Configuración</h2>
+		<p class="mt-2 text-sm text-on-surface-muted">Administra los catálogos base de la aplicación.</p>
 	</div>
 
 	<SettingsTabs
 		banks={data.banks}
 		categories={data.categories}
 		categoryTree={data.categoryTree}
+		colorPalettes={data.colorPalettes}
+		selectedColorPaletteId={data.selectedColorPaletteId}
 		feedback={form ?? null}
 	/>
 </section>

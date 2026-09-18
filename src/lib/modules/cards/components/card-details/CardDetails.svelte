@@ -91,7 +91,7 @@
 				<p class="text-sm font-bold text-on-surface">{card.alias}</p>
 				<p class="mt-1 text-sm text-on-surface-muted">{card.isDefault ? 'Efectivo' : `${card.bankName} · •••• ${card.lastFourDigits}`}</p>
 			</div>
-			<span class="rounded-full px-2.5 py-1 text-xs font-bold {card.kind === 'credit' ? 'bg-primary-container text-primary' : 'bg-success-container text-on-success-container'}">{card.kind === 'credit' ? 'Crédito' : 'Débito'}</span>
+			<span class="rounded-full px-2.5 py-1 text-xs font-bold {card.kind === 'credit' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'}">{card.kind === 'credit' ? 'Crédito' : 'Débito'}</span>
 		</div>
 		<div class="grid gap-3 sm:grid-cols-2">
 			<div>
@@ -173,17 +173,17 @@
 							required
 							value={balanceAdjustmentFeedback?.values?.balanceAmount ?? ''}
 							placeholder="0.00"
-							class="h-11 border-outline-strong"
+							class="h-11 border-outline"
 							aria-invalid={balanceAdjustmentFieldError('balanceAmount') ? 'true' : undefined}
 						/>
-						{#if balanceAdjustmentFieldError('balanceAmount')}<span class="text-xs text-on-danger-container">{balanceAdjustmentFieldError('balanceAmount')}</span>{/if}
+						{#if balanceAdjustmentFieldError('balanceAmount')}<span class="text-xs text-destructive">{balanceAdjustmentFieldError('balanceAmount')}</span>{/if}
 					</div>
 
 					{#if balanceAdjustmentFeedback?.success}
-						<p class="rounded-md bg-success-container px-3 py-2 text-sm font-semibold text-on-success-container">{balanceAdjustmentFeedback.success}</p>
+						<p class="rounded-md bg-secondary/10 px-3 py-2 text-sm font-semibold text-secondary">{balanceAdjustmentFeedback.success}</p>
 					{/if}
 					{#if balanceAdjustmentFeedback?.message}
-						<p class="rounded-md bg-danger-container px-3 py-2 text-sm font-semibold text-on-danger-container">{balanceAdjustmentFeedback.message}</p>
+						<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{balanceAdjustmentFeedback.message}</p>
 					{/if}
 
 					<Dialog.Footer>
@@ -238,17 +238,17 @@
 							required
 							value={statementFeedback?.values?.statementAmount ?? ''}
 							placeholder="0.00"
-							class="h-11 border-outline-strong"
+							class="h-11 border-outline"
 							aria-invalid={fieldError('statementAmount') ? 'true' : undefined}
 						/>
-						{#if fieldError('statementAmount')}<span class="text-xs text-on-danger-container">{fieldError('statementAmount')}</span>{/if}
+						{#if fieldError('statementAmount')}<span class="text-xs text-destructive">{fieldError('statementAmount')}</span>{/if}
 					</div>
 
 					{#if statementFeedback?.success}
-						<p class="rounded-md bg-success-container px-3 py-2 text-sm font-semibold text-on-success-container">{statementFeedback.success}</p>
+						<p class="rounded-md bg-secondary/10 px-3 py-2 text-sm font-semibold text-secondary">{statementFeedback.success}</p>
 					{/if}
 					{#if statementFeedback?.message}
-						<p class="rounded-md bg-danger-container px-3 py-2 text-sm font-semibold text-on-danger-container">{statementFeedback.message}</p>
+						<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{statementFeedback.message}</p>
 					{/if}
 
 					<Dialog.Footer>
@@ -275,8 +275,8 @@
 				</strong>
 			</div>
 
-			{#if installmentFeedback?.success}<p class="rounded-md bg-success-container px-3 py-2 text-sm font-semibold text-on-success-container">{installmentFeedback.success}</p>{/if}
-			{#if installmentFeedback?.message}<p class="rounded-md bg-danger-container px-3 py-2 text-sm font-semibold text-on-danger-container">{installmentFeedback.message}</p>{/if}
+			{#if installmentFeedback?.success}<p class="rounded-md bg-secondary/10 px-3 py-2 text-sm font-semibold text-secondary">{installmentFeedback.success}</p>{/if}
+			{#if installmentFeedback?.message}<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{installmentFeedback.message}</p>{/if}
 
 				{#if card.interestFreeInstallmentPurchases.length === 0}
 				<p class="rounded-md border border-outline px-4 py-6 text-center text-sm font-semibold text-on-surface-muted">No hay compras MSI registradas con esta cuenta.</p>
@@ -331,7 +331,7 @@
 											<div>
 												<div class="flex flex-wrap items-center gap-2">
 													<p class="text-sm font-semibold text-on-surface">Mensualidad {installment.installmentNumber}/{installment.totalInstallments}</p>
-													<span class="rounded-full px-2 py-0.5 text-xs font-bold {installment.paid ? 'bg-success-container text-on-success-container' : 'bg-warning-container text-on-warning-container'}">
+													<span class="rounded-full px-2 py-0.5 text-xs font-bold {installment.paid ? 'bg-secondary/10 text-secondary' : 'bg-tertiary/10 text-tertiary'}">
 														{installment.paid ? 'Pagada' : 'Pendiente'}
 													</span>
 												</div>

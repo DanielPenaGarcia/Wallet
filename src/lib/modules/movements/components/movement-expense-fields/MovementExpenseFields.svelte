@@ -80,7 +80,7 @@
 	<div class="grid gap-2">
 		<Label for={`${idPrefix}-payment-mode`}>Forma de pago</Label>
 		<Select.Root type="single" name="paymentMode" required bind:value={paymentMode} items={[{ value: 'cash', label: 'Contado' }, { value: 'installments', label: 'Meses sin intereses' }]}>
-			<Select.Trigger id={`${idPrefix}-payment-mode`} class="h-11 w-full border-slate-300 px-3"><span>{paymentMode === 'cash' ? 'Contado' : 'Meses sin intereses'}</span></Select.Trigger>
+			<Select.Trigger id={`${idPrefix}-payment-mode`} class="h-11 w-full border-outline px-3"><span>{paymentMode === 'cash' ? 'Contado' : 'Meses sin intereses'}</span></Select.Trigger>
 			<Select.Content><Select.Item value="cash" label="Contado">Contado</Select.Item><Select.Item value="installments" label="Meses sin intereses">Meses sin intereses</Select.Item></Select.Content>
 		</Select.Root>
 	</div>
@@ -91,8 +91,8 @@
 {#if canUseInterestFreeInstallments && paymentMode === 'installments'}
 	<div class="grid gap-2">
 		<Label for={`${idPrefix}-installment-count`}>Cantidad de meses</Label>
-		<Input id={`${idPrefix}-installment-count`} name="installmentCount" required type="number" min="2" max="120" step="1" value={installmentCountValue ?? ''} class="h-11 border-slate-300" aria-invalid={fieldError('installmentCount') ? 'true' : undefined} />
-		{#if fieldError('installmentCount')}<span class="text-xs text-red-700">{fieldError('installmentCount')}</span>{/if}
+		<Input id={`${idPrefix}-installment-count`} name="installmentCount" required type="number" min="2" max="120" step="1" value={installmentCountValue ?? ''} class="h-11 border-outline" aria-invalid={fieldError('installmentCount') ? 'true' : undefined} />
+		{#if fieldError('installmentCount')}<span class="text-xs text-destructive">{fieldError('installmentCount')}</span>{/if}
 	</div>
 	<input type="hidden" name="interestFree" value="true" />
 {/if}
@@ -100,7 +100,7 @@
 <div class="grid gap-2">
 	<Label for={`${idPrefix}-classification-kind`}>Clasificar como</Label>
 	<Select.Root type="single" name="classificationKind" required bind:value={classificationKind} items={[{ value: 'expense', label: 'Gasto registrado' }, { value: 'category', label: 'Categoría' }]}>
-		<Select.Trigger id={`${idPrefix}-classification-kind`} class="h-11 w-full border-slate-300 px-3"><span>{classificationKind === 'expense' ? 'Gasto registrado' : 'Categoría'}</span></Select.Trigger>
+		<Select.Trigger id={`${idPrefix}-classification-kind`} class="h-11 w-full border-outline px-3"><span>{classificationKind === 'expense' ? 'Gasto registrado' : 'Categoría'}</span></Select.Trigger>
 		<Select.Content><Select.Item value="expense" label="Gasto registrado">Gasto registrado</Select.Item><Select.Item value="category" label="Categoría">Categoría</Select.Item></Select.Content>
 	</Select.Root>
 </div>
@@ -109,12 +109,12 @@
 	<div class="grid gap-2">
 		<Label for={`${idPrefix}-classification-id`}>Gasto</Label>
 		<Select.Root type="single" name="classificationId" required bind:value={classificationId} items={expenses.map((expense) => ({ value: expense.id, label: expense.name }))}>
-			<Select.Trigger id={`${idPrefix}-classification-id`} class="h-11 w-full border-slate-300 px-3" aria-invalid={fieldError('classificationId') ? 'true' : undefined}><span class="truncate">{selectedClassification}</span></Select.Trigger>
+			<Select.Trigger id={`${idPrefix}-classification-id`} class="h-11 w-full border-outline px-3" aria-invalid={fieldError('classificationId') ? 'true' : undefined}><span class="truncate">{selectedClassification}</span></Select.Trigger>
 			<Select.Content>
 				{#each expenses as expense}<Select.Item value={expense.id} label={expense.name}>{expense.name}</Select.Item>{/each}
 			</Select.Content>
 		</Select.Root>
-		{#if fieldError('classificationId')}<span class="text-xs text-red-700">{fieldError('classificationId')}</span>{/if}
+		{#if fieldError('classificationId')}<span class="text-xs text-destructive">{fieldError('classificationId')}</span>{/if}
 	</div>
 {:else}
 	<CategorySelectField

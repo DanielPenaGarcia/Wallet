@@ -10,7 +10,7 @@
 </script>
 
 {#if feedback?.success}
-	<p class="mb-5 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">{feedback.success}</p>
+	<p class="mb-5 rounded-md border border-secondary/20 bg-secondary/10 px-4 py-3 text-sm font-semibold text-secondary">{feedback.success}</p>
 {/if}
 
 <ExpenseList {expenses} {categories} {cards} {feedback} onCreate={() => (createOpen = true)} />
@@ -22,7 +22,7 @@
 			<Dialog.Description>Registra el importe y cómo debe organizarse.</Dialog.Description>
 		</Dialog.Header>
 		{#if categories.length === 0}
-			<p class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Primero registra una categoría activa desde Configuración.</p>
+			<p class="rounded-md border border-tertiary/20 bg-tertiary/10 px-4 py-3 text-sm text-tertiary">Primero registra una categoría activa desde Configuración.</p>
 		{/if}
 		<CreateExpenseForm {categories} {feedback} />
 	</Dialog.Content>

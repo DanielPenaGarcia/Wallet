@@ -104,8 +104,8 @@
 		type="button"
 		{id}
 		class={cn(
-			'flex h-11 w-full items-center justify-between gap-2 rounded-md border border-slate-300 bg-white px-3 text-left text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
-			error && 'border-red-600 focus-visible:border-red-600 focus-visible:ring-red-100'
+			'flex h-11 w-full items-center justify-between gap-2 rounded-md border border-outline bg-surface px-3 text-left text-sm text-on-surface shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
+			error && 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20'
 		)}
 		aria-haspopup="listbox"
 		aria-expanded={isOpen}
@@ -113,19 +113,19 @@
 		onclick={() => (isOpen = !isOpen)}
 	>
 		<span class="min-w-0 truncate">{selectedLabel}</span>
-		<ChevronDownIcon class="size-4 shrink-0 text-slate-500" />
+		<ChevronDownIcon class="size-4 shrink-0 text-on-surface-muted" />
 	</button>
 
 	{#if isOpen}
-		<div class="absolute top-full right-0 left-0 z-50 mt-1 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg">
-			<div class="border-b border-slate-100 p-2">
+		<div class="absolute top-full right-0 left-0 z-50 mt-1 overflow-hidden rounded-md border border-outline bg-surface shadow-lg">
+			<div class="border-b border-outline p-2">
 				<div class="relative">
-					<SearchIcon class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+					<SearchIcon class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-on-surface-muted" />
 					<Input
 						id={searchId}
 						bind:value={search}
 						placeholder="Buscar categoría"
-						class="h-10 border-slate-300 bg-white pl-9"
+						class="h-10 border-outline bg-surface pl-9"
 						autocomplete="off"
 						onkeydown={handleSearchKeydown}
 					/>
@@ -133,7 +133,7 @@
 			</div>
 			<div id={listboxId} role="listbox" class="overflow-y-auto p-1" style="max-height: min(20rem, calc(100vh - 8rem));">
 				{#if filteredOptions.length === 0}
-					<p class="px-3 py-2 text-sm text-slate-500">Sin resultados</p>
+					<p class="px-3 py-2 text-sm text-on-surface-muted">Sin resultados</p>
 				{:else}
 					{#each filteredOptions as option (option.value)}
 						<button
@@ -141,8 +141,8 @@
 							role="option"
 							aria-selected={option.value === value}
 							class={cn(
-								'flex min-h-10 w-full items-center justify-between gap-2 rounded px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none',
-								option.value === value && 'bg-blue-50 font-semibold text-blue-800'
+								'flex min-h-10 w-full items-center justify-between gap-2 rounded px-3 py-2 text-left text-sm text-on-surface-variant hover:bg-surface-hover focus:bg-surface-hover focus:outline-none',
+								option.value === value && 'bg-primary/10 font-semibold text-primary'
 							)}
 							onclick={() => selectOption(option)}
 						>
@@ -155,5 +155,5 @@
 		</div>
 	{/if}
 
-	{#if error}<span class="text-xs text-red-700">{error}</span>{/if}
+	{#if error}<span class="text-xs text-destructive">{error}</span>{/if}
 </div>

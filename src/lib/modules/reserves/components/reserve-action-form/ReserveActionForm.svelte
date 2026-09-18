@@ -79,7 +79,7 @@
 			<input type="hidden" name="targetId" value={targetId} />
 
 			{#if !hasPendingAmount}
-				<p class="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+				<p class="rounded-md border border-outline bg-surface-subtle px-4 py-3 text-sm text-on-surface-variant">
 					Este apartado ya está cubierto.
 				</p>
 			{:else if canReserve}
@@ -92,45 +92,45 @@
 					error={sourceError()}
 				/>
 
-				<div class="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+				<div class="grid gap-3 rounded-md border border-outline bg-surface-subtle p-3">
 					<div class="grid gap-2 sm:grid-cols-2">
-						<div class="rounded-md bg-white p-3 ring-1 ring-slate-200">
-							<p class="text-xs font-bold tracking-wide text-slate-500 uppercase">Disponible actual</p>
-							<p class="mt-1 text-lg font-bold text-slate-900">{selectedAvailableLabel ?? 'Selecciona una cuenta'}</p>
+						<div class="rounded-md bg-surface p-3 ring-1 ring-outline">
+							<p class="text-xs font-bold tracking-wide text-on-surface-muted uppercase">Disponible actual</p>
+							<p class="mt-1 text-lg font-bold text-on-surface">{selectedAvailableLabel ?? 'Selecciona una cuenta'}</p>
 						</div>
-						<div class="rounded-md bg-white p-3 ring-1 ring-slate-200">
-							<p class="text-xs font-bold tracking-wide text-slate-500 uppercase">Después de apartar</p>
-							<p class="mt-1 text-lg font-bold {selectedBalanceAfterReserve !== null && selectedBalanceAfterReserve < 0 ? 'text-red-700' : 'text-slate-900'}">
+						<div class="rounded-md bg-surface p-3 ring-1 ring-outline">
+							<p class="text-xs font-bold tracking-wide text-on-surface-muted uppercase">Después de apartar</p>
+							<p class="mt-1 text-lg font-bold {selectedBalanceAfterReserve !== null && selectedBalanceAfterReserve < 0 ? 'text-destructive' : 'text-on-surface'}">
 								{selectedBalanceAfterReserveLabel ?? 'Selecciona una cuenta'}
 							</p>
 						</div>
 					</div>
 					{#if wouldOverdraw}
-						<p class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+						<p class="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">
 							Selecciona una cuenta con saldo suficiente para apartar.
 						</p>
 					{/if}
 
 					<div>
-						<p class="text-xs font-bold tracking-wide text-slate-500 uppercase">Disponible por cuenta</p>
-						<ul class="mt-2 divide-y divide-slate-100 rounded-md bg-white ring-1 ring-slate-200">
+						<p class="text-xs font-bold tracking-wide text-on-surface-muted uppercase">Disponible por cuenta</p>
+						<ul class="mt-2 divide-y divide-outline rounded-md bg-surface ring-1 ring-outline">
 							{#each eligibleDebitCards as card (card.id)}
 								<li class="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-									<span class="min-w-0 truncate font-semibold text-slate-700">{cardLabel(card)}</span>
-									<span class="shrink-0 font-bold text-slate-900">{formatCurrencyFromMinorUnits(card.currentBalance, card.currencyCode)}</span>
+									<span class="min-w-0 truncate font-semibold text-on-surface-variant">{cardLabel(card)}</span>
+									<span class="shrink-0 font-bold text-on-surface">{formatCurrencyFromMinorUnits(card.currentBalance, card.currencyCode)}</span>
 								</li>
 							{/each}
 						</ul>
 					</div>
 				</div>
 			{:else}
-				<p class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+				<p class="rounded-md border border-tertiary/20 bg-tertiary/10 px-4 py-3 text-sm text-tertiary">
 					No hay cuentas de débito en {currencyCode} disponibles para apartar.
 				</p>
 			{/if}
 
 			{#if currentFeedback?.message}
-				<p class="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{currentFeedback.message}</p>
+				<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{currentFeedback.message}</p>
 			{/if}
 
 			<Dialog.Footer>

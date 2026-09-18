@@ -32,10 +32,10 @@
 		maxlength={100}
 		value={titleValue}
 		placeholder="Ej. Botana en la tienda"
-		class="h-11 border-slate-300"
+		class="h-11 border-outline"
 		aria-invalid={fieldError('title') ? 'true' : undefined}
 	/>
-	{#if fieldError('title')}<span class="text-xs text-red-700">{fieldError('title')}</span>{/if}
+	{#if fieldError('title')}<span class="text-xs text-destructive">{fieldError('title')}</span>{/if}
 </div>
 
 <div class="grid gap-2">
@@ -49,10 +49,10 @@
 		step="0.01"
 		value={amountValue}
 		placeholder="0.00"
-		class="h-11 border-slate-300"
+		class="h-11 border-outline"
 		aria-invalid={fieldError('amount') ? 'true' : undefined}
 	/>
-	{#if fieldError('amount')}<span class="text-xs text-red-700">{fieldError('amount')}</span>{/if}
+	{#if fieldError('amount')}<span class="text-xs text-destructive">{fieldError('amount')}</span>{/if}
 </div>
 
 <div class="grid gap-2">
@@ -63,8 +63,8 @@
 		required
 		type="datetime-local"
 		bind:value={occurredAt}
-		class="h-11 border-slate-300"
+		class="h-11 border-outline"
 		aria-invalid={fieldError('occurredAt') ? 'true' : undefined}
 	/>
-	{#if fieldError('occurredAt')}<span class="text-xs text-red-700">{fieldError('occurredAt')}</span>{/if}
+	{#if fieldError('occurredAt')}<span class="text-xs text-destructive">{fieldError('occurredAt')}</span>{/if}
 </div>
