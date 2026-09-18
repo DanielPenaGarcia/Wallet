@@ -13,6 +13,8 @@ export type CardFormValues = {
 	maximumOfferedCredit: string;
 	statementDay: string;
 	paymentDueDay: string;
+	statementAmount?: string;
+	balanceAmount?: string;
 };
 
 export type CardFormFeedback = {
@@ -21,7 +23,9 @@ export type CardFormFeedback = {
 		| 'update-card'
 		| 'delete-card'
 		| 'pay-credit-installment'
-		| 'unpay-credit-installment';
+		| 'unpay-credit-installment'
+		| 'register-card-statement'
+		| 'adjust-card-balance';
 	targetId?: string;
 	success?: string;
 	message?: string;

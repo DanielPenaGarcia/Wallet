@@ -1,9 +1,11 @@
 import type { CardListItem } from '$lib/modules/cards/types/card-list-item.types';
+import { isCardBalanceAdjustmentMovement } from '$lib/modules/cards/constants/card-balance-adjustment';
 import { isDefaultPersonalAccount } from '$lib/modules/cards/constants/default-account';
 import type { InterestFreeInstallmentPurchase } from '$lib/modules/cards/types/interest-free-installment.types';
 import { normalizeCardColor } from '$lib/modules/cards/utils/card-color';
+import { openCreditCardStatementCycle } from '$lib/modules/cards/utils/credit-card-cycle';
 import { splitAmountIntoInstallments } from '$lib/modules/cards/utils/installment-amounts';
-import { lastDayOfMonth, toIsoDate } from '$lib/shared/utils/local-date';
+import { toIsoDate } from '$lib/shared/utils/local-date';
 import type { CardMovementOutput } from './outputs/card-movement.output';
 
 type CardWithBankRecord = {
@@ -30,27 +32,6 @@ type PaidCreditInstallmentRecord = {
 	paidAt: string;
 };
 
-function cycleDate(year: number, month: number, dayOfMonth: number) {
-	return new Date(year, month, Math.min(dayOfMonth, lastDayOfMonth(year, month)));
-}
-
-function currentStatementCycle(statementDay: number, today = new Date()) {
-	const statementThisMonth = cycleDate(today.getFullYear(), today.getMonth(), statementDay);
-	const previousStatement =
-		today >= statementThisMonth
-			? statementThisMonth
-			: cycleDate(today.getFullYear(), today.getMonth() - 1, statementDay);
-	const nextStatement =
-		today >= statementThisMonth
-			? cycleDate(today.getFullYear(), today.getMonth() + 1, statementDay)
-			: statementThisMonth;
-
-	return {
-		previousStatementOn: toIsoDate(previousStatement),
-		nextStatementOn: toIsoDate(nextStatement)
-	};
-}
-
 function movementIsInterestFreeInstallment(movement: CardMovementOutput) {
 	return movement.paymentMode === 'installments' && movement.interestFree;
 }
@@ -62,24 +43,69 @@ function movementDate(movement: CardMovementOutput) {
 function consumedCreditInCurrentCycle(
 	cardId: string,
 	statementDay: number | null,
-	movements: CardMovementOutput[]
+	movements: CardMovementOutput[],
+	referenceDate = new Date(),
+	options: { includeBalanceAdjustments?: boolean } = {}
 ) {
 	if (statementDay === null) return 0;
 
-	const { previousStatementOn, nextStatementOn } = currentStatementCycle(statementDay);
+	const includeBalanceAdjustments = options.includeBalanceAdjustments ?? true;
+	const { previousStatementDate, statementDate } = openCreditCardStatementCycle(
+		statementDay,
+		referenceDate
+	);
+	const previousStatementOn = toIsoDate(previousStatementDate);
+	const statementOn = toIsoDate(statementDate);
 
 	return movements
 		.filter(
 			(movement) =>
-				movement.type === 'expense' &&
-				movement.sourceCardId === cardId &&
-				!movementIsInterestFreeInstallment(movement)
+				!isCardBalanceAdjustmentMovement(movement) ||
+				includeBalanceAdjustments
+		)
+		.filter(
+			(movement) =>
+				(movement.type === 'expense' &&
+					movement.sourceCardId === cardId &&
+					!movementIsInterestFreeInstallment(movement)) ||
+				(movement.type === 'income' && movement.destinationCardId === cardId)
 		)
 		.filter((movement) => {
 			const occurredOn = movementDate(movement);
-			return occurredOn > previousStatementOn && occurredOn < nextStatementOn;
+			return occurredOn > previousStatementOn && occurredOn <= statementOn;
 		})
-		.reduce((total, movement) => total + movement.amount, 0);
+		.reduce((total, movement) => {
+			if (movement.type === 'income') return total - movement.amount;
+			return total + movement.amount;
+		}, 0);
+}
+
+function creditBalanceFromMovements(
+	cardId: string,
+	initialBalance: number,
+	movements: CardMovementOutput[],
+	pendingInterestFreeAmount: number
+) {
+	const movementBalance = movements.reduce((balance, movement) => {
+		if (movementIsInterestFreeInstallment(movement)) return balance;
+
+		if (movement.type === 'income' && movement.destinationCardId === cardId) {
+			return balance - movement.amount;
+		}
+
+		if (movement.type === 'expense' && movement.sourceCardId === cardId) {
+			return balance + movement.amount;
+		}
+
+		if (movement.type === 'transfer') {
+			if (movement.sourceCardId === cardId) return balance + movement.amount;
+			if (movement.destinationCardId === cardId) return balance - movement.amount;
+		}
+
+		return balance;
+	}, initialBalance);
+
+	return movementBalance + pendingInterestFreeAmount;
 }
 
 function paidInstallmentsForMovement(
@@ -164,7 +190,8 @@ function debitBalanceFromMovements(
 export function toCardListItem(
 	record: CardWithBankRecord,
 	movements: CardMovementOutput[] = [],
-	paidInstallments: PaidCreditInstallmentRecord[] = []
+	paidInstallments: PaidCreditInstallmentRecord[] = [],
+	referenceDate = new Date()
 ): CardListItem {
 	const pendingInterestFreePurchases =
 		record.kind === 'credit'
@@ -176,12 +203,24 @@ export function toCardListItem(
 	);
 	const cashExpenseAmount =
 		record.kind === 'credit'
-			? consumedCreditInCurrentCycle(record.id, record.statementDay, movements)
+			? consumedCreditInCurrentCycle(
+					record.id,
+					record.statementDay,
+					movements,
+					referenceDate,
+					{ includeBalanceAdjustments: false }
+				)
 			: null;
 	const debitInitialBalance = record.debitInitialBalance ?? 0;
+	const creditInitialBalance = record.creditInitialBalance ?? 0;
 	const currentBalance =
 		record.kind === 'credit'
-			? (cashExpenseAmount ?? 0) + pendingInterestFreeAmount
+			? creditBalanceFromMovements(
+					record.id,
+					creditInitialBalance,
+					movements,
+					pendingInterestFreeAmount
+				)
 			: debitBalanceFromMovements(record.id, debitInitialBalance, movements);
 
 	return {
@@ -196,7 +235,7 @@ export function toCardListItem(
 		currencyCode: record.currencyCode,
 		initialBalance:
 			record.kind === 'credit'
-				? (record.creditInitialBalance ?? 0)
+				? creditInitialBalance
 				: debitInitialBalance,
 		currentBalance,
 		cashExpenseAmount,

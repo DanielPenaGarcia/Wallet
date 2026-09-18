@@ -11,9 +11,13 @@ export type DashboardExpenseReserve = {
 	paymentsUntilDue: number;
 	reserveAmount: number;
 	reserveAmountLabel: string;
+	reservedAmount: number;
+	reservedAmountLabel: string;
 	monthlyReserveAmount: number;
 	monthlyReserveAmountLabel: string;
-	status: 'pending' | 'paid';
+	monthlyReservedAmount: number;
+	monthlyReservedAmountLabel: string;
+	status: 'pending' | 'reserved' | 'paid';
 	statusLabel: string;
 	currencyCode: string;
 };
@@ -34,6 +38,8 @@ export type DashboardCreditCardReserve = {
 	semimonthsUntilDue: number;
 	reserveAmount: number;
 	reserveAmountLabel: string;
+	reservedAmount: number;
+	reservedAmountLabel: string;
 	currencyCode: string;
 };
 
@@ -44,6 +50,8 @@ export type DashboardSummary = {
 	reserveTotalLabel: string;
 	debitBalanceTotal: number;
 	debitBalanceTotalLabel: string;
+	creditBalanceTotal: number;
+	creditBalanceTotalLabel: string;
 	availableAfterReserve: number | null;
 	availableAfterReserveLabel: string | null;
 	currencyCode: string;
