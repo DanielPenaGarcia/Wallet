@@ -12,6 +12,8 @@ The application section is the home for global application settings. Color palet
 
 The section displays a color palette selector sourced from the database and a preview of the selected palette's base, hover, pressed, and foreground tokens. The selected palette id is persisted in browser storage under `wallet:color-palette-id`; the root layout applies the cached palette before the page paints so a reload keeps the selected theme without briefly flashing the default palette.
 
+The application section also stores a local profile under `wallet:application-profile`. The profile has `Nombres` and `Apellidos`; the sidebar displays the first written name and first written surname, and uses their first letters for the account badge.
+
 ## Banks
 
 The bank section shows a table with each bank's name, alias, and color marker.

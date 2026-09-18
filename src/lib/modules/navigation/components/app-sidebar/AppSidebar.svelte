@@ -1,9 +1,46 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
+	import {
+		applicationProfileChangedEvent,
+		applicationProfileInitials,
+		defaultApplicationProfile,
+		readApplicationProfile,
+		shortApplicationProfileName,
+		type ApplicationProfile
+	} from '$lib/shared/utils/application-profile';
 	import type { AppSidebarProps } from './props';
 
 	let { currentPath, isOpen, onClose }: AppSidebarProps = $props();
 	let isSettingsActive = $derived(currentPath.startsWith('/settings'));
+	let applicationProfile = $state(defaultApplicationProfile);
+	let sidebarProfileName = $derived(shortApplicationProfileName(applicationProfile));
+	let sidebarProfileInitials = $derived(applicationProfileInitials(applicationProfile));
+
+	$effect(() => {
+		if (!browser) return;
+
+		applicationProfile = readApplicationProfile(localStorage);
+
+		function handleStorage(event: StorageEvent) {
+			if (event.storageArea !== localStorage) return;
+			applicationProfile = readApplicationProfile(localStorage);
+		}
+
+		function handleProfileChanged(event: Event) {
+			applicationProfile = event instanceof CustomEvent
+				? event.detail as ApplicationProfile
+				: readApplicationProfile(localStorage);
+		}
+
+		window.addEventListener('storage', handleStorage);
+		window.addEventListener(applicationProfileChangedEvent, handleProfileChanged);
+
+		return () => {
+			window.removeEventListener('storage', handleStorage);
+			window.removeEventListener(applicationProfileChangedEvent, handleProfileChanged);
+		};
+	});
 </script>
 
 {#if isOpen}
@@ -57,9 +94,9 @@
 	<div class="border-t border-on-primary/15 p-4">
 		<div class="rounded-lg bg-primary-pressed p-3">
 			<div class="flex items-center gap-3">
-				<span class="grid size-9 place-items-center rounded-full bg-secondary text-sm font-bold text-on-secondary">MC</span>
+				<span class="grid size-9 place-items-center rounded-full bg-secondary text-sm font-bold text-on-secondary">{sidebarProfileInitials}</span>
 				<div class="min-w-0">
-					<p class="truncate text-sm font-semibold">Mi cuenta</p>
+					<p class="truncate text-sm font-semibold">{sidebarProfileName}</p>
 					<p class="truncate text-xs text-on-primary/70">Sesión personal</p>
 				</div>
 			</div>

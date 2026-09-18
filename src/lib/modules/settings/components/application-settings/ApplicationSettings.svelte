@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { untrack } from 'svelte';
+	import { Input } from '$lib/components/ui/input';
 	import * as Select from '$lib/components/ui/select';
 	import { Label } from '$lib/components/ui/label';
 	import {
@@ -11,12 +12,20 @@
 		toColorPaletteCssVariables,
 		toColorPaletteRootStyle
 	} from '$lib/shared/utils/color-palette';
+	import {
+		defaultApplicationProfile,
+		dispatchApplicationProfileChanged,
+		readApplicationProfile,
+		writeApplicationProfile
+	} from '$lib/shared/utils/application-profile';
 	import type { ColorPaletteRole } from '$lib/modules/color-palettes/types/color-palette.types';
 	import type { ApplicationSettingsProps } from './props';
 
 	const paletteRoles: ColorPaletteRole[] = ['primary', 'secondary', 'tertiary', 'background', 'surface'];
 
 	let { colorPalettes, selectedColorPaletteId }: ApplicationSettingsProps = $props();
+	let applicationProfile = $state(untrack(() => browser ? readApplicationProfile(localStorage) : defaultApplicationProfile));
+	let restoredApplicationProfile = $state(false);
 	let selectedPaletteId = $state(untrack(() => {
 		const initialPaletteId = selectedColorPaletteId ?? colorPalettes[0]?.id ?? '';
 		return browser ? localStorage.getItem(colorPaletteStorageKey) ?? initialPaletteId : initialPaletteId;
@@ -24,6 +33,18 @@
 	let restoredStoredPalette = $state(false);
 	let selectedPalette = $derived(colorPalettes.find((palette) => palette.id === selectedPaletteId) ?? colorPalettes[0] ?? null);
 	let selectedTokens = $derived(selectedPalette ? buildColorPaletteTokens(selectedPalette) : null);
+
+	$effect(() => {
+		if (!browser || restoredApplicationProfile) return;
+		applicationProfile = readApplicationProfile(localStorage);
+		restoredApplicationProfile = true;
+	});
+
+	$effect(() => {
+		if (!browser || !restoredApplicationProfile) return;
+		writeApplicationProfile(localStorage, applicationProfile);
+		dispatchApplicationProfileChanged(applicationProfile);
+	});
 
 	$effect(() => {
 		if (!browser || restoredStoredPalette) return;
@@ -98,6 +119,28 @@
 				{/each}
 			</Select.Content>
 		</Select.Root>
+	</div>
+
+	<div class="grid gap-4 sm:grid-cols-2">
+		<div class="grid gap-2">
+			<Label for="application-first-names">Nombres</Label>
+			<Input
+				id="application-first-names"
+				bind:value={applicationProfile.firstNames}
+				placeholder="Ej. Daniel Armando"
+				class="h-11 border-outline bg-surface"
+			/>
+		</div>
+
+		<div class="grid gap-2">
+			<Label for="application-last-names">Apellidos</Label>
+			<Input
+				id="application-last-names"
+				bind:value={applicationProfile.lastNames}
+				placeholder="Ej. Ramírez López"
+				class="h-11 border-outline bg-surface"
+			/>
+		</div>
 	</div>
 
 	{#if selectedPalette && selectedTokens}
