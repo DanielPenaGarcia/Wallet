@@ -19,7 +19,7 @@
 		<div class="min-w-0">
 			<p class="truncate text-sm font-semibold text-slate-500">Mi Cartera</p>
 			<h1 class="truncate text-lg font-bold text-slate-950">
-				{currentPath === '/' ? 'Inicio' : 'Sin secciones'}
+				{currentPath.startsWith('/settings') ? 'Settings' : 'Inicio'}
 			</h1>
 		</div>
 	</div>

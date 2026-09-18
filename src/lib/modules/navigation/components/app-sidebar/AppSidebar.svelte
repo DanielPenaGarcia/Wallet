@@ -1,7 +1,9 @@
 <script lang="ts">
+	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import type { AppSidebarProps } from './props';
 
-	let { isOpen, onClose }: AppSidebarProps = $props();
+	let { currentPath, isOpen, onClose }: AppSidebarProps = $props();
+	let isSettingsActive = $derived(currentPath.startsWith('/settings'));
 </script>
 
 {#if isOpen}
@@ -41,9 +43,15 @@
 	</div>
 
 	<nav class="flex-1 px-3 py-6">
-		<p class="rounded-md border border-white/10 bg-white/10 px-3 py-3 text-sm font-semibold text-blue-50">
-			No hay secciones activas.
-		</p>
+		<a
+			href="/settings"
+			class="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-semibold transition {isSettingsActive ? 'bg-white text-[#123a63] shadow-sm' : 'text-blue-50 hover:bg-white/10'}"
+			onclick={onClose}
+			aria-current={isSettingsActive ? 'page' : undefined}
+		>
+			<SettingsIcon class="size-5" />
+			Settings
+		</a>
 	</nav>
 
 	<div class="border-t border-white/15 p-4">

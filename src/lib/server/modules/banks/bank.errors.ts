@@ -1,19 +1,13 @@
 export class BankNameAlreadyExistsError extends Error {
 	constructor() {
 		super('Ya existe un banco con ese nombre.');
+		this.name = 'BankNameAlreadyExistsError';
 	}
 }
 
 export class BankNotFoundError extends Error {
 	constructor() {
-		super('El banco ya no está disponible.');
+		super('No se encontró el banco.');
 		this.name = 'BankNotFoundError';
-	}
-}
-
-export class BankHasCardsError extends Error {
-	constructor() {
-		super('No puedes eliminar el banco porque está relacionado con una o más cuentas.');
-		this.name = 'BankHasCardsError';
 	}
 }

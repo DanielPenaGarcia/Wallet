@@ -31,25 +31,45 @@
 
 {#if feedback?.success}<p class="mb-5 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">{feedback.success}</p>{/if}
 
-<BankList {banks} onCreate={() => (createOpen = true)} onEdit={(bank) => { editingBank = bank; editOpen = true; }} onDelete={(bank) => { deletingBank = bank; deleteOpen = true; }} />
+<BankList
+	{banks}
+	onCreate={() => (createOpen = true)}
+	onEdit={(bank) => {
+		editingBank = bank;
+		editOpen = true;
+	}}
+	onDelete={(bank) => {
+		deletingBank = bank;
+		deleteOpen = true;
+	}}
+/>
 
 <Dialog.Root bind:open={createOpen}>
 	<Dialog.Content>
-		<Dialog.Header><Dialog.Title>Nuevo banco</Dialog.Title><Dialog.Description>Agrega un banco al catálogo disponible para cuentas bancarias.</Dialog.Description></Dialog.Header>
+		<Dialog.Header>
+			<Dialog.Title>Registrar banco</Dialog.Title>
+			<Dialog.Description>Captura el nombre, alias y color del banco.</Dialog.Description>
+		</Dialog.Header>
 		<BankForm mode="create" {feedback} onCancel={() => (createOpen = false)} />
 	</Dialog.Content>
 </Dialog.Root>
 
 <Dialog.Root bind:open={editOpen}>
 	<Dialog.Content>
-		<Dialog.Header><Dialog.Title>Editar banco</Dialog.Title><Dialog.Description>Actualiza su nombre, país o zona horaria.</Dialog.Description></Dialog.Header>
+		<Dialog.Header>
+			<Dialog.Title>Editar banco</Dialog.Title>
+			<Dialog.Description>Actualiza el nombre, alias o color del banco.</Dialog.Description>
+		</Dialog.Header>
 		{#if editingBank}<BankForm mode="edit" bank={editingBank} {feedback} onCancel={() => (editOpen = false)} />{/if}
 	</Dialog.Content>
 </Dialog.Root>
 
 <Dialog.Root bind:open={deleteOpen}>
 	<Dialog.Content>
-		<Dialog.Header><Dialog.Title>Eliminar {deletingBank?.name ?? 'banco'}</Dialog.Title><Dialog.Description>Esta acción es lógica y conserva el registro.</Dialog.Description></Dialog.Header>
+		<Dialog.Header>
+			<Dialog.Title>Eliminar {deletingBank?.name ?? 'banco'}</Dialog.Title>
+			<Dialog.Description>Esta acción eliminará el banco del catálogo.</Dialog.Description>
+		</Dialog.Header>
 		{#if deletingBank}<DeleteBankForm bank={deletingBank} {feedback} onCancel={() => (deleteOpen = false)} />{/if}
 	</Dialog.Content>
 </Dialog.Root>

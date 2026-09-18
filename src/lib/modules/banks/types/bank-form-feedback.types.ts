@@ -1,9 +1,8 @@
 export type BankFormValues = {
 	id?: string;
 	name?: string;
-	shortName?: string;
-	countryCode?: string;
-	timeZone?: string;
+	alias?: string;
+	color?: string;
 };
 
 export type BankFormFeedback = {
