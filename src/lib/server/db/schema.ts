@@ -32,3 +32,16 @@ export const colorPalettes = sqliteTable('color_palettes', {
 	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 });
+
+export const recurringIncomes = sqliteTable('recurring_incomes', {
+	id: text('id').primaryKey(),
+	title: text('title').notNull(),
+	expectedAmountCents: integer('expected_amount_cents').notNull(),
+	source: text('source').notNull(),
+	frequency: text('frequency').notNull(),
+	paymentSchedule: text('payment_schedule').notNull(),
+	workSchedule: text('work_schedule'),
+	isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
+});

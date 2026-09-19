@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import RepeatIcon from '@lucide/svelte/icons/repeat';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import {
 		applicationProfileChangedEvent,
@@ -12,6 +13,7 @@
 	import type { AppSidebarProps } from './props';
 
 	let { currentPath, isOpen, onClose }: AppSidebarProps = $props();
+	let isRecurringActive = $derived(currentPath.startsWith('/recurrentes'));
 	let isSettingsActive = $derived(currentPath.startsWith('/settings'));
 	let applicationProfile = $state(defaultApplicationProfile);
 	let sidebarProfileName = $derived(shortApplicationProfileName(applicationProfile));
@@ -79,7 +81,16 @@
 		</button>
 	</div>
 
-	<nav class="flex-1 px-3 py-6">
+	<nav class="grid flex-1 content-start gap-1 px-3 py-6">
+		<a
+			href="/recurrentes"
+			class="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-semibold transition {isRecurringActive ? 'bg-on-primary text-primary shadow-sm' : 'text-on-primary/90 hover:bg-on-primary/10'}"
+			onclick={onClose}
+			aria-current={isRecurringActive ? 'page' : undefined}
+		>
+			<RepeatIcon class="size-5" />
+			Recurrentes
+		</a>
 		<a
 			href="/settings"
 			class="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-semibold transition {isSettingsActive ? 'bg-on-primary text-primary shadow-sm' : 'text-on-primary/90 hover:bg-on-primary/10'}"

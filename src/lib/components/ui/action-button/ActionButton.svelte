@@ -1,34 +1,35 @@
 <script lang="ts" module>
-	import type { ButtonProps, ButtonVariant } from '$lib/components/ui/button';
+	import type { ButtonProps } from '$lib/components/ui/button';
+	import type { ActionButtonIntent } from './styles';
 
-	export type ActionButtonIntent =
-		| 'primary'
-		| 'secondary'
-		| 'danger';
+	export type { ActionButtonIntent } from './styles';
 
 	export type ActionButtonProps = Omit<ButtonProps, 'href'> & {
 		intent?: ActionButtonIntent;
-	};
-
-	const variants: Record<ActionButtonIntent, ButtonVariant> = {
-		primary: 'default',
-		secondary: 'outline',
-		danger: 'destructive'
 	};
 </script>
 
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
+	import { cn } from '$lib/utils';
+	import { actionButtonIntentVariants, actionButtonStyles } from './styles';
+
 	let {
 		intent = 'primary',
 		variant,
 		size = 'default',
+		class: className,
 		...restProps
 	}: ActionButtonProps = $props();
+
+	let styleClass = $derived(
+		variant ? className : cn(actionButtonStyles({ intent }), className)
+	);
 </script>
 
 <Button
-	variant={variant ?? variants[intent]}
+	variant={variant ?? actionButtonIntentVariants[intent]}
 	{size}
+	class={styleClass}
 	{...restProps}
 />
