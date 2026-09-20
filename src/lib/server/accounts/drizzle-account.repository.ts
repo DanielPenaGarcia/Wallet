@@ -51,7 +51,13 @@ class DrizzleAccountRepository implements AccountRepository {
 			name: 'Efectivo',
 			type: 'personal',
 			bankId: null,
+			cardLastFourDigits: null,
+			cardColor: null,
 			balanceCents: 0,
+			creditLimitCents: null,
+			statementDay: null,
+			paymentDueDay: null,
+			isActive: true,
 			createdAt: now,
 			updatedAt: now
 		};
@@ -60,14 +66,20 @@ class DrizzleAccountRepository implements AccountRepository {
 		return this.toAccount({ ...account, bankName: null, bankAlias: null, bankColor: null }, []);
 	}
 
-	async createDebit(input: CreateAccountInput) {
+	async create(input: CreateAccountInput) {
 		const now = new Date().toISOString();
 		const account = {
 			id: crypto.randomUUID(),
 			name: input.name,
-			type: 'debit',
+			type: input.type,
 			bankId: input.bankId,
+			cardLastFourDigits: input.cardLastFourDigits,
+			cardColor: input.cardColor,
 			balanceCents: input.initialBalanceCents,
+			creditLimitCents: input.creditLimitCents,
+			statementDay: input.statementDay,
+			paymentDueDay: input.paymentDueDay,
+			isActive: input.isActive,
 			createdAt: now,
 			updatedAt: now
 		};
@@ -84,9 +96,26 @@ class DrizzleAccountRepository implements AccountRepository {
 			.set({
 				name: input.name,
 				bankId: input.bankId,
+				cardLastFourDigits: input.cardLastFourDigits,
+				cardColor: input.cardColor,
+				balanceCents: input.balanceCents ?? undefined,
+				creditLimitCents: input.creditLimitCents,
+				statementDay: input.statementDay,
+				paymentDueDay: input.paymentDueDay,
+				isActive: input.isActive ?? undefined,
 				updatedAt: new Date().toISOString()
 			})
 			.where(eq(accounts.id, input.id));
+	}
+
+	async updateActive(id: string, isActive: boolean) {
+		await this.database
+			.update(accounts)
+			.set({
+				isActive,
+				updatedAt: new Date().toISOString()
+			})
+			.where(eq(accounts.id, id));
 	}
 
 	async delete(id: string) {
@@ -126,7 +155,13 @@ class DrizzleAccountRepository implements AccountRepository {
 				name: accounts.name,
 				type: accounts.type,
 				bankId: accounts.bankId,
+				cardLastFourDigits: accounts.cardLastFourDigits,
+				cardColor: accounts.cardColor,
 				balanceCents: accounts.balanceCents,
+				creditLimitCents: accounts.creditLimitCents,
+				statementDay: accounts.statementDay,
+				paymentDueDay: accounts.paymentDueDay,
+				isActive: accounts.isActive,
 				createdAt: accounts.createdAt,
 				updatedAt: accounts.updatedAt,
 				bankName: banks.name,
@@ -160,7 +195,13 @@ class DrizzleAccountRepository implements AccountRepository {
 			bank: account.bankId && account.bankName && account.bankAlias && account.bankColor
 				? { id: account.bankId, name: account.bankName, alias: account.bankAlias, color: account.bankColor }
 				: null,
+			cardLastFourDigits: account.cardLastFourDigits,
+			cardColor: account.cardColor,
 			balanceCents: account.balanceCents,
+			creditLimitCents: account.creditLimitCents,
+			statementDay: account.statementDay,
+			paymentDueDay: account.paymentDueDay,
+			isActive: account.isActive,
 			createdAt: account.createdAt,
 			updatedAt: account.updatedAt,
 			adjustments

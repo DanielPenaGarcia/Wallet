@@ -82,7 +82,13 @@ export const accounts = sqliteTable('accounts', {
 	name: text('name').notNull(),
 	type: text('type').notNull(),
 	bankId: text('bank_id').references(() => banks.id),
+	cardLastFourDigits: text('card_last_four_digits'),
+	cardColor: text('card_color'),
 	balanceCents: integer('balance_cents').notNull().default(0),
+	creditLimitCents: integer('credit_limit_cents'),
+	statementDay: integer('statement_day'),
+	paymentDueDay: integer('payment_due_day'),
+	isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
 	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 });

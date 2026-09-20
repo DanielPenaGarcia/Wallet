@@ -33,6 +33,9 @@
 {#if feedback?.success}
 	<p class="mb-5 rounded-md border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary">{feedback.success}</p>
 {/if}
+{#if feedback?.message && feedback.action === 'toggle-credit-account-active'}
+	<p class="mb-5 rounded-md border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">{feedback.message}</p>
+{/if}
 
 <AccountList
 	{accounts}
@@ -55,7 +58,7 @@
 	<Dialog.Content>
 		<Dialog.Header>
 			<Dialog.Title>Nueva cuenta</Dialog.Title>
-			<Dialog.Description>Registra una cuenta de débito asociada a un banco.</Dialog.Description>
+			<Dialog.Description>Registra una cuenta de débito o una tarjeta de crédito asociada a un banco.</Dialog.Description>
 		</Dialog.Header>
 		<AccountForm mode="create" {banks} {feedback} onCancel={() => (createOpen = false)} />
 	</Dialog.Content>
@@ -65,7 +68,7 @@
 	<Dialog.Content>
 		<Dialog.Header>
 			<Dialog.Title>Editar cuenta</Dialog.Title>
-			<Dialog.Description>Actualiza solo la información descriptiva de la cuenta.</Dialog.Description>
+			<Dialog.Description>Actualiza la configuración básica de la cuenta.</Dialog.Description>
 		</Dialog.Header>
 		{#if editingAccount}<AccountForm mode="edit" account={editingAccount} {banks} {feedback} onCancel={() => (editOpen = false)} />{/if}
 	</Dialog.Content>
@@ -85,7 +88,7 @@
 	<Dialog.Content>
 		<Dialog.Header>
 			<Dialog.Title>Eliminar cuenta</Dialog.Title>
-			<Dialog.Description>Esta acción elimina la cuenta de débito.</Dialog.Description>
+			<Dialog.Description>Esta acción elimina la cuenta seleccionada.</Dialog.Description>
 		</Dialog.Header>
 		{#if deletingAccount}<DeleteAccountForm account={deletingAccount} {feedback} onCancel={() => (deleteOpen = false)} />{/if}
 	</Dialog.Content>

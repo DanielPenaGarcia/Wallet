@@ -162,6 +162,20 @@
       "when": 1789882512010,
       "tag": "0022_talented_stardust",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1789920735521,
+      "tag": "0023_slimy_blackheart",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1789921642058,
+      "tag": "0024_gifted_ultimatum",
+      "breakpoints": true
     }
   ]
 }

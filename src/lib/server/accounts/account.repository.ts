@@ -8,8 +8,9 @@ export interface AccountRepository {
 	findPersonal(): Promise<Account | undefined>;
 	list(): Promise<Account[]>;
 	createPersonal(): Promise<Account>;
-	createDebit(input: CreateAccountInput): Promise<Account>;
+	create(input: CreateAccountInput): Promise<Account>;
 	update(input: UpdateAccountInput): Promise<void>;
+	updateActive(id: string, isActive: boolean): Promise<void>;
 	delete(id: string): Promise<void>;
 	adjustBalance(input: AdjustAccountBalanceInput): Promise<void>;
 }

@@ -1,6 +1,7 @@
 import { normalizeName } from '$lib/shared/utils/normalize-name';
 import { drizzleBankRepository } from '$lib/server/banks/drizzle-bank.repository';
 import type { BankRepository } from '$lib/server/banks/bank.repository';
+import { colorInputToHex } from '$lib/shared/utils/color';
 import {
 	AccountNotFoundError,
 	AccountValidationError,
@@ -23,12 +24,12 @@ export class AccountService {
 		return this.accountRepository.list();
 	}
 
-	async createDebitAccount(input: CreateAccountInput): Promise<void> {
+	async createAccount(input: CreateAccountInput): Promise<void> {
 		await this.ensurePersonalAccount();
 		const normalizedInput = this.normalizeCreateInput(input);
-		await this.assertValidDebitInput(normalizedInput);
+		await this.assertValidCreateInput(normalizedInput);
 		await this.assertUniqueAccountName(normalizedInput.name);
-		await this.accountRepository.createDebit(normalizedInput);
+		await this.accountRepository.create(normalizedInput);
 	}
 
 	async updateAccount(input: UpdateAccountInput): Promise<void> {
@@ -38,22 +39,46 @@ export class AccountService {
 		const normalizedInput = {
 			...input,
 			name: input.name.trim(),
-			bankId: account.type === 'personal' ? null : input.bankId?.trim() || null
+			bankId: account.type === 'personal' ? null : input.bankId?.trim() || null,
+			cardLastFourDigits: account.type === 'personal' ? null : input.cardLastFourDigits?.trim() || null,
+			cardColor: account.type === 'personal' ? null : colorInputToHex(input.cardColor ?? '') ?? null,
+			balanceCents: account.type === 'credit' ? input.balanceCents : account.balanceCents,
+			creditLimitCents: account.type === 'credit' ? input.creditLimitCents : null,
+			statementDay: account.type === 'credit' ? input.statementDay : null,
+			paymentDueDay: account.type === 'credit' ? input.paymentDueDay : null,
+			isActive: account.type === 'credit' ? input.isActive : true
 		};
 
 		const errors: Record<string, string[]> = {};
 		if (normalizedInput.name.length === 0) errors.name = ['El nombre es obligatorio.'];
 		if (normalizedInput.name.length > 100) errors.name = ['El nombre debe tener máximo 100 caracteres.'];
-		if (account.type === 'debit') {
+		if (account.type === 'debit' || account.type === 'credit') {
 			if (!normalizedInput.bankId) errors.bankId = ['Selecciona un banco.'];
 			else if (!(await this.bankRepository.findById(normalizedInput.bankId))) {
 				errors.bankId = ['Selecciona un banco existente.'];
 			}
+			if (account.type === 'debit' && (!normalizedInput.cardLastFourDigits || !/^\d{4}$/.test(normalizedInput.cardLastFourDigits))) {
+				errors.cardLastFourDigits = ['Captura exactamente 4 dígitos.'];
+			}
+			if (!normalizedInput.cardColor) errors.cardColor = ['El color debe ser hexadecimal o rgb válido.'];
+		}
+		if (account.type === 'credit') {
+			this.validateCreditConfiguration(normalizedInput, errors);
 		}
 		if (Object.keys(errors).length > 0) throw new AccountValidationError(errors);
 
 		await this.assertUniqueAccountName(normalizedInput.name, account.id);
 		await this.accountRepository.update(normalizedInput);
+	}
+
+	async updateCreditAccountActive(id: string, isActive: boolean): Promise<void> {
+		const account = await this.accountRepository.findById(id);
+		if (!account) throw new AccountNotFoundError();
+		if (account.type !== 'credit') {
+			throw new AccountValidationError({ id: ['Solo las tarjetas de crédito pueden activarse o desactivarse.'] });
+		}
+
+		await this.accountRepository.updateActive(id, isActive);
 	}
 
 	async deleteAccount(id: string): Promise<void> {
@@ -67,6 +92,9 @@ export class AccountService {
 	async adjustBalance(input: AdjustAccountBalanceInput): Promise<void> {
 		const account = await this.accountRepository.findById(input.id);
 		if (!account) throw new AccountNotFoundError();
+		if (account.type === 'credit') {
+			throw new AccountValidationError({ id: ['El saldo de una tarjeta de crédito se edita desde su configuración básica.'] });
+		}
 
 		const normalizedInput = {
 			...input,
@@ -93,23 +121,72 @@ export class AccountService {
 		return {
 			...input,
 			name: input.name.trim(),
-			bankId: input.bankId.trim()
+			bankId: input.bankId.trim(),
+			cardLastFourDigits: input.cardLastFourDigits?.trim() || null,
+			cardColor: colorInputToHex(input.cardColor) ?? input.cardColor.trim()
 		};
 	}
 
-	private async assertValidDebitInput(input: CreateAccountInput) {
+	private async assertValidCreateInput(input: CreateAccountInput) {
 		const errors: Record<string, string[]> = {};
 
+		if (!['debit', 'credit'].includes(input.type)) errors.accountType = ['Selecciona un tipo de cuenta válido.'];
 		if (input.name.length === 0) errors.name = ['El nombre es obligatorio.'];
 		if (input.name.length > 100) errors.name = ['El nombre debe tener máximo 100 caracteres.'];
 		if (input.bankId.length === 0 || !(await this.bankRepository.findById(input.bankId))) {
 			errors.bankId = ['Selecciona un banco existente.'];
 		}
+		if (input.type === 'debit' && (!input.cardLastFourDigits || !/^\d{4}$/.test(input.cardLastFourDigits))) {
+			errors.cardLastFourDigits = ['Captura exactamente 4 dígitos.'];
+		}
+		if (!colorInputToHex(input.cardColor)) errors.cardColor = ['El color debe ser hexadecimal o rgb válido.'];
 		if (!Number.isInteger(input.initialBalanceCents) || input.initialBalanceCents < 0) {
 			errors.initialBalance = ['El saldo inicial no puede ser negativo.'];
 		}
+		if (input.type === 'debit') {
+			if (input.creditLimitCents !== null) errors.creditLimit = ['Las cuentas de débito no tienen límite de crédito.'];
+		}
+		if (input.type === 'credit') {
+			this.validateCreditConfiguration({
+				balanceCents: input.initialBalanceCents,
+				creditLimitCents: input.creditLimitCents,
+				statementDay: input.statementDay,
+				paymentDueDay: input.paymentDueDay
+			}, errors);
+		}
 
 		if (Object.keys(errors).length > 0) throw new AccountValidationError(errors);
+	}
+
+	private validateCreditConfiguration(
+		input: Pick<UpdateAccountInput, 'balanceCents' | 'creditLimitCents' | 'statementDay' | 'paymentDueDay'>,
+		errors: Record<string, string[]>
+	) {
+		if (!Number.isInteger(input.creditLimitCents) || !input.creditLimitCents || input.creditLimitCents <= 0) {
+			errors.creditLimit = ['El límite de crédito debe ser mayor a 0.'];
+		}
+		if (!Number.isInteger(input.balanceCents) || input.balanceCents === null || input.balanceCents < 0) {
+			errors.initialBalance = ['El saldo no puede ser negativo.'];
+		}
+		if (
+			Number.isInteger(input.creditLimitCents) &&
+			Number.isInteger(input.balanceCents) &&
+			input.creditLimitCents !== null &&
+			input.balanceCents !== null &&
+			input.balanceCents > input.creditLimitCents
+		) {
+			errors.initialBalance = ['El saldo no debe superar el límite de crédito.'];
+		}
+		if (!this.isValidRecurringMonthDay(input.statementDay)) {
+			errors.statementDay = ['El día de corte debe estar entre 1 y 31.'];
+		}
+		if (!this.isValidRecurringMonthDay(input.paymentDueDay)) {
+			errors.paymentDueDay = ['El día límite de pago debe estar entre 1 y 31.'];
+		}
+	}
+
+	private isValidRecurringMonthDay(day: number | null) {
+		return Number.isInteger(day) && day !== null && day >= 1 && day <= 31;
 	}
 
 	private async assertUniqueAccountName(name: string, ignoredId?: string) {
