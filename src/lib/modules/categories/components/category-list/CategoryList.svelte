@@ -9,6 +9,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import type { CategoryNode } from '../../types/category.types';
 	import type { CategoryListProps } from './props';
+    import Button from '$lib/components/ui/button/button.svelte';
 
 	const searchStorageKey = 'wallet:category-settings:search';
 	const essentialFilterStorageKey = 'wallet:category-settings:essential-only';
@@ -89,7 +90,7 @@
 				<h2 class="text-lg font-bold text-on-surface">Categorías existentes</h2>
 				<p class="mt-1 text-sm text-on-surface-muted">Usa el botón de cada categoría para agregarle un hijo.</p>
 			</div>
-			<ActionButton type="button" onclick={onCreateRoot} aria-label="Crear categoría principal" title="Agregar categoría principal"><PlusIcon /><span>Registrar</span></ActionButton>
+			<Button type="button" onclick={onCreateRoot} aria-label="Crear categoría principal" title="Agregar categoría principal"><PlusIcon /><span>Registrar</span></Button>
 		</div>
 		{#if categories.length === 0}
 			<div class="px-6 py-12 text-center">

@@ -45,3 +45,20 @@ export const recurringIncomes = sqliteTable('recurring_incomes', {
 	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 });
+
+export const recurringExpenses = sqliteTable('recurring_expenses', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	categoryId: text('category_id').notNull().references(() => categories.id),
+	amountCents: integer('amount_cents').notNull(),
+	amountKind: text('amount_kind').notNull(),
+	frequency: text('frequency').notNull(),
+	customIntervalCount: integer('custom_interval_count'),
+	customIntervalUnit: text('custom_interval_unit'),
+	paymentSchedule: text('payment_schedule').notNull(),
+	statementDay: integer('statement_day'),
+	lastPaidAt: text('last_paid_at'),
+	isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
+});

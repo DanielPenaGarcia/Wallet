@@ -60,7 +60,7 @@
 								<span class="line-clamp-2">{formatWorkScheduleSummary(income.workSchedule)}</span>
 							</td>
 							<td class="px-5 py-4">
-								<span class="rounded-full px-2.5 py-1 text-xs font-bold {income.isActive ? 'bg-secondary/20 text-secondary' : 'bg-surface-muted text-on-surface-muted'}">
+								<span class="rounded-full px-2.5 py-1 text-xs font-bold {income.isActive ? 'bg-secondary text-on-secondary' : 'bg-surface-muted text-on-surface-muted'}">
 									{income.isActive ? 'Activo' : 'Inactivo'}
 								</span>
 							</td>

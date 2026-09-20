@@ -2,11 +2,20 @@
 	import ReceiptTextIcon from '@lucide/svelte/icons/receipt-text';
 	import TrendingUpIcon from '@lucide/svelte/icons/trending-up';
 	import * as Tabs from '$lib/components/ui/tabs';
+	import RecurringExpenseSection from '$lib/modules/recurring-expenses/components/recurring-expense-section/RecurringExpenseSection.svelte';
+	import type { RecurringExpenseFormFeedback } from '$lib/modules/recurring-expenses/types/recurring-expense-form-feedback.types';
 	import RecurringIncomeSection from '$lib/modules/recurring-incomes/components/recurring-income-section/RecurringIncomeSection.svelte';
+	import type { RecurringIncomeFormFeedback } from '$lib/modules/recurring-incomes/types/recurring-income-form-feedback.types';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let defaultTab = $derived(form?.action?.endsWith('recurring-income') ? 'income' : 'expenses');
+	let expenseFeedback = $derived(
+		form?.action?.endsWith('recurring-expense') ? (form as RecurringExpenseFormFeedback) : null
+	);
+	let incomeFeedback = $derived(
+		form?.action?.endsWith('recurring-income') ? (form as RecurringIncomeFormFeedback) : null
+	);
 </script>
 
 <section class="grid gap-6">
@@ -31,25 +40,11 @@
 		</Tabs.List>
 
 		<Tabs.Content value="expenses">
-			<section class="overflow-hidden rounded-lg border border-outline bg-surface shadow-sm">
-				<div class="border-b border-outline px-5 py-4">
-					<h3 class="text-base font-bold text-on-surface">Gastos recurrentes</h3>
-					<p class="mt-1 text-sm text-on-surface-muted">Pagos periódicos registrados para seguimiento.</p>
-				</div>
-				<div class="grid min-h-64 place-items-center px-6 py-12 text-center">
-					<div class="max-w-sm">
-						<span class="mx-auto grid size-12 place-items-center rounded-full bg-primary/10 text-primary">
-							<ReceiptTextIcon class="size-6" />
-						</span>
-						<p class="mt-4 text-sm font-semibold text-on-surface">Sin gastos recurrentes</p>
-						<p class="mt-1 text-sm text-on-surface-muted">Los gastos periódicos aparecerán aquí.</p>
-					</div>
-				</div>
-			</section>
+			<RecurringExpenseSection expenses={data.recurringExpenses} categories={data.categories} feedback={expenseFeedback} />
 		</Tabs.Content>
 
 		<Tabs.Content value="income">
-			<RecurringIncomeSection incomes={data.recurringIncomes} feedback={form ?? null} />
+			<RecurringIncomeSection incomes={data.recurringIncomes} feedback={incomeFeedback} />
 		</Tabs.Content>
 	</Tabs.Root>
 </section>

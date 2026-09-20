@@ -1,4 +1,5 @@
 import type { ExpenseFrequency, ExpenseIntervalUnit } from '../../types/expense.types';
+import type { expenseFrequencyOptions } from '../../utils/expense-form-options';
 
 export type ExpenseFrequencyFieldProps = {
 	idPrefix: string;
@@ -8,4 +9,5 @@ export type ExpenseFrequencyFieldProps = {
 	frequencyError?: string;
 	customIntervalCountError?: string;
 	customIntervalUnitError?: string;
+	options?: typeof expenseFrequencyOptions;
 };

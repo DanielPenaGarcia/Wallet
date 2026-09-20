@@ -15,11 +15,12 @@
 		customIntervalUnit = $bindable(),
 		frequencyError,
 		customIntervalCountError,
-		customIntervalUnitError
+		customIntervalUnitError,
+		options = expenseFrequencyOptions
 	}: ExpenseFrequencyFieldProps = $props();
 
 	let selectedFrequency = $derived(
-		expenseFrequencyOptions.find((option) => option.value === frequency)?.label ??
+		options.find((option) => option.value === frequency)?.label ??
 			'Selecciona una frecuencia'
 	);
 	let selectedUnit = $derived(
@@ -35,12 +36,12 @@
 
 <div class="grid gap-2">
 	<Label for={`${idPrefix}-frequency`}>Frecuencia</Label>
-	<Select.Root type="single" name="frequency" required bind:value={frequency} items={expenseFrequencyOptions}>
+	<Select.Root type="single" name="frequency" required bind:value={frequency} items={options}>
 		<Select.Trigger id={`${idPrefix}-frequency`} class="h-11 w-full border-outline px-3" aria-invalid={frequencyError ? 'true' : undefined} aria-describedby={frequencyError ? `${idPrefix}-frequency-error` : undefined}>
 			<span>{selectedFrequency}</span>
 		</Select.Trigger>
 		<Select.Content>
-			{#each expenseFrequencyOptions as option}
+			{#each options as option}
 				<Select.Item value={option.value} label={option.label}>{option.label}</Select.Item>
 			{/each}
 		</Select.Content>
