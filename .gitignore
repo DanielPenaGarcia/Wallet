@@ -27,4 +27,6 @@ vite.config.ts.timestamp-*
 *.db-wal
 
 # Local agent/runtime state
-.codex/
+.codex/*
+!.codex/skills/
+!.codex/skills/**

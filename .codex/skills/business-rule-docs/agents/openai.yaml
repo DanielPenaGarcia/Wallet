@@ -1,0 +1,3 @@
+interface:
+  display_name: "Business Rule Docs"
+  short_description: "Update docs when business rules change"
