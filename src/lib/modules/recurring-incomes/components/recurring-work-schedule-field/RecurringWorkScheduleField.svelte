@@ -16,37 +16,33 @@
 	let selectedDays = $state<WorkDay[]>(untrack(() => workDayOptions
 		.filter((day) => (value?.[day.value]?.length ?? 0) > 0)
 		.map((day) => day.value)));
-	let schedule = $state<Record<WorkDay, EditableBlock[]>>(untrack(() => initialSchedule(value)));
-	let nextBlockId = $state(untrack(() => maxBlockId(schedule) + 1));
+	let timeBlocks = $state<EditableBlock[]>(untrack(() => initialTimeBlocks(value)));
+	let nextBlockId = $state(untrack(() => timeBlocks.length + 1));
 
-	let scheduleValue = $derived(JSON.stringify(toWorkSchedule(schedule, selectedDays)));
+	let scheduleValue = $derived(JSON.stringify(toWorkSchedule(timeBlocks, selectedDays)));
 
-	function initialSchedule(workSchedule: WorkSchedule | null) {
-		return Object.fromEntries(workDayOptions.map((day) => {
-			const blocks = workSchedule?.[day.value] ?? [{ startsAt: '09:00', endsAt: '17:00' }];
-			return [
-				day.value,
-				blocks.map((block, index) => ({
-					id: index + 1,
-					startsAt: block.startsAt,
-					endsAt: block.endsAt
-				}))
-			];
-		})) as Record<WorkDay, EditableBlock[]>;
+	function initialTimeBlocks(workSchedule: WorkSchedule | null) {
+		const firstScheduledDay = workDayOptions.find((day) => (workSchedule?.[day.value]?.length ?? 0) > 0);
+		const blocks = firstScheduledDay ? workSchedule?.[firstScheduledDay.value] : null;
+		return (blocks?.length ? blocks : [{ startsAt: '09:00', endsAt: '17:00' }]).map((block, index) => ({
+			id: index + 1,
+			startsAt: block.startsAt,
+			endsAt: block.endsAt
+		}));
 	}
 
-	function maxBlockId(currentSchedule: Record<WorkDay, EditableBlock[]>) {
-		return Math.max(0, ...Object.values(currentSchedule).flat().map((block) => block.id));
-	}
-
-	function toWorkSchedule(currentSchedule: Record<WorkDay, EditableBlock[]>, days: WorkDay[]) {
+	function toWorkSchedule(blocks: EditableBlock[], days: WorkDay[]) {
 		const workSchedule: WorkSchedule = {};
+		const validBlocks = blocks
+			.filter((block) => block.startsAt && block.endsAt)
+			.map((block) => ({ startsAt: block.startsAt, endsAt: block.endsAt }));
+
+		if (validBlocks.length === 0) return workSchedule;
+
 		for (const day of days) {
-			const blocks = currentSchedule[day]
-				.filter((block) => block.startsAt && block.endsAt)
-				.map((block) => ({ startsAt: block.startsAt, endsAt: block.endsAt }));
-			if (blocks.length > 0) workSchedule[day] = blocks;
+			workSchedule[day] = validBlocks;
 		}
+
 		return workSchedule;
 	}
 
@@ -56,13 +52,13 @@
 			: [...selectedDays, day];
 	}
 
-	function addTimeBlock(day: WorkDay) {
-		schedule[day] = [...schedule[day], { id: nextBlockId, startsAt: '09:00', endsAt: '17:00' }];
+	function addTimeBlock() {
+		timeBlocks = [...timeBlocks, { id: nextBlockId, startsAt: '09:00', endsAt: '17:00' }];
 		nextBlockId += 1;
 	}
 
-	function removeTimeBlock(day: WorkDay, id: number) {
-		schedule[day] = schedule[day].filter((block) => block.id !== id);
+	function removeTimeBlock(id: number) {
+		timeBlocks = timeBlocks.filter((block) => block.id !== id);
 	}
 </script>
 
@@ -90,55 +86,53 @@
 		</div>
 	</div>
 
-	{#each workDayOptions.filter((day) => selectedDays.includes(day.value)) as day (day.value)}
-		<div class="grid gap-2 rounded-md border border-outline bg-surface-subtle p-3">
-			<div class="flex items-center justify-between gap-3">
-				<span class="text-sm font-bold text-on-surface">{day.label}</span>
-				<ActionButton type="button" intent="secondary" onclick={() => addTimeBlock(day.value)}>
-					<PlusIcon />
-					Tramo
-				</ActionButton>
-			</div>
-
-			<div class="grid gap-2">
-				{#each schedule[day.value] as block, index (block.id)}
-					<div class="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
-						<div class="grid gap-1">
-							<Label for={`${idPrefix}-${day.value}-${block.id}-start`}>Entrada {index + 1}</Label>
-							<input
-								id={`${idPrefix}-${day.value}-${block.id}-start`}
-								type="time"
-								required
-								bind:value={block.startsAt}
-								class="h-11 w-full rounded-md border border-outline bg-surface px-2.5 text-sm text-on-surface shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/50"
-							/>
-						</div>
-						<div class="grid gap-1">
-							<Label for={`${idPrefix}-${day.value}-${block.id}-end`}>Salida {index + 1}</Label>
-							<input
-								id={`${idPrefix}-${day.value}-${block.id}-end`}
-								type="time"
-								required
-								bind:value={block.endsAt}
-								class="h-11 w-full rounded-md border border-outline bg-surface px-2.5 text-sm text-on-surface shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/50"
-							/>
-						</div>
-						<ActionButton
-							type="button"
-							intent="danger"
-							size="icon-sm"
-							onclick={() => removeTimeBlock(day.value, block.id)}
-							disabled={schedule[day.value].length === 1}
-							aria-label={`Eliminar tramo ${index + 1} de ${day.label}`}
-							title="Eliminar tramo"
-						>
-							<Trash2Icon />
-						</ActionButton>
-					</div>
-				{/each}
-			</div>
+	<div class="grid gap-2 rounded-md border border-outline bg-surface-subtle p-3">
+		<div class="flex items-center justify-between gap-3">
+			<span class="text-sm font-bold text-on-surface">Tramos</span>
+			<ActionButton type="button" intent="secondary" onclick={addTimeBlock}>
+				<PlusIcon />
+				Agregar tramo
+			</ActionButton>
 		</div>
-	{/each}
+
+		<div class="grid gap-2">
+			{#each timeBlocks as block, index (block.id)}
+				<div class="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
+					<div class="grid gap-1">
+						<Label for={`${idPrefix}-work-schedule-${block.id}-start`}>Entrada {index + 1}</Label>
+						<input
+							id={`${idPrefix}-work-schedule-${block.id}-start`}
+							type="time"
+							required
+							bind:value={block.startsAt}
+							class="h-11 w-full rounded-md border border-outline bg-surface px-2.5 text-sm text-on-surface shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/50"
+						/>
+					</div>
+					<div class="grid gap-1">
+						<Label for={`${idPrefix}-work-schedule-${block.id}-end`}>Salida {index + 1}</Label>
+						<input
+							id={`${idPrefix}-work-schedule-${block.id}-end`}
+							type="time"
+							required
+							bind:value={block.endsAt}
+							class="h-11 w-full rounded-md border border-outline bg-surface px-2.5 text-sm text-on-surface shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/50"
+						/>
+					</div>
+					<ActionButton
+						type="button"
+						intent="danger"
+						size="icon-sm"
+						onclick={() => removeTimeBlock(block.id)}
+						disabled={timeBlocks.length === 1}
+						aria-label={`Eliminar tramo ${index + 1}`}
+						title="Eliminar tramo"
+					>
+						<Trash2Icon />
+					</ActionButton>
+				</div>
+			{/each}
+		</div>
+	</div>
 
 	{#if error}<span class="text-xs text-destructive">{error}</span>{/if}
 </div>

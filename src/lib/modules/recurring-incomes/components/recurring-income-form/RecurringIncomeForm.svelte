@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { ActionButton } from '$lib/components/ui/action-button';
+	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
@@ -188,9 +189,14 @@
 	</div>
 	{#if fieldError('paymentSchedule')}<span class="text-xs text-destructive">{fieldError('paymentSchedule')}</span>{/if}
 
-	<label class="flex items-center gap-3 text-sm font-semibold text-on-surface">
-		<input name="isActive" type="checkbox" bind:checked={isActive} class="size-4 rounded border-outline accent-primary" />
-		Activo
+	<label class="flex w-fit cursor-pointer items-center">
+		<input name="isActive" type="checkbox" bind:checked={isActive} class="sr-only" />
+		<Badge
+			variant={isActive ? 'default' : 'outline'}
+			class="h-7 px-3 text-sm font-semibold {isActive ? '' : 'text-on-surface-variant'}"
+		>
+			{isActive ? 'Activo' : 'Inactivo'}
+		</Badge>
 	</label>
 
 	{#if source === 'work'}
