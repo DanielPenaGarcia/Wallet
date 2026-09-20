@@ -176,6 +176,20 @@
       "when": 1789921642058,
       "tag": "0024_gifted_ultimatum",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1789926293865,
+      "tag": "0025_flimsy_ricochet",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1789928053269,
+      "tag": "0026_abandoned_infant_terrible",
+      "breakpoints": true
     }
   ]
 }

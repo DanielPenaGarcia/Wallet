@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { integer, sqliteTable, text, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
+import { integer, sqliteTable, text, uniqueIndex, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
 
 export const banks = sqliteTable('banks', {
 	id: text('id').primaryKey(),
@@ -102,3 +102,35 @@ export const accountAdjustments = sqliteTable('account_adjustments', {
 	reason: text('reason').notNull(),
 	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 });
+
+export const installmentPurchases = sqliteTable('installment_purchases', {
+	id: text('id').primaryKey(),
+	accountId: text('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+	description: text('description').notNull(),
+	purchaseDate: text('purchase_date').notNull(),
+	originalAmountCents: integer('original_amount_cents').notNull(),
+	installmentAmountCents: integer('installment_amount_cents').notNull(),
+	totalInstallments: integer('total_installments').notNull(),
+	billedInstallments: integer('billed_installments').notNull().default(0),
+	paidInstallments: integer('paid_installments').notNull().default(0),
+	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
+});
+
+export const creditCardStatements = sqliteTable('credit_card_statements', {
+	id: text('id').primaryKey(),
+	accountId: text('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+	periodStartDate: text('period_start_date').notNull(),
+	periodEndDate: text('period_end_date').notNull(),
+	statementDate: text('statement_date').notNull(),
+	paymentDueDate: text('payment_due_date').notNull(),
+	statementBalanceCents: integer('statement_balance_cents').notNull(),
+	paidAmountCents: integer('paid_amount_cents').notNull().default(0),
+	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
+}, (table) => [
+	uniqueIndex('credit_card_statements_account_statement_date_unique').on(
+		table.accountId,
+		table.statementDate
+	)
+]);

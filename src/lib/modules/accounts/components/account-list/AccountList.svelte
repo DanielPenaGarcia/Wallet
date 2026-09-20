@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CreditCardIcon from '@lucide/svelte/icons/credit-card';
+	import EyeIcon from '@lucide/svelte/icons/eye';
 	import LandmarkIcon from '@lucide/svelte/icons/landmark';
 	import PencilIcon from '@lucide/svelte/icons/pencil';
 	import PlusIcon from '@lucide/svelte/icons/plus';
@@ -8,6 +9,7 @@
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import WalletIcon from '@lucide/svelte/icons/wallet';
 	import { ActionButton } from '$lib/components/ui/action-button';
+	import { Button } from '$lib/components/ui/button';
 	import {
 		formatAccountBalance,
 		getCreditAvailableCents,
@@ -156,6 +158,9 @@
 						{/if}
 					</div>
 					<div class="flex shrink-0 gap-1">
+						{#if account.type === 'credit'}
+							<Button href={`/cuentas/${account.id}`} variant="ghost" size="icon-sm" aria-label={`Ver detalle de ${account.name}`} title="Ver detalle"><EyeIcon /></Button>
+						{/if}
 						<ActionButton type="button" variant="ghost" size="icon-sm" onclick={() => onEdit(account)} aria-label={`Editar ${getAccountDisplayName(account)}`} title="Editar"><PencilIcon /></ActionButton>
 						{#if account.type !== 'credit'}
 							<ActionButton type="button" variant="ghost" size="icon-sm" onclick={() => onAdjustBalance(account)} aria-label={`Ajustar saldo de ${getAccountDisplayName(account)}`} title="Ajustar saldo"><SlidersHorizontalIcon /></ActionButton>

@@ -38,7 +38,7 @@ Fields:
 - `reason`: user-facing explanation for the correction.
 - `createdAt`: adjustment timestamp.
 
-Credit card balances are not adjusted through this history. In the current stage, a credit card balance is edited from the card configuration itself.
+Credit card balances are not adjusted through this history. A credit card balance is edited from the card configuration itself.
 
 ## Derived Values
 
@@ -58,6 +58,12 @@ The credit usage percentage shown in the account list is also derived:
 usagePercentage = balanceCents / creditLimitCents
 ```
 
+Credit card installment purchases (`installmentPurchases`) and statement records (`creditCardStatements`) can explain parts of the consumed balance, but `balanceCents` remains the persisted current consumed credit. The account module does not reconstruct `balanceCents` from those records.
+
+When installment purchase outstanding amount exceeds `balanceCents`, the UI shows a warning. The condition does not block account usage and does not automatically modify the account balance.
+
+Credit statement cycles and payment due dates are derived from `statementDay` and `paymentDueDay`, using the last real day of the month when a configured day does not exist.
+
 ## Rules
 
 - A personal account is automatically ensured by the account service and cannot be deleted.
@@ -71,10 +77,12 @@ usagePercentage = balanceCents / creditLimitCents
 - Credit balance cannot exceed credit limit.
 - Credit statement and payment due days must be recurring month days from `1` to `31`.
 - Credit available must remain derivable and is not persisted.
+- Historical credit installment purchases do not mutate `balanceCents` when created, edited, or deleted.
+- Historical credit card statements do not mutate `balanceCents` when created.
+- Account `statementDay` and `paymentDueDay` can be used to prefill statement dates, but persisted statement dates remain historical and do not change if account configuration changes later.
 
 ## Server Module
 
 Account business rules are owned by `src/lib/server/accounts`.
 
-The service ensures the personal account exists, validates create and update inputs, enforces name uniqueness, blocks deletion of the personal account, prevents credit balance changes through adjustment history, and delegates persistence through the account repository contract.
-
+The service ensures the personal account exists, validates create and update inputs, exposes credit-card-only reads for the detail page, enforces name uniqueness, blocks deletion of the personal account, prevents credit balance changes through adjustment history, and delegates persistence through the account repository contract.

@@ -24,6 +24,16 @@ export class AccountService {
 		return this.accountRepository.list();
 	}
 
+	async getCreditAccount(id: string) {
+		const account = await this.accountRepository.findById(id);
+		if (!account) throw new AccountNotFoundError();
+		if (account.type !== 'credit') {
+			throw new AccountValidationError({ id: ['La cuenta debe ser una tarjeta de crédito.'] });
+		}
+
+		return account;
+	}
+
 	async createAccount(input: CreateAccountInput): Promise<void> {
 		await this.ensurePersonalAccount();
 		const normalizedInput = this.normalizeCreateInput(input);
