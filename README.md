@@ -369,8 +369,6 @@ export interface Fund {
   targetAmount?: number;
   currentAmount: number;
 
-  targetDate?: Date;
-
   priority: number;
   active: boolean;
 }

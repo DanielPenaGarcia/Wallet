@@ -3,6 +3,12 @@
 	import type { AppHeaderProps } from './props';
 
 	let { currentPath, onOpenSidebar }: AppHeaderProps = $props();
+	let pageTitle = $derived.by(() => {
+		if (currentPath.startsWith('/settings')) return 'Settings';
+		if (currentPath.startsWith('/recurrentes')) return 'Recurrentes';
+		if (currentPath.startsWith('/metas')) return 'Metas';
+		return 'Inicio';
+	});
 </script>
 
 <header class="sticky top-0 z-20 flex h-20 items-center border-b border-outline bg-surface px-4 shadow-sm sm:px-6 lg:px-8">
@@ -19,7 +25,7 @@
 		<div class="min-w-0">
 			<p class="truncate text-sm font-semibold text-on-surface-muted">Mi Cartera</p>
 			<h1 class="truncate text-lg font-bold text-on-surface">
-				{currentPath.startsWith('/settings') ? 'Settings' : 'Inicio'}
+				{pageTitle}
 			</h1>
 		</div>
 	</div>

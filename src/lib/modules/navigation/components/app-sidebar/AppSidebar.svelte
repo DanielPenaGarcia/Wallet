@@ -2,6 +2,7 @@
 	import { browser } from '$app/environment';
 	import RepeatIcon from '@lucide/svelte/icons/repeat';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
+	import TargetIcon from '@lucide/svelte/icons/target';
 	import {
 		applicationProfileChangedEvent,
 		applicationProfileInitials,
@@ -14,6 +15,7 @@
 
 	let { currentPath, isOpen, onClose }: AppSidebarProps = $props();
 	let isRecurringActive = $derived(currentPath.startsWith('/recurrentes'));
+	let isGoalsActive = $derived(currentPath.startsWith('/metas'));
 	let isSettingsActive = $derived(currentPath.startsWith('/settings'));
 	let applicationProfile = $state(defaultApplicationProfile);
 	let sidebarProfileName = $derived(shortApplicationProfileName(applicationProfile));
@@ -90,6 +92,15 @@
 		>
 			<RepeatIcon class="size-5" />
 			Recurrentes
+		</a>
+		<a
+			href="/metas"
+			class="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-semibold transition {isGoalsActive ? 'bg-on-primary text-primary shadow-sm' : 'text-on-primary/90 hover:bg-on-primary/10'}"
+			onclick={onClose}
+			aria-current={isGoalsActive ? 'page' : undefined}
+		>
+			<TargetIcon class="size-5" />
+			Metas
 		</a>
 		<a
 			href="/settings"

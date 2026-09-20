@@ -1,4 +1,5 @@
 import { formatCurrencyFromMinorUnits } from '$lib/shared/utils/format-currency';
+import { formatIsoDate as formatSharedIsoDate } from '$lib/shared/utils/format-iso-date';
 import {
 	expenseAmountKindOptions,
 	expenseFrequencyOptions,
@@ -91,8 +92,5 @@ export function formatMonthDay(day: number | 'last') {
 }
 
 export function formatIsoDate(value: string | null) {
-	if (!value) return 'Sin fecha';
-	const [year, month, day] = value.split('-').map(Number);
-	if (!year || !month || !day) return value;
-	return new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium' }).format(new Date(year, month - 1, day));
+	return value ? formatSharedIsoDate(value) : 'Sin fecha';
 }

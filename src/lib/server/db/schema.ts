@@ -62,3 +62,17 @@ export const recurringExpenses = sqliteTable('recurring_expenses', {
 	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 });
+
+export const financialGoals = sqliteTable('financial_goals', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	targetAmountCents: integer('target_amount_cents').notNull(),
+	currentAmountCents: integer('current_amount_cents').notNull().default(0),
+	distributionPercentage: integer('distribution_percentage').notNull().default(0),
+	currencyCode: text('currency_code').notNull().default('MXN'),
+	priority: text('priority').notNull(),
+	status: text('status').notNull(),
+	type: text('type').notNull(),
+	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
+});
