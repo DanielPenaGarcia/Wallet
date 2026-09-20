@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import LandmarkIcon from '@lucide/svelte/icons/landmark';
 	import RepeatIcon from '@lucide/svelte/icons/repeat';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import TargetIcon from '@lucide/svelte/icons/target';
@@ -16,6 +17,7 @@
 	let { currentPath, isOpen, onClose }: AppSidebarProps = $props();
 	let isRecurringActive = $derived(currentPath.startsWith('/recurrentes'));
 	let isGoalsActive = $derived(currentPath.startsWith('/metas'));
+	let isAccountsActive = $derived(currentPath.startsWith('/cuentas'));
 	let isSettingsActive = $derived(currentPath.startsWith('/settings'));
 	let applicationProfile = $state(defaultApplicationProfile);
 	let sidebarProfileName = $derived(shortApplicationProfileName(applicationProfile));
@@ -101,6 +103,15 @@
 		>
 			<TargetIcon class="size-5" />
 			Metas
+		</a>
+		<a
+			href="/cuentas"
+			class="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-semibold transition {isAccountsActive ? 'bg-on-primary text-primary shadow-sm' : 'text-on-primary/90 hover:bg-on-primary/10'}"
+			onclick={onClose}
+			aria-current={isAccountsActive ? 'page' : undefined}
+		>
+			<LandmarkIcon class="size-5" />
+			Cuentas
 		</a>
 		<a
 			href="/settings"

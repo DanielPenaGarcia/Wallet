@@ -76,3 +76,23 @@ export const financialGoals = sqliteTable('financial_goals', {
 	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 });
+
+export const accounts = sqliteTable('accounts', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	type: text('type').notNull(),
+	bankId: text('bank_id').references(() => banks.id),
+	balanceCents: integer('balance_cents').notNull().default(0),
+	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
+});
+
+export const accountAdjustments = sqliteTable('account_adjustments', {
+	id: text('id').primaryKey(),
+	accountId: text('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+	previousBalanceCents: integer('previous_balance_cents').notNull(),
+	newBalanceCents: integer('new_balance_cents').notNull(),
+	differenceCents: integer('difference_cents').notNull(),
+	reason: text('reason').notNull(),
+	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`)
+});

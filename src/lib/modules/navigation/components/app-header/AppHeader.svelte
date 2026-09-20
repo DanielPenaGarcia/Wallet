@@ -7,6 +7,7 @@
 		if (currentPath.startsWith('/settings')) return 'Settings';
 		if (currentPath.startsWith('/recurrentes')) return 'Recurrentes';
 		if (currentPath.startsWith('/metas')) return 'Metas';
+		if (currentPath.startsWith('/cuentas')) return 'Cuentas';
 		return 'Inicio';
 	});
 </script>
