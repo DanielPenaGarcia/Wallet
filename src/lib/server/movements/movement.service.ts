@@ -40,6 +40,7 @@ export class MovementService {
 		const normalizedInput = this.normalizeMovementInput(input);
 
 		await this.assertValidMovementInput(normalizedInput);
+		await this.assertUniqueRecurringMaterialization(normalizedInput);
 		const accountsById = await this.getMovementAccounts(normalizedInput);
 		this.validateCreditTrackingBoundary(normalizedInput, accountsById);
 		const balanceChanges = this.balanceChangesFromDeltas(
@@ -59,6 +60,7 @@ export class MovementService {
 		};
 
 		await this.assertValidMovementInput(normalizedInput);
+		await this.assertUniqueRecurringMaterialization(normalizedInput, original.id);
 		const accountsById = await this.getImpactedAccounts(original, normalizedInput);
 		this.validateCreditTrackingBoundary(normalizedInput, accountsById);
 
@@ -131,6 +133,25 @@ export class MovementService {
 		await this.validateFinancialShape(input, errors);
 
 		if (Object.keys(errors).length > 0) throw new MovementValidationError(errors);
+	}
+
+	private async assertUniqueRecurringMaterialization(input: CreateMovementInput, excludeMovementId?: string) {
+		if (!input.recurringExpenseId && !input.recurringIncomeId) return;
+
+		const duplicate = await this.movementRepository.findActiveRecurringMaterialization({
+			type: input.type,
+			recurringExpenseId: input.recurringExpenseId,
+			recurringIncomeId: input.recurringIncomeId,
+			occurredOn: input.occurredAt.slice(0, 10),
+			excludeMovementId
+		});
+		if (!duplicate) return;
+
+		throw new MovementValidationError({
+			[input.recurringIncomeId ? 'recurringIncomeId' : 'recurringExpenseId']: [
+				'Ya existe un movimiento activo para esta configuración recurrente en la fecha seleccionada.'
+			]
+		});
 	}
 
 	private async getMovementAccounts(input: CreateMovementInput) {
@@ -208,6 +229,7 @@ export class MovementService {
 		if (input.type === 'income') {
 			this.requireDestinationOnly(input, errors);
 			await this.requireRealDestinationAccount(input, errors);
+			if (input.categoryId) errors.categoryId = ['Un ingreso no se clasifica como categoría de gasto.'];
 			if (input.recurringExpenseId) errors.recurringExpenseId = ['Un ingreso no materializa un gasto recurrente.'];
 		}
 		if (input.type === 'expense') {

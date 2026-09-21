@@ -30,7 +30,7 @@ The current client-safe `Movement` shape includes:
 - `occurredAt`: date and time when the movement happened.
 - `sourceCardId`: origin account/card for expenses and transfers.
 - `destinationCardId`: destination account/card for income and transfers.
-- `classificationKind`: whether an expense is classified by recurring expense or category.
+- `classificationKind`: whether the movement is linked to recurring income, recurring expense, or category.
 - `classificationId`: identifier of the selected classification.
 - `categoryId`: persisted category reference when the movement is categorizable.
 - `recurringExpenseId`: optional recurring expense configuration materialized by the movement.
@@ -54,6 +54,8 @@ Future balance-changing workflows should be movement-backed:
 - Account balance correction forms create `adjustment` movements instead of writing balances directly.
 
 Historical credit card statements and installment purchases remain explanatory records. They do not replace movements and do not mutate balances by themselves.
+
+Recurring income and recurring expense records remain expected configuration. They do not modify balances until a concrete movement is created and linked to the recurring record.
 
 ## Current Scope
 
@@ -79,6 +81,8 @@ The UI has movement components and client-safe types. The server module defines 
 - A movement cannot leave consumed credit negative or above the configured credit limit.
 - A credit-affecting movement must occur after the credit account's balance reference date.
 - Expense and credit purchase movements require exactly one classification: category or recurring expense.
+- Income movements may reference a recurring income configuration and cannot reference expense categories or recurring expenses.
+- Active recurring materializations are unique by recurring configuration, movement type, and effective date to prevent duplicate balance impact from repeated submissions.
 - Transfers, credit card payments, and adjustments do not carry category or recurring configuration references.
 - Persisted account, category, recurring expense, and recurring income references are verified before creation.
 - Soft deletion preserves historical context with `active = false` and `deletedAt`.

@@ -14,7 +14,7 @@
 	import TransferMovementForm from '../transfer-movement-form/TransferMovementForm.svelte';
 	import type { MovementSectionProps } from './props';
 
-	let { movements, cards, expenses, categories, filters, feedback = null }: MovementSectionProps = $props();
+	let { movements, cards, expenses, incomes, categories, filters, feedback = null }: MovementSectionProps = $props();
 	let realCards = $derived(cards.filter((card) => card.kind !== 'credit'));
 	let creditCards = $derived(cards.filter((card) => card.kind === 'credit'));
 	let createOpen = $state(
@@ -94,7 +94,7 @@
 		{:else if selectedType === 'credit_purchase'}
 			<ExpenseMovementForm mode="create" movementType="credit_purchase" cards={creditCards} {expenses} {categories} {feedback} onBack={() => (selectedType = null)} />
 		{:else if selectedType === 'income'}
-			<IncomeMovementForm mode="create" cards={realCards} {feedback} onBack={() => (selectedType = null)} />
+			<IncomeMovementForm mode="create" cards={realCards} {incomes} {feedback} onBack={() => (selectedType = null)} />
 		{:else if selectedType === 'transfer'}
 			<TransferMovementForm mode="create" cards={realCards} {feedback} onBack={() => (selectedType = null)} />
 		{:else if selectedType === 'credit_card_payment'}
@@ -133,7 +133,7 @@
 		{:else if editingMovement?.type === 'credit_purchase'}
 			<ExpenseMovementForm mode="edit" movementType="credit_purchase" movement={editingMovement} cards={creditCards} {expenses} {categories} {feedback} onCancel={() => (editingMovement = null)} />
 		{:else if editingMovement?.type === 'income'}
-			<IncomeMovementForm mode="edit" movement={editingMovement} cards={realCards} {feedback} onCancel={() => (editingMovement = null)} />
+			<IncomeMovementForm mode="edit" movement={editingMovement} cards={realCards} {incomes} {feedback} onCancel={() => (editingMovement = null)} />
 		{:else if editingMovement?.type === 'transfer'}
 			<TransferMovementForm mode="edit" movement={editingMovement} cards={realCards} {feedback} onCancel={() => (editingMovement = null)} />
 		{:else if editingMovement?.type === 'credit_card_payment'}

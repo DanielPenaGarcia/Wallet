@@ -16,6 +16,8 @@ import type { UpdateMovementInput } from '$lib/server/movements/inputs/update-mo
 import type { MovementOutput } from '$lib/server/movements/outputs/movement.output';
 import { recurringExpenseService } from '$lib/server/recurring-expenses/recurring-expense.service';
 import type { RecurringExpense } from '$lib/modules/recurring-expenses/types/recurring-expense.types';
+import { recurringIncomeService } from '$lib/server/recurring-incomes/recurring-income.service';
+import type { RecurringIncome } from '$lib/modules/recurring-incomes/types/recurring-income.types';
 
 const allFilterValue = 'all';
 
@@ -27,10 +29,11 @@ export async function load({ url }) {
 		categoryId: normalizedFilter(url.searchParams.get('categoryId')),
 		type: normalizedFilter(url.searchParams.get('type'))
 	};
-	const [accounts, categories, recurringExpenses] = await Promise.all([
+	const [accounts, categories, recurringExpenses, recurringIncomes] = await Promise.all([
 		accountService.getAccounts(),
 		categoryService.getCategories(),
-		recurringExpenseService.getRecurringExpenses()
+		recurringExpenseService.getRecurringExpenses(),
+		recurringIncomeService.getRecurringIncomes()
 	]);
 	const movements = await movementService.listMovements({
 		accountId: filters.cardId || undefined,
@@ -41,9 +44,10 @@ export async function load({ url }) {
 	});
 
 	return {
-		movements: movements.map((movement) => toMovement(movement, accounts, categories, recurringExpenses)),
+		movements: movements.map((movement) => toMovement(movement, accounts, categories, recurringExpenses, recurringIncomes)),
 		cards: accounts.map(toCardListItem),
 		expenses: recurringExpenses.map((expense) => toExpense(expense, categories)),
+		incomes: recurringIncomes,
 		categories,
 		filters
 	};
@@ -88,6 +92,7 @@ function movementValues(formData: FormData): MovementFormValues & {
 		destinationCardId: formValue(formData, 'destinationCardId'),
 		classificationKind: formValue(formData, 'classificationKind') as MovementClassificationKind,
 		classificationId: formValue(formData, 'classificationId'),
+		recurringIncomeId: normalizedFilter(formValue(formData, 'recurringIncomeId')),
 		paymentMode: formValue(formData, 'paymentMode') === 'installments' ? 'installments' : 'cash',
 		installmentCount: formValue(formData, 'installmentCount'),
 		interestFree: formData.get('interestFree') === 'true' || formData.get('interestFree') === 'on',
@@ -117,7 +122,7 @@ function validateMovementValues(values: ReturnType<typeof movementValues>) {
 		destinationAccountId: values.destinationCardId || null,
 		categoryId: values.classificationKind === 'category' ? values.classificationId || null : null,
 		recurringExpenseId: values.classificationKind === 'expense' ? values.classificationId || null : null,
-		recurringIncomeId: null
+		recurringIncomeId: values.recurringIncomeId || null
 	};
 
 	if (input.type === 'income') {
@@ -279,12 +284,14 @@ function toMovement(
 	movement: MovementOutput,
 	accounts: Account[],
 	categories: Category[],
-	recurringExpenses: RecurringExpense[]
+	recurringExpenses: RecurringExpense[],
+	recurringIncomes: RecurringIncome[]
 ): Movement {
 	const source = movement.sourceAccountId ? accounts.find((account) => account.id === movement.sourceAccountId) ?? null : null;
 	const destination = movement.destinationAccountId ? accounts.find((account) => account.id === movement.destinationAccountId) ?? null : null;
 	const category = movement.categoryId ? categories.find((item) => item.id === movement.categoryId) ?? null : null;
 	const recurringExpense = movement.recurringExpenseId ? recurringExpenses.find((expense) => expense.id === movement.recurringExpenseId) ?? null : null;
+	const recurringIncome = movement.recurringIncomeId ? recurringIncomes.find((income) => income.id === movement.recurringIncomeId) ?? null : null;
 
 	return {
 		id: movement.id,
@@ -305,9 +312,9 @@ function toMovement(
 		destinationCardAlias: destination ? destination.type === 'personal' ? 'Efectivo' : destination.name : null,
 		destinationCardLastFourDigits: destination?.cardLastFourDigits ?? null,
 		destinationCardKind: destination?.type === 'credit' ? 'credit' : destination ? 'debit' : null,
-		classificationKind: movement.recurringExpenseId ? 'expense' : movement.categoryId ? 'category' : null,
-		classificationId: movement.recurringExpenseId ?? movement.categoryId,
-		classificationName: recurringExpense?.name ?? (category ? getCategoryPath(category, categories) : null),
+		classificationKind: movement.recurringIncomeId ? 'income' : movement.recurringExpenseId ? 'expense' : movement.categoryId ? 'category' : null,
+		classificationId: movement.recurringIncomeId ?? movement.recurringExpenseId ?? movement.categoryId,
+		classificationName: recurringIncome?.title ?? recurringExpense?.name ?? (category ? getCategoryPath(category, categories) : null),
 		active: movement.active,
 		registeredAt: movement.createdAt,
 		updatedAt: movement.updatedAt,

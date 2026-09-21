@@ -2,7 +2,7 @@ import type { CardKind } from '$lib/modules/cards/types/card.types';
 import type { IsoDateTime } from '$lib/shared/types/date.types';
 
 export const movementPaymentModes = ['cash', 'installments'] as const;
-export const movementClassificationKinds = ['expense', 'category'] as const;
+export const movementClassificationKinds = ['income', 'expense', 'category'] as const;
 export const movementTypes = [
 	'income',
 	'expense',

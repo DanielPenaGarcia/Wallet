@@ -17,6 +17,7 @@ export type MovementFormValues = {
 	destinationCardId?: string;
 	classificationKind?: MovementClassificationKind;
 	classificationId?: string;
+	recurringIncomeId?: string;
 };
 
 export type MovementFormFeedback = {

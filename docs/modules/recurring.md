@@ -56,3 +56,9 @@ Rules:
 Financial goal projections read active recurring incomes and active recurring expenses to estimate free money periods. Recurring configuration does not create movements by itself.
 
 Income and expense next-date calculations share the recurrence helper in `src/lib/shared/utils/recurring-payment-schedule.ts`; module-specific code is responsible for validating which frequencies each record type supports.
+
+## Movement Materialization
+
+Recurring income and recurring expense records remain expected configuration. They do not change account balances directly.
+
+When money is actually received or paid, the movement module can create an income or expense movement linked to the recurring record. The movement owns the balance impact. Wallet rejects duplicate active materializations for the same recurring configuration, movement type, and effective date so repeated submissions do not double count the same event.

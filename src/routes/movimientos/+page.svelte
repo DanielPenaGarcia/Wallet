@@ -18,6 +18,7 @@
 		movements={data.movements}
 		cards={data.cards}
 		expenses={data.expenses}
+		incomes={data.incomes}
 		categories={data.categories}
 		filters={data.filters}
 		feedback={form ?? null}

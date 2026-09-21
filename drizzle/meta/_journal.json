@@ -211,6 +211,13 @@
       "when": 1789959828484,
       "tag": "0029_lonely_dragon_man",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "6",
+      "when": 1790017243050,
+      "tag": "0030_uneven_santa_claus",
+      "breakpoints": true
     }
   ]
 }

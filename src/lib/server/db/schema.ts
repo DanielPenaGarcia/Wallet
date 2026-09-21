@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { index, integer, sqliteTable, text, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
+import { integer, sqliteTable, text, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
 
 export const banks = sqliteTable('banks', {
 	id: text('id').primaryKey(),
@@ -148,11 +148,4 @@ export const movements = sqliteTable('movements', {
 	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 	deletedAt: text('deleted_at')
-}, (table) => [
-	index('movements_occurred_at_idx').on(table.occurredAt),
-	index('movements_source_account_idx').on(table.sourceAccountId),
-	index('movements_destination_account_idx').on(table.destinationAccountId),
-	index('movements_category_idx').on(table.categoryId),
-	index('movements_recurring_expense_idx').on(table.recurringExpenseId),
-	index('movements_recurring_income_idx').on(table.recurringIncomeId)
-]);
+});

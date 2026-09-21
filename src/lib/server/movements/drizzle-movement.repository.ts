@@ -5,6 +5,7 @@ import type { MovementRepository } from './movement.repository';
 import type { AccountBalanceChangeInput } from './inputs/account-balance-change.input';
 import type { CreateMovementInput } from './inputs/create-movement.input';
 import type { ListMovementsInput } from './inputs/list-movements.input';
+import type { RecurringMaterializationInput } from './inputs/recurring-materialization.input';
 import type { UpdateMovementInput } from './inputs/update-movement.input';
 import { toMovementOutput } from './movement.mapper';
 
@@ -14,6 +15,30 @@ class DrizzleMovementRepository implements MovementRepository {
 	async findById(id: string) {
 		const [movement] = await this.database.select().from(movements).where(eq(movements.id, id)).limit(1);
 		return movement ? toMovementOutput(movement) : undefined;
+	}
+
+	async findActiveRecurringMaterialization(input: RecurringMaterializationInput) {
+		const recurringFilter = input.recurringExpenseId
+			? eq(movements.recurringExpenseId, input.recurringExpenseId)
+			: input.recurringIncomeId
+				? eq(movements.recurringIncomeId, input.recurringIncomeId)
+				: undefined;
+		if (!recurringFilter) return undefined;
+
+		const rows = await this.database
+			.select()
+			.from(movements)
+			.where(and(
+				eq(movements.active, true),
+				eq(movements.type, input.type),
+				recurringFilter
+			));
+		const duplicate = rows.find((movement) =>
+			movement.id !== input.excludeMovementId &&
+			movement.occurredAt.slice(0, 10) === input.occurredOn
+		);
+
+		return duplicate ? toMovementOutput(duplicate) : undefined;
 	}
 
 	async list(input: ListMovementsInput = {}) {

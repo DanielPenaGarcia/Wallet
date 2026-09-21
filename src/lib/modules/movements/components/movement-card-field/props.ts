@@ -2,7 +2,7 @@ import type { CardListItem } from '$lib/modules/cards/types/card-list-item.types
 
 export type MovementCardFieldProps = {
 	id: string;
-	name: 'sourceCardId' | 'destinationCardId';
+	name: 'sourceCardId' | 'destinationCardId' | 'adjustmentAccountId';
 	label: string;
 	cards: CardListItem[];
 	value: string;
