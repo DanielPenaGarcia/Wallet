@@ -4,6 +4,7 @@ import type { UpdateBankInput } from './inputs/update-bank.input';
 
 export interface BankRepository {
 	findById(id: string): Promise<Bank | undefined>;
+	hasAccounts(id: string): Promise<boolean>;
 	list(): Promise<Bank[]>;
 	create(input: CreateBankInput): Promise<Bank>;
 	update(input: UpdateBankInput): Promise<void>;

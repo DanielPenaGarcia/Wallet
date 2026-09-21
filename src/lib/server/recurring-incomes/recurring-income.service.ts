@@ -1,12 +1,12 @@
 import {
 	incomeFrequencies,
 	incomeSources,
-	type PaymentSchedule,
 	type TimeBlock,
 	type WorkDay,
 	workDays,
 	type WorkSchedule
 } from '$lib/modules/recurring-incomes/types/recurring-income.types';
+import { isRecurringPaymentScheduleForFrequency } from '$lib/shared/utils/recurring-payment-schedule';
 import { RecurringIncomeNotFoundError, RecurringIncomeValidationError } from './recurring-income.errors';
 import type { RecurringIncomeRepository } from './recurring-income.repository';
 import { drizzleRecurringIncomeRepository } from './drizzle-recurring-income.repository';
@@ -64,7 +64,7 @@ export class RecurringIncomeService {
 		}
 		if (!incomeSources.includes(input.source)) errors.source = ['La fuente del ingreso no es válida.'];
 		if (!incomeFrequencies.includes(input.frequency)) errors.frequency = ['La frecuencia no es válida.'];
-		if (!this.isPaymentScheduleForFrequency(input.paymentSchedule, input.frequency)) {
+		if (!isRecurringPaymentScheduleForFrequency(input.paymentSchedule, input.frequency)) {
 			errors.paymentSchedule = ['La configuración de pago no corresponde a la frecuencia.'];
 		}
 
@@ -72,21 +72,6 @@ export class RecurringIncomeService {
 		if (scheduleErrors.length > 0) errors.workSchedule = scheduleErrors;
 
 		if (Object.keys(errors).length > 0) throw new RecurringIncomeValidationError(errors);
-	}
-
-	private isPaymentScheduleForFrequency(
-		paymentSchedule: PaymentSchedule,
-		frequency: CreateRecurringIncomeInput['frequency']
-	) {
-		if (paymentSchedule.type !== frequency) return false;
-		if (paymentSchedule.type === 'daily') return true;
-		if (paymentSchedule.type === 'weekly') return workDays.includes(paymentSchedule.weekday);
-		if (paymentSchedule.type === 'monthly') return this.isMonthDay(paymentSchedule.day);
-		return this.isMonthDay(paymentSchedule.firstDay) && this.isMonthDay(paymentSchedule.secondDay);
-	}
-
-	private isMonthDay(value: number | 'last') {
-		return value === 'last' || (Number.isInteger(value) && value >= 1 && value <= 31);
 	}
 
 	private normalizeWorkSchedule(workSchedule: WorkSchedule | null): WorkSchedule | null {

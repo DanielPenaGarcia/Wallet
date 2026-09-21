@@ -4,6 +4,8 @@ import type { UpdateCategoryInput } from './inputs/update-category.input';
 
 export interface CategoryRepository {
 	findById(id: string): Promise<Category | undefined>;
+	hasChildren(id: string): Promise<boolean>;
+	hasRecurringExpenses(id: string): Promise<boolean>;
 	list(): Promise<Category[]>;
 	create(input: CreateCategoryInput): Promise<Category>;
 	update(input: UpdateCategoryInput): Promise<void>;

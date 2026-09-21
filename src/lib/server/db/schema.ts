@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { integer, sqliteTable, text, uniqueIndex, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
+import { integer, sqliteTable, text, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
 
 export const banks = sqliteTable('banks', {
 	id: text('id').primaryKey(),
@@ -128,9 +128,4 @@ export const creditCardStatements = sqliteTable('credit_card_statements', {
 	paidAmountCents: integer('paid_amount_cents').notNull().default(0),
 	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
-}, (table) => [
-	uniqueIndex('credit_card_statements_account_statement_date_unique').on(
-		table.accountId,
-		table.statementDate
-	)
-]);
+});

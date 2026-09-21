@@ -11,10 +11,14 @@
 
 ## Current Scope
 
-The entity can be registered, edited, listed, and deleted from the settings page.
+The entity can be registered, edited, listed, and deleted from the settings page when it is not referenced by an account.
 
 Registration and edit forms capture `name`, `alias`, and `color`. The `color` value is normalized to hexadecimal when the input is a valid hex or rgb color.
 
+## Deletion
+
+Bank deletion is restricted while any account references the bank. This keeps debit and credit account history readable and prevents account records from losing their institution context.
+
 ## Server Module
 
-Bank business rules are owned by the server module at `src/lib/server/banks`. The service validates unique names, normalizes input values, checks that records exist before update or delete operations, and delegates persistence through the bank repository contract.
+Bank business rules are owned by the server module at `src/lib/server/banks`. The service validates unique names, normalizes input values, checks that records exist before update or delete operations, blocks deletion while accounts reference the bank, and delegates persistence through the bank repository contract.

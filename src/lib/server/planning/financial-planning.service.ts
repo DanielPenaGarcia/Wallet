@@ -2,17 +2,8 @@ import type { RecurringExpense } from '$lib/modules/recurring-expenses/types/rec
 import type { RecurringIncome } from '$lib/modules/recurring-incomes/types/recurring-income.types';
 import type { FinancialPlanningPeriod } from '$lib/modules/goals/types/goal-projection.types';
 import { toIsoDate } from '$lib/shared/utils/local-date';
-import {
-	addCustomInterval,
-	addDays,
-	nextMonthlyDate,
-	nextSemimonthlyDate,
-	nextWeekday,
-	nextYearlyDate,
-	parseLocalDate,
-	startOfLocalDay,
-	weekDayIndex
-} from '$lib/shared/utils/recurrence-date';
+import { parseLocalDate, startOfLocalDay } from '$lib/shared/utils/recurrence-date';
+import { nextRecurringPaymentDate } from '$lib/shared/utils/recurring-payment-schedule';
 
 const projectionIncomeLimit = 50000;
 const projectionYearLimit = 100;
@@ -110,25 +101,16 @@ export class FinancialPlanningService {
 	}
 
 	private nextIncomeDateAfter(income: RecurringIncome, date: Date): Date | null {
-		const schedule = income.paymentSchedule;
-		if (schedule.type === 'daily') return addDays(date, 1);
-		if (schedule.type === 'weekly') return nextWeekday(date, weekDayIndex[schedule.weekday]);
-		if (schedule.type === 'monthly') return nextMonthlyDate(date, schedule.day);
-		return nextSemimonthlyDate(date, schedule.firstDay, schedule.secondDay);
+		return nextRecurringPaymentDate(date, income.paymentSchedule);
 	}
 
 	private nextExpenseDateAfter(expense: RecurringExpense, date: Date): Date | null {
-		const schedule = expense.paymentSchedule;
-		if (schedule.type === 'daily') return addDays(date, 1);
-		if (schedule.type === 'weekly') return nextWeekday(date, weekDayIndex[schedule.weekday]);
-		if (schedule.type === 'semimonthly') return nextSemimonthlyDate(date, schedule.firstDay, schedule.secondDay);
-		if (schedule.type === 'monthly') return nextMonthlyDate(date, schedule.day);
-		if (schedule.type === 'yearly') return nextYearlyDate(date, schedule.month, schedule.day);
-		if (expense.customIntervalCount && expense.customIntervalUnit) {
-			return addCustomInterval(date, expense.customIntervalCount, expense.customIntervalUnit);
-		}
-
-		return null;
+		return nextRecurringPaymentDate(date, expense.paymentSchedule, {
+			customInterval: {
+				count: expense.customIntervalCount,
+				unit: expense.customIntervalUnit
+			}
+		});
 	}
 }
 

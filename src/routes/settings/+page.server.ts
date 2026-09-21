@@ -1,10 +1,12 @@
 import { fail, type Actions } from '@sveltejs/kit';
 import {
+	BankInUseError,
 	BankNameAlreadyExistsError,
 	BankNotFoundError
 } from '$lib/server/banks/bank.errors';
 import { bankService } from '$lib/server/banks/bank.service';
 import {
+	CategoryInUseError,
 	CategoryNameAlreadyExistsError,
 	CategoryNotFoundError,
 	ParentCategoryNotFoundError
@@ -171,7 +173,7 @@ export const actions: Actions = {
 			await bankService.deleteBank(id);
 			return { action: 'delete-bank' as const, success: 'Banco eliminado.' };
 		} catch (error) {
-			if (error instanceof BankNotFoundError) {
+			if (error instanceof BankNotFoundError || error instanceof BankInUseError) {
 				return fail(400, { action: 'delete-bank' as const, targetId: id, message: error.message });
 			}
 			throw error;
@@ -242,7 +244,7 @@ export const actions: Actions = {
 			await categoryService.deleteCategory(id);
 			return { action: 'delete-category' as const, success: 'Categoría eliminada.' };
 		} catch (error) {
-			if (error instanceof CategoryNotFoundError) {
+			if (error instanceof CategoryNotFoundError || error instanceof CategoryInUseError) {
 				return fail(400, {
 					action: 'delete-category' as const,
 					targetId: id,

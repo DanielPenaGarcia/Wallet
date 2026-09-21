@@ -20,7 +20,7 @@ It does not implement credit card payments as movements, new movement-based purc
 - `Editar`: opens a modal with the selected account configuration.
 - `Ajustar saldo`: corrects personal and debit balances and stores an adjustment reason.
 - `Activar` / `Desactivar`: toggles credit card active state.
-- `Eliminar`: deletes debit and credit accounts. The personal account cannot be deleted.
+- `Eliminar`: deletes debit and credit accounts. The personal account cannot be deleted. Deleting an account does not delete the bank record.
 - `Ver detalle`: opens a credit-card-only detail page for summary and installment purchases.
 - `Registrar compra MSI`: registers a historical installment purchase for a credit card.
 - `Registrar corte`: registers the latest known credit card statement without changing current consumed balance.

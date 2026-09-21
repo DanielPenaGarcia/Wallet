@@ -97,4 +97,6 @@ This projection is approximate. It does not include interest, fees, tax, bonuses
 
 Statement persistence and validation are owned by `src/lib/server/credit-card-statements`.
 
+The service enforces one statement per `accountId` and `statementDate` before create and update operations.
+
 Client-safe cycle and projection helpers live in `src/lib/modules/credit-card-statements`.

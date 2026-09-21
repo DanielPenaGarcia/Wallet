@@ -2,7 +2,7 @@ import type { BankOption } from '$lib/modules/banks/types/bank-option.types';
 import type { Bank } from '$lib/modules/banks/types/bank.types';
 import { colorInputToHex } from '$lib/shared/utils/color';
 import { normalizeName } from '$lib/shared/utils/normalize-name';
-import { BankNameAlreadyExistsError, BankNotFoundError } from './bank.errors';
+import { BankInUseError, BankNameAlreadyExistsError, BankNotFoundError } from './bank.errors';
 import type { BankRepository } from './bank.repository';
 import { drizzleBankRepository } from './drizzle-bank.repository';
 import type { CreateBankInput } from './inputs/create-bank.input';
@@ -35,6 +35,7 @@ export class BankService {
 
 	async deleteBank(id: string): Promise<void> {
 		if (!(await this.bankRepository.findById(id))) throw new BankNotFoundError();
+		if (await this.bankRepository.hasAccounts(id)) throw new BankInUseError();
 		await this.bankRepository.delete(id);
 	}
 

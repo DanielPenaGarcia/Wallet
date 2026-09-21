@@ -11,3 +11,10 @@ export class BankNotFoundError extends Error {
 		this.name = 'BankNotFoundError';
 	}
 }
+
+export class BankInUseError extends Error {
+	constructor() {
+		super('No se puede eliminar un banco que está asociado a una cuenta.');
+		this.name = 'BankInUseError';
+	}
+}

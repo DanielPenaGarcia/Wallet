@@ -1,16 +1,14 @@
-# Personal Finance Manager
+# Wallet
 
-Aplicación personal para administrar ingresos, gastos recurrentes, tarjetas de crédito, cuentas por cobrar, fondos apartados y distribución inteligente del dinero disponible.
+Wallet is a personal finance manager built with SvelteKit, TypeScript, Tailwind CSS, Drizzle ORM, and SQLite.
 
-El objetivo principal de la aplicación es responder una pregunta sencilla:
+The application helps answer one practical question:
 
-> **Tengo una cantidad de dinero disponible. ¿A dónde debería dirigirla primero?**
+> Tengo una cantidad de dinero disponible. A donde deberia dirigirla primero?
 
-La aplicación no busca únicamente registrar gastos. Su propósito es ayudar a tomar decisiones financieras considerando prioridades, fechas de pago, obligaciones, fondos reservados y deudas.
+Wallet is not only an expense log. Its purpose is to keep financial context explicit: real cash, credit usage, recurring obligations, statement dates, installment purchases, goals, and projected free money.
 
----
-
-## Ejecutar localmente
+## Run Locally
 
 ```bash
 pnpm install
@@ -19,894 +17,112 @@ pnpm db:migrate
 pnpm dev
 ```
 
-La aplicación usa SQLite mediante `DATABASE_URL`. Para desarrollo local, `.env.example` apunta a `local.db`.
+The app uses SQLite through `DATABASE_URL`. For local development, `.env.example` points to `local.db`.
 
-Comandos útiles:
+Useful commands:
 
 ```bash
 pnpm check
 pnpm build
 pnpm db:generate
 pnpm db:migrate
+pnpm db:push
+pnpm db:seed:categories
+pnpm db:seed:color-palettes
 ```
 
----
+## Current Scope
 
-## Objetivo
+Wallet currently includes:
 
-Construir una aplicación simple, mantenible y extensible que permita:
+- Application settings, local profile preferences, and configurable color palettes.
+- Bank catalog.
+- Hierarchical expense categories.
+- Personal cash, debit, and credit accounts.
+- Manual balance adjustments for cash and debit accounts.
+- Historical credit card statements.
+- Historical months-without-interest installment purchases.
+- Recurring incomes.
+- Recurring expenses.
+- Financial goals with projected contributions from recurring income and expense configuration.
 
-- Registrar ingresos.
-- Registrar gastos recurrentes.
-- Registrar tarjetas de crédito y sus fechas de corte.
-- Registrar pagos para no generar intereses.
-- Registrar compras a meses sin intereses.
-- Registrar dinero que otras personas deben.
-- Registrar compromisos futuros.
-- Crear fondos o apartados.
-- Calcular cuánto dinero está realmente disponible.
-- Distribuir una cantidad de dinero según prioridades.
-- Evitar considerar el crédito disponible como ingreso.
-- Evitar gastar dinero que ya está comprometido.
-- Mantener una visión clara de deuda respaldada y deuda no respaldada.
+Still planned or conceptual:
 
----
+- Full Allocation Engine.
+- Accounts receivable.
+- Reserved funds.
+- Future commitments.
+- Movement-backed balance changes for cards and accounts.
+- Dashboard distribution workflow.
 
-# Problema que resuelve
+## Architecture
 
-Un saldo bancario alto no necesariamente significa que todo ese dinero esté disponible.
-
-Ejemplo:
+Wallet is a modular monolith. Route files adapt SvelteKit requests and forms; business rules live in services; repositories own database access; client-safe UI code, types, and pure helpers live under `src/lib/modules`.
 
 ```text
-Saldo bancario:              $10,000
-Dinero comprometido:          $7,200
--------------------------------------
-Dinero realmente disponible:  $2,800
+src/lib/server/<module>          private server services, repositories, inputs, errors
+src/lib/server/db                Drizzle schema, database client, migrations
+src/lib/modules/<module>         Svelte components, UI/shared types, pure helpers
+src/lib/shared                   cross-module client-safe utilities and types
+src/routes                       SvelteKit route adapters
+docs/entities                    entity fields, invariants, derived values
+docs/modules                     user-facing module scope and workflows
 ```
 
-La aplicación debe distinguir entre:
+More detail:
 
-- Dinero disponible.
-- Dinero comprometido.
-- Dinero reservado.
-- Dinero por cobrar.
-- Deuda exigible.
-- Deuda diferida.
-- Dinero libre para gastar.
+- [Architecture](docs/architecture.md)
+- [Domain conventions](docs/domain.md)
+- [Roadmap](docs/roadmap.md)
+- [Allocation Engine boundary](docs/modules/allocation-engine.md)
 
----
+## Domain Rules
 
-# Stack tecnológico
+- Persisted monetary values are integer minor units and use explicit names such as `amountCents`, `balanceCents`, `targetAmountCents`, and `expectedAmountCents`.
+- Derived values are calculated unless they need to be stored for history or audit.
+- Credit available is not income.
+- Historical credit card statements and installment purchases explain credit balance composition; they do not mutate `accounts.balanceCents`.
+- Bank and category deletion is restricted when references would lose financial context.
+- Category `isEssential` is explicit per category; child categories do not inherit it automatically.
+- Recurring income payment schedules and work schedules are separate concepts.
 
-## Frontend y backend
+## Documentation
 
-- [SvelteKit](https://svelte.dev/docs/kit)
-- TypeScript
-- Tailwind CSS
+Entity docs:
 
-## Persistencia
+- [Account](docs/entities/account.md)
+- [Bank](docs/entities/bank.md)
+- [Category](docs/entities/category.md)
+- [Color Palette](docs/entities/color-palette.md)
+- [Credit Card Statement](docs/entities/credit-card-statement.md)
+- [Financial Goal](docs/entities/financial-goal.md)
+- [Installment Purchase](docs/entities/installment-purchase.md)
+- [Movement](docs/entities/movement.md)
+- [Recurring Expense](docs/entities/recurring-expense.md)
+- [Recurring Income](docs/entities/recurring-income.md)
 
-- SQLite
-- Drizzle ORM
+Module docs:
 
-## Validación
+- [Accounts](docs/modules/accounts.md)
+- [Allocation Engine](docs/modules/allocation-engine.md)
+- [Financial Goals](docs/modules/financial-goals.md)
+- [Movements](docs/modules/movements.md)
+- [Recurring](docs/modules/recurring.md)
+- [Settings](docs/modules/settings.md)
 
-- Zod
+## Technical Principles
 
-## Administrador de paquetes
+- Keep financial logic outside Svelte components.
+- Keep services independent from `Request`, `RequestEvent`, `FormData`, cookies, route params, and URLs.
+- Keep repositories focused on persistence.
+- Prefer shared client-safe pure utilities under `src/lib/shared` when behavior is reused by multiple modules.
+- Use `ActionButton` for user-triggered application actions.
+- Add or update docs when changing business rules.
 
-- pnpm
+## Validation
 
----
+Run this before considering changes complete:
 
-# Arquitectura
-
-El proyecto debe mantenerse como una aplicación monolítica modular.
-
-No se requieren microservicios, colas, Redis ni infraestructura distribuida para el MVP.
-
-```mermaid
-flowchart TD
-    UI[UI / Svelte Pages]
-    USECASES[Application / Use Cases]
-    DOMAIN[Domain]
-    REPOSITORIES[Repository Interfaces]
-    INFRA[Infrastructure]
-    DB[(SQLite)]
-
-    UI --> USECASES
-    USECASES --> DOMAIN
-    USECASES --> REPOSITORIES
-    INFRA --> REPOSITORIES
-    INFRA --> DB
+```bash
+pnpm check
 ```
-
-La lógica financiera debe vivir fuera de los componentes visuales.
-
-Los componentes no deben decidir cómo distribuir dinero ni calcular prioridades.
-
----
-
-# Módulos principales
-
-## 1. Dashboard
-
-Es la pantalla principal de la aplicación.
-
-Debe permitir ingresar una cantidad disponible:
-
-```text
-Monto a distribuir
-
-$6,500.00
-```
-
-La aplicación calcula automáticamente a dónde dirigir el dinero.
-
-Ejemplo:
-
-| Prioridad | Destino | Necesario | Asignar | Restante |
-|---:|---|---:|---:|---:|
-| 1 | Alimentación | $1,500 | $1,500 | $5,000 |
-| 2 | Transporte | $220 | $220 | $4,780 |
-| 3 | Compromiso próximo | $500 | $500 | $4,280 |
-| 4 | Tarjeta próxima a vencer | $1,300 | $1,300 | $2,980 |
-| 5 | Fondo de emergencia | $500 | $500 | $2,480 |
-| 6 | Otra deuda | $2,480 | $2,480 | $0 |
-
-El Dashboard debe mostrar al menos:
-
-- Dinero disponible.
-- Dinero comprometido.
-- Dinero realmente libre.
-- Total de deuda.
-- Total de deuda exigible.
-- Fondos reservados.
-- Cuentas por cobrar.
-- Próximas obligaciones.
-- Distribución sugerida.
-
----
-
-# 2. Gastos recurrentes
-
-Permite registrar obligaciones periódicas.
-
-Ejemplos:
-
-- Agua.
-- Electricidad.
-- Internet.
-- Transporte.
-- Gimnasio.
-- Suscripciones.
-- Alimentación.
-- Otros gastos del hogar.
-
-Modelo aproximado:
-
-```ts
-export type ExpenseFrequency =
-  | "one_time"
-  | "daily"
-  | "weekly"
-  | "semimonthly"
-  | "monthly"
-  | "yearly"
-  | "custom";
-
-export interface RecurringExpense {
-  id: string;
-  name: string;
-  category: string;
-  amount: number;
-  amountKind: "fixed" | "estimated";
-  frequency: ExpenseFrequency;
-  customIntervalCount?: number;
-  customIntervalUnit?: "days" | "weeks" | "months" | "years";
-  priority: number;
-  active: boolean;
-}
-```
-
----
-
-# 3. Tarjetas de crédito
-
-Cada tarjeta debe mantener información independiente.
-
-Ejemplo:
-
-```text
-BBVA Azul
-
-Saldo actual:
-$12,132.43
-
-Día de corte:
-14
-
-Fecha límite:
-3
-
-Pago para no generar intereses:
-$8,125.93
-
-Mensualidad MSI:
-$1,643.00
-```
-
-Modelo aproximado:
-
-```ts
-export interface CreditCard {
-  id: string;
-  name: string;
-  currentBalance: number;
-  creditLimit?: number;
-
-  statementDay: number;
-  paymentDueDay: number;
-
-  paymentToAvoidInterest: number;
-  minimumPayment: number;
-
-  active: boolean;
-}
-```
-
----
-
-# Compras a meses sin intereses
-
-Las compras a MSI deben almacenarse de forma independiente al saldo regular.
-
-```ts
-export interface InstallmentPurchase {
-  id: string;
-  creditCardId: string;
-
-  description: string;
-
-  originalAmount: number;
-  remainingAmount: number;
-
-  monthlyPayment: number;
-
-  totalInstallments: number;
-  currentInstallment: number;
-
-  interestRate: number;
-}
-```
-
-Una tarjeta puede tener saldo pendiente sin que todo ese saldo sea exigible durante el periodo actual.
-
-Por ello se debe distinguir entre:
-
-```text
-Saldo total
-Pago requerido
-Saldo pendiente a MSI
-```
-
----
-
-# 4. Cuentas por cobrar
-
-Permite registrar dinero prestado a otras personas.
-
-Ejemplo:
-
-```text
-Préstamo
-
-Monto original:
-$2,897.37
-
-Cobrado:
-$0
-
-Pendiente:
-$2,897.37
-```
-
-Modelo:
-
-```ts
-export interface Receivable {
-  id: string;
-
-  description: string;
-  person?: string;
-
-  originalAmount: number;
-  receivedAmount: number;
-
-  expectedDate?: Date;
-
-  status: "pending" | "partial" | "paid";
-}
-```
-
-## Regla importante
-
-El dinero pendiente de cobro:
-
-> **No debe considerarse dinero disponible hasta que realmente sea recibido.**
-
-Cuando se registra un pago recibido, la aplicación puede ofrecer:
-
-```text
-Recibiste $2,897.37
-
-¿Deseas distribuir este dinero?
-```
-
----
-
-# 5. Fondos / apartados
-
-Los fondos representan dinero reservado para un propósito específico.
-
-Ejemplos:
-
-- Fondo para luz.
-- Fondo de emergencia.
-- Fondo para viaje.
-- Fondo para tarjeta.
-- Fondo para compras futuras.
-
-Modelo:
-
-```ts
-export interface Fund {
-  id: string;
-
-  name: string;
-
-  targetAmount?: number;
-  currentAmount: number;
-
-  priority: number;
-  active: boolean;
-}
-```
-
-Ejemplo:
-
-```text
-Fondo electricidad
-
-Objetivo:
-$3,000
-
-Apartado:
-$1,500
-
-Falta:
-$1,500
-```
-
----
-
-# 6. Compromisos futuros
-
-Son obligaciones que todavía no se han pagado pero que tienen fecha conocida.
-
-Ejemplos:
-
-- Viajes.
-- Eventos.
-- Compras comprometidas.
-- Pagos anuales.
-- Reparaciones.
-
-```ts
-export interface Commitment {
-  id: string;
-
-  name: string;
-
-  amount: number;
-  reservedAmount: number;
-
-  dueDate: Date;
-
-  priority: number;
-
-  status:
-    | "pending"
-    | "reserved"
-    | "paid"
-    | "cancelled";
-}
-```
-
----
-
-# Allocation Engine
-
-El motor de distribución es la parte principal del sistema.
-
-Debe recibir:
-
-```ts
-allocateMoney({
-  amount,
-  obligations,
-  funds,
-  debts,
-  rules
-});
-```
-
-y devolver:
-
-```ts
-export interface AllocationResult {
-  initialAmount: number;
-
-  allocations: Allocation[];
-
-  remainingAmount: number;
-}
-```
-
----
-
-## Allocation
-
-```ts
-export interface Allocation {
-  destinationId: string;
-  destinationType:
-    | "expense"
-    | "credit-card"
-    | "fund"
-    | "commitment"
-    | "saving";
-
-  name: string;
-
-  requiredAmount: number;
-  allocatedAmount: number;
-
-  priority: number;
-
-  status:
-    | "covered"
-    | "partial"
-    | "unfunded";
-}
-```
-
----
-
-# Estrategia de distribución
-
-No se debe utilizar únicamente una distribución porcentual.
-
-La aplicación debe utilizar un sistema híbrido:
-
-1. Prioridades obligatorias.
-2. Fechas límite.
-3. Gastos esenciales.
-4. Compromisos.
-5. Fondos mínimos.
-6. Deudas.
-7. Ahorro.
-8. Gastos opcionales.
-
-Ejemplo:
-
-```text
-1. Alimentación
-2. Transporte
-3. Pago que vence antes del siguiente ingreso
-4. Compromisos previamente adquiridos
-5. Fondo de emergencia mínimo
-6. Deuda
-7. Ahorro
-8. Gastos personales
-```
-
-Después de cubrir las obligaciones prioritarias, el remanente puede utilizar reglas porcentuales.
-
----
-
-# Algoritmo inicial
-
-```ts
-export function allocateMoney(
-  availableMoney: number,
-  obligations: Obligation[]
-): AllocationResult {
-  let remainingAmount = availableMoney;
-
-  const allocations: Allocation[] = [];
-
-  const sortedObligations = obligations
-    .filter((obligation) => obligation.active)
-    .sort((a, b) => a.priority - b.priority);
-
-  for (const obligation of sortedObligations) {
-    if (remainingAmount <= 0) {
-      allocations.push({
-        destinationId: obligation.id,
-        destinationType: obligation.type,
-        name: obligation.name,
-        requiredAmount: obligation.requiredAmount,
-        allocatedAmount: 0,
-        priority: obligation.priority,
-        status: "unfunded"
-      });
-
-      continue;
-    }
-
-    const allocatedAmount = Math.min(
-      obligation.requiredAmount,
-      remainingAmount
-    );
-
-    remainingAmount -= allocatedAmount;
-
-    allocations.push({
-      destinationId: obligation.id,
-      destinationType: obligation.type,
-      name: obligation.name,
-      requiredAmount: obligation.requiredAmount,
-      allocatedAmount,
-      priority: obligation.priority,
-      status:
-        allocatedAmount >= obligation.requiredAmount
-          ? "covered"
-          : "partial"
-    });
-  }
-
-  return {
-    initialAmount: availableMoney,
-    allocations,
-    remainingAmount
-  };
-}
-```
-
-Este algoritmo es únicamente la primera versión.
-
-Posteriormente deberá considerar:
-
-- Fecha de vencimiento.
-- Fecha del siguiente ingreso.
-- Monto ya reservado.
-- Pago mínimo.
-- Pago para no generar intereses.
-- Categoría.
-- Prioridad configurable.
-- MSI.
-- Saldo disponible en fondos.
-
----
-
-# Conceptos financieros de la aplicación
-
-## Dinero disponible
-
-Dinero que actualmente existe y puede ser utilizado.
-
-```text
-availableCash
-```
-
----
-
-## Dinero comprometido
-
-Dinero reservado para obligaciones existentes.
-
-```text
-committedMoney
-```
-
----
-
-## Dinero realmente libre
-
-```text
-freeMoney =
-  availableCash
-  - committedMoney
-```
-
-Este debe ser uno de los indicadores principales del Dashboard.
-
----
-
-# Deuda respaldada
-
-Una deuda está respaldada cuando ya existe dinero reservado para cubrirla.
-
-Ejemplo:
-
-```text
-Saldo tarjeta:
-$2,000
-
-Fondo reservado para tarjeta:
-$2,000
-
-Deuda no respaldada:
-$0
-```
-
----
-
-# Deuda no respaldada
-
-```text
-unbackedDebt =
-  debt
-  - reservedMoney
-  - nonDueInstallments
-```
-
-El objetivo de la aplicación no necesariamente es que todas las tarjetas tengan saldo `$0`.
-
-El objetivo es reducir:
-
-```text
-deuda no respaldada
-```
-
----
-
-# Reglas de negocio
-
-## RN-01
-
-Una tarjeta de crédito nunca debe considerarse ingreso.
-
----
-
-## RN-02
-
-Registrar una compra con tarjeta debe consumir presupuesto inmediatamente.
-
-El hecho de que la tarjeta se pague posteriormente no significa que el gasto ocurra en el futuro.
-
----
-
-## RN-03
-
-El dinero de una cuenta por cobrar no debe considerarse disponible hasta registrarse como recibido.
-
----
-
-## RN-04
-
-Los fondos apartados deben descontarse del dinero realmente libre.
-
----
-
-## RN-05
-
-Una obligación puede recibir una asignación parcial cuando no existe dinero suficiente.
-
----
-
-## RN-06
-
-Las obligaciones con prioridad superior deben recibir dinero antes que las de menor prioridad.
-
----
-
-## RN-07
-
-Los gastos opcionales pueden quedar sin asignación cuando existen obligaciones prioritarias pendientes.
-
----
-
-## RN-08
-
-El pago para no generar intereses debe tener prioridad sobre gastos opcionales cuando su fecha límite ocurre antes del próximo ingreso esperado.
-
----
-
-## RN-09
-
-Las mensualidades de MSI deben diferenciarse del saldo no exigible.
-
----
-
-## RN-10
-
-El sistema debe permitir modificar manualmente prioridades y montos sugeridos.
-
----
-
-# MVP
-
-El MVP debe incluir únicamente:
-
-- [ ] Dashboard.
-- [ ] Registrar gastos recurrentes.
-- [ ] Editar gastos recurrentes.
-- [ ] Registrar tarjetas.
-- [ ] Editar tarjetas.
-- [ ] Registrar compras a MSI.
-- [ ] Registrar cuentas por cobrar.
-- [ ] Registrar pagos de cuentas por cobrar.
-- [ ] Registrar fondos.
-- [ ] Registrar compromisos.
-- [ ] Registrar ingresos.
-- [ ] Distribuir una cantidad disponible.
-- [ ] Mostrar deuda respaldada.
-- [ ] Mostrar deuda no respaldada.
-- [ ] Mostrar dinero realmente libre.
-
----
-
-# Fuera del MVP
-
-No implementar inicialmente:
-
-- Integraciones bancarias.
-- Scraping bancario.
-- OCR de estados de cuenta.
-- Inteligencia artificial.
-- Microservicios.
-- Redis.
-- Colas.
-- Notificaciones push.
-- Multiusuario.
-- Sincronización bancaria automática.
-- Importación automática de movimientos.
-- Aplicación móvil nativa.
-
-Estas funcionalidades pueden considerarse después de validar que el motor de distribución realmente sea útil.
-
----
-
-# Estructura sugerida
-
-```text
-src/
-├── lib/
-│   ├── modules/
-│   │   ├── allocation/
-│   │   │   ├── domain/
-│   │   │   ├── application/
-│   │   │   └── infrastructure/
-│   │   │
-│   │   ├── credit-cards/
-│   │   ├── expenses/
-│   │   ├── funds/
-│   │   ├── income/
-│   │   ├── commitments/
-│   │   └── receivables/
-│   │
-│   ├── server/
-│   │   └── db/
-│   │       ├── schema/
-│   │       ├── migrations/
-│   │       └── index.ts
-│   │
-│   ├── components/
-│   └── utils/
-│
-└── routes/
-    ├── +page.svelte
-    ├── cards/
-    ├── expenses/
-    ├── funds/
-    └── receivables/
-```
-
----
-
-# Principios técnicos
-
-El proyecto debe priorizar:
-
-- Clean Code.
-- SOLID.
-- Separación de responsabilidades.
-- Tipado estricto.
-- Componentes pequeños.
-- Lógica de negocio independiente de Svelte.
-- Validaciones centralizadas.
-- No duplicar reglas financieras.
-- Repositories desacoplados de los casos de uso.
-- Tests unitarios para el Allocation Engine.
-
----
-
-# Testing
-
-La prioridad de pruebas debe estar en el motor de distribución.
-
-Ejemplo:
-
-```ts
-describe("allocateMoney", () => {
-  it("should prioritize essential obligations", () => {
-    // ...
-  });
-
-  it("should partially fund an obligation when money is insufficient", () => {
-    // ...
-  });
-
-  it("should never allocate more money than available", () => {
-    // ...
-  });
-
-  it("should leave optional expenses unfunded when higher priorities exist", () => {
-    // ...
-  });
-});
-```
-
----
-
-# Roadmap
-
-## Fase 1 — Base
-
-- Configuración de SvelteKit.
-- SQLite.
-- Drizzle.
-- Migraciones.
-- Layout principal.
-
-## Fase 2 — Configuración financiera
-
-- Gastos recurrentes.
-- Tarjetas.
-- Cuentas por cobrar.
-- Fondos.
-- Compromisos.
-
-## Fase 3 — Allocation Engine
-
-- Prioridades.
-- Distribución de dinero.
-- Asignaciones parciales.
-- Dinero restante.
-
-## Fase 4 — Dashboard
-
-- Dinero disponible.
-- Dinero comprometido.
-- Dinero libre.
-- Deuda.
-- Fondos.
-- Distribución sugerida.
-
-## Fase 5 — Historial
-
-- Ingresos.
-- Pagos.
-- Movimientos.
-- Historial de distribuciones.
-
-## Fase 6 — Mejoras
-
-- Estadísticas.
-- Metas.
-- Historial mensual.
-- Alertas.
-- Importación de estados de cuenta.
-
----
-
-# Estado
-
-Proyecto en fase de diseño.
-
-La primera meta técnica es implementar correctamente:
-
-> **Ingresar una cantidad disponible y obtener una distribución clara, justificable y reproducible de a dónde debe dirigirse ese dinero.**

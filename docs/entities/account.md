@@ -69,6 +69,7 @@ Credit statement cycles and payment due dates are derived from `statementDay` an
 - A personal account is automatically ensured by the account service and cannot be deleted.
 - Account names must be unique after normalization.
 - Debit and credit accounts require an existing bank.
+- A bank referenced by any account cannot be deleted from settings.
 - Debit accounts require exactly four card digits.
 - Debit and credit accounts require a valid card color.
 - Debit initial balance cannot be negative.

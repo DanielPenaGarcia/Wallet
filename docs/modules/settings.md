@@ -22,7 +22,7 @@ Available actions:
 
 - `Registrar`: opens a modal to create a bank with name, alias, and color.
 - `Editar`: opens a modal with the selected bank data.
-- `Eliminar`: opens a confirmation modal and removes the bank from the catalog.
+- `Eliminar`: opens a confirmation modal and removes the bank from the catalog only when no account references it.
 
 ## Categories
 
@@ -33,11 +33,12 @@ Available actions:
 - `Nueva categoría`: opens a modal to create a root category with name, color, and the essential flag.
 - `Agregar subcategoría`: opens a modal to create a child category under a root category.
 - `Editar`: updates the category name, root color when applicable, and essential flag.
-- `Eliminar`: removes the category from the catalog. Child categories are also removed through the database cascade.
+- `Eliminar`: removes the category from the catalog only when it has no child categories and no recurring expenses associated with it.
 
 Rules:
 
 - Category names must be unique within the same parent level.
 - A child category requires an existing parent category.
 - Root categories require a valid hexadecimal or rgb color from the settings form.
-- The essential flag marks categories whose associated expenses are considered necessary or worthwhile.
+- The essential flag is explicit per category. Child categories do not inherit it automatically from their parent.
+- Categories in use by child categories or recurring expenses cannot be deleted.

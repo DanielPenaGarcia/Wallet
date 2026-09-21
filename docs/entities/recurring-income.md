@@ -6,7 +6,7 @@
 
 - `id`: unique identifier.
 - `title`: user-facing name or title for the income.
-- `expectedAmountCents`: expected amount for each payment period, stored in cents.
+- `expectedAmountCents`: expected amount for each payment period, stored as an integer number of cents.
 - `source`: where the income comes from. Supported values are `work`, `business`, `support`, `rent`, and `other`.
 - `frequency`: how often the money is received. Supported values are `daily`, `weekly`, `semimonthly`, and `monthly`.
 - `paymentSchedule`: JSON configuration for the expected payment date according to the frequency.

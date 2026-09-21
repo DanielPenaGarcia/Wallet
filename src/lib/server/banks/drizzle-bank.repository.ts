@@ -1,6 +1,6 @@
 import { asc, eq } from 'drizzle-orm';
 import { db, type Database } from '$lib/server/db';
-import { banks } from '$lib/server/db/schema';
+import { accounts, banks } from '$lib/server/db/schema';
 import type { BankRepository } from './bank.repository';
 import type { CreateBankInput } from './inputs/create-bank.input';
 import type { UpdateBankInput } from './inputs/update-bank.input';
@@ -12,6 +12,16 @@ class DrizzleBankRepository implements BankRepository {
 		return this.database.query.banks.findFirst({
 			where: (bank, { eq }) => eq(bank.id, id)
 		});
+	}
+
+	async hasAccounts(id: string) {
+		const [account] = await this.database
+			.select({ id: accounts.id })
+			.from(accounts)
+			.where(eq(accounts.bankId, id))
+			.limit(1);
+
+		return Boolean(account);
 	}
 
 	list() {

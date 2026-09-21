@@ -3,11 +3,12 @@ import {
 	expenseIntervalUnits
 } from '$lib/modules/expenses/types/expense.types';
 import {
-	recurringExpenseFrequencies,
-	weekDays,
-	type MonthDay,
-	type RecurringExpensePaymentSchedule
+	recurringExpenseFrequencies
 } from '$lib/modules/recurring-expenses/types/recurring-expense.types';
+import {
+	isNumericRecurrenceMonthDay,
+	isRecurringPaymentScheduleForFrequency
+} from '$lib/shared/utils/recurring-payment-schedule';
 import { drizzleCategoryRepository } from '$lib/server/categories/drizzle-category.repository';
 import type { CategoryRepository } from '$lib/server/categories/category.repository';
 import { drizzleRecurringExpenseRepository } from './drizzle-recurring-expense.repository';
@@ -78,7 +79,7 @@ export class RecurringExpenseService {
 		if (input.categoryId.length === 0 || !(await this.categoryRepository.findById(input.categoryId))) {
 			errors.categoryId = ['Selecciona una categoría existente.'];
 		}
-		if (!this.isPaymentScheduleForFrequency(input.paymentSchedule, input.frequency)) {
+		if (!isRecurringPaymentScheduleForFrequency(input.paymentSchedule, input.frequency)) {
 			errors.paymentSchedule = ['La configuración de pago no corresponde a la frecuencia.'];
 		}
 		if (input.frequency === 'custom') {
@@ -89,7 +90,7 @@ export class RecurringExpenseService {
 				errors.customIntervalUnit = ['Selecciona el periodo del intervalo.'];
 			}
 		}
-		if (input.statementDay !== null && !this.isNumericMonthDay(input.statementDay)) {
+		if (input.statementDay !== null && !isNumericRecurrenceMonthDay(input.statementDay)) {
 			errors.statementDay = ['El día de corte debe estar entre 1 y 31.'];
 		}
 		if (input.lastPaidAt !== null && !this.isIsoDate(input.lastPaidAt)) {
@@ -97,34 +98,6 @@ export class RecurringExpenseService {
 		}
 
 		if (Object.keys(errors).length > 0) throw new RecurringExpenseValidationError(errors);
-	}
-
-	private isPaymentScheduleForFrequency(
-		paymentSchedule: RecurringExpensePaymentSchedule,
-		frequency: CreateRecurringExpenseInput['frequency']
-	) {
-		if (paymentSchedule.type !== frequency) return false;
-		if (paymentSchedule.type === 'daily') return true;
-		if (paymentSchedule.type === 'weekly') return weekDays.includes(paymentSchedule.weekday);
-		if (paymentSchedule.type === 'semimonthly') {
-			return this.isNumericMonthDay(paymentSchedule.firstDay) && this.isMonthDay(paymentSchedule.secondDay);
-		}
-		if (paymentSchedule.type === 'monthly') return this.isMonthDay(paymentSchedule.day);
-		if (paymentSchedule.type === 'yearly') {
-			return Number.isInteger(paymentSchedule.month) &&
-				paymentSchedule.month >= 1 &&
-				paymentSchedule.month <= 12 &&
-				this.isMonthDay(paymentSchedule.day);
-		}
-		return true;
-	}
-
-	private isMonthDay(value: MonthDay) {
-		return value === 'last' || this.isNumericMonthDay(value);
-	}
-
-	private isNumericMonthDay(value: number) {
-		return Number.isInteger(value) && value >= 1 && value <= 31;
 	}
 
 	private isIsoDate(value: string) {

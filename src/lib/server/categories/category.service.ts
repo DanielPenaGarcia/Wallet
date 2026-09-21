@@ -2,6 +2,7 @@ import type { Category, CategoryNode } from '$lib/modules/categories/types/categ
 import { colorInputToHex } from '$lib/shared/utils/color';
 import { normalizeName } from '$lib/shared/utils/normalize-name';
 import {
+	CategoryInUseError,
 	CategoryNameAlreadyExistsError,
 	CategoryNotFoundError,
 	ParentCategoryNotFoundError
@@ -66,6 +67,12 @@ export class CategoryService {
 
 	async deleteCategory(id: string): Promise<void> {
 		if (!(await this.categoryRepository.findById(id))) throw new CategoryNotFoundError();
+		if (
+			(await this.categoryRepository.hasChildren(id)) ||
+			(await this.categoryRepository.hasRecurringExpenses(id))
+		) {
+			throw new CategoryInUseError();
+		}
 		await this.categoryRepository.delete(id);
 	}
 

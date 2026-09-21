@@ -1,7 +1,7 @@
 import { asc, eq } from 'drizzle-orm';
 import type { Category, CategoryColor } from '$lib/modules/categories/types/category.types';
 import { db, type Database } from '$lib/server/db';
-import { categories } from '$lib/server/db/schema';
+import { categories, recurringExpenses } from '$lib/server/db/schema';
 import type { CategoryRepository } from './category.repository';
 import type { CreateCategoryInput } from './inputs/create-category.input';
 import type { UpdateCategoryInput } from './inputs/update-category.input';
@@ -15,6 +15,26 @@ class DrizzleCategoryRepository implements CategoryRepository {
 		});
 
 		return category ? this.toCategory(category) : undefined;
+	}
+
+	async hasChildren(id: string) {
+		const [child] = await this.database
+			.select({ id: categories.id })
+			.from(categories)
+			.where(eq(categories.parentId, id))
+			.limit(1);
+
+		return Boolean(child);
+	}
+
+	async hasRecurringExpenses(id: string) {
+		const [expense] = await this.database
+			.select({ id: recurringExpenses.id })
+			.from(recurringExpenses)
+			.where(eq(recurringExpenses.categoryId, id))
+			.limit(1);
+
+		return Boolean(expense);
 	}
 
 	async list() {

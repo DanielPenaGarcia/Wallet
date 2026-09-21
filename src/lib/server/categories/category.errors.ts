@@ -12,6 +12,13 @@ export class CategoryNotFoundError extends Error {
 	}
 }
 
+export class CategoryInUseError extends Error {
+	constructor() {
+		super('No se puede eliminar una categoría que tiene subcategorías o gastos recurrentes asociados.');
+		this.name = 'CategoryInUseError';
+	}
+}
+
 export class ParentCategoryNotFoundError extends Error {
 	constructor() {
 		super('No se encontró la categoría padre.');

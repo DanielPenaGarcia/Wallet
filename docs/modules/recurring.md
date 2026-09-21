@@ -8,7 +8,25 @@ The page uses the shared tabs component. It includes `Gastos` for recurring expe
 
 ## Expenses
 
-The `Gastos` tab currently exposes an empty section only. It does not define recurring expense entities, persistence, service logic, validation rules, or actions yet.
+The `Gastos` tab manages `RecurringExpense` records.
+
+Available actions:
+
+- `Registrar`: opens a modal to create a recurring expense with category, amount, amount kind, frequency, payment schedule, optional statement day, last paid date, and active state.
+- `Editar`: opens a modal with the selected recurring expense data.
+- `Eliminar`: removes the recurring expense configuration.
+
+The tab displays configured expenses with category, amount, amount kind, frequency, payment schedule, next occurrence, active state, and row actions.
+
+Rules:
+
+- A recurring expense requires an existing category.
+- Supported amount kinds are `Fijo` and `Estimado`.
+- Supported frequencies are `Diario`, `Semanal`, `Quincenal`, `Mensual`, `Anual`, and `Personalizado`.
+- Custom frequency requires an interval count and interval unit.
+- Payment schedule must match the selected frequency.
+- Optional statement day must be a month day from `1` to `31`.
+- Optional last paid date must be a valid ISO date.
 
 ## Income
 
@@ -32,3 +50,9 @@ Rules:
 - Time blocks on the same day must not overlap.
 - A block start time must be earlier than its end time.
 - The expected amount is stored per payment period.
+
+## Shared Planning Use
+
+Financial goal projections read active recurring incomes and active recurring expenses to estimate free money periods. Recurring configuration does not create movements by itself.
+
+Income and expense next-date calculations share the recurrence helper in `src/lib/shared/utils/recurring-payment-schedule.ts`; module-specific code is responsible for validating which frequencies each record type supports.
