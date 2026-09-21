@@ -14,6 +14,7 @@ export type MovementSectionProps = {
 		endDate: string;
 		cardId: string;
 		categoryId: string;
+		type: string;
 	};
 	feedback?: MovementFormFeedback | null;
 };

@@ -22,6 +22,7 @@ export type Account = {
 	cardLastFourDigits: string | null;
 	cardColor: string | null;
 	balanceCents: number;
+	balanceAsOfDate: string;
 	creditLimitCents: number | null;
 	statementDay: number | null;
 	paymentDueDay: number | null;

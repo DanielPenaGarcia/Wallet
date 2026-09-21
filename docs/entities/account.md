@@ -17,6 +17,7 @@ The current account types are:
 - `cardLastFourDigits`: optional last four digits for card-like accounts. Required for debit accounts by the current form rules.
 - `cardColor`: optional color used to preview debit and credit cards in the UI.
 - `balanceCents`: current balance stored in cents.
+- `balanceAsOfDate`: financial reference date for the captured balance.
 - `creditLimitCents`: credit limit stored in cents. Applies only to `credit`.
 - `statementDay`: recurring monthly statement day for credit cards. Applies only to `credit`.
 - `paymentDueDay`: recurring monthly payment due day for credit cards. Applies only to `credit`.
@@ -26,7 +27,7 @@ The current account types are:
 
 ## Account Adjustments
 
-`accountAdjustments` stores manual balance corrections for personal and debit accounts.
+`accountAdjustments` stores legacy manual balance corrections for personal and debit accounts.
 
 Fields:
 
@@ -38,7 +39,7 @@ Fields:
 - `reason`: user-facing explanation for the correction.
 - `createdAt`: adjustment timestamp.
 
-Credit card balances are not adjusted through this history. A credit card balance is edited from the card configuration itself.
+New balance corrections are represented as explicit `adjustment` movements. Credit card balances are not adjusted through this history, and credit card corrections must be represented by the appropriate purchase or payment movement after the initial balance reference date.
 
 ## Derived Values
 
@@ -73,11 +74,15 @@ Credit statement cycles and payment due dates are derived from `statementDay` an
 - Debit accounts require exactly four card digits.
 - Debit and credit accounts require a valid card color.
 - Debit initial balance cannot be negative.
+- Debit and credit accounts require a balance reference date.
 - Credit limit must be greater than `0`.
 - Credit balance cannot be negative.
 - Credit balance cannot exceed credit limit.
 - Credit statement and payment due days must be recurring month days from `1` to `31`.
 - Credit available must remain derivable and is not persisted.
+- Creating movements changes `balanceCents` directly in the same transaction that persists the movement.
+- Post-start balance corrections must be explicit adjustment movements, not direct account writes.
+- Credit movements that affect balance must occur after the credit account's `balanceAsOfDate`.
 - Historical credit installment purchases do not mutate `balanceCents` when created, edited, or deleted.
 - Historical credit card statements do not mutate `balanceCents` when created.
 - Account `statementDay` and `paymentDueDay` can be used to prefill statement dates, but persisted statement dates remain historical and do not change if account configuration changes later.
@@ -86,4 +91,4 @@ Credit statement cycles and payment due dates are derived from `statementDay` an
 
 Account business rules are owned by `src/lib/server/accounts`.
 
-The service ensures the personal account exists, validates create and update inputs, exposes credit-card-only reads for the detail page, enforces name uniqueness, blocks deletion of the personal account, prevents credit balance changes through adjustment history, and delegates persistence through the account repository contract.
+The service ensures the personal account exists, validates create and update inputs, exposes credit-card-only reads for the detail page, enforces name uniqueness, blocks deletion of the personal account, preserves a financial reference date for the current balance, and delegates persistence through the account repository contract. It no longer exposes a direct balance-adjustment write path.

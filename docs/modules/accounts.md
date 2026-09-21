@@ -12,13 +12,13 @@ The module manages:
 - Historical installment purchases for credit cards.
 - Historical credit card statements.
 
-It does not implement credit card payments as movements, new movement-based purchases, minimum payments, payment to avoid interest, interest, commissions, bank adjustments, automatic statement generation, or movement history for credit cards.
+It does not implement minimum payments, payment to avoid interest, interest, commissions, automatic statement generation, or full movement history for credit cards inside the accounts module. Credit card payments and movement-based purchases belong to the movement module.
 
 ## Available Actions
 
 - `Nueva cuenta`: opens a modal to register a debit account or credit card.
 - `Editar`: opens a modal with the selected account configuration.
-- `Ajustar saldo`: corrects personal and debit balances and stores an adjustment reason.
+- `Ajustar saldo`: registers an explicit adjustment movement for personal and debit balances.
 - `Activar` / `Desactivar`: toggles credit card active state.
 - `Eliminar`: deletes debit and credit accounts. The personal account cannot be deleted. Deleting an account does not delete the bank record.
 - `Ver detalle`: opens a credit-card-only detail page for summary and installment purchases.
@@ -37,6 +37,7 @@ Captured fields:
 - Last four card digits.
 - Card color.
 - Initial balance.
+- Balance reference date.
 
 The list preview uses the same compact visual structure as credit cards and displays balance, card ending, type, and bank.
 
@@ -52,6 +53,7 @@ Captured fields:
 - Card color.
 - Credit limit.
 - Current consumed balance.
+- Balance reference date.
 - Statement day.
 - Payment due day.
 - Active state.
@@ -106,15 +108,19 @@ If the previous statement outstanding amount plus future MSI exceeds the current
 
 ## Balance Responsibilities
 
-Personal and debit account balances can be corrected through adjustment history.
+Personal and debit account balances can be corrected through explicit adjustment movements and changed by movement creation.
 
-Credit card balance is part of the credit card's current state and is edited from the card configuration. Historical MSI purchase registration and historical statement registration explain composition only; those actions do not increase or decrease the card balance. Future movement functionality will be responsible for increasing or decreasing that balance.
+Credit card balance is part of the credit card's current state at setup. Its balance reference date defines the last known state that movements should not replay. After creation, ordinary credit balance changes must be represented as purchases or card payments. Historical MSI purchase registration and historical statement registration explain composition only; those actions do not increase or decrease the card balance. Movement creation is responsible for ordinary credit purchases and card payments that increase or decrease consumed credit after that reference date.
 
 ## Persistence
 
 Accounts are stored in `accounts`.
 
-Manual balance corrections for personal and debit accounts are stored in `account_adjustments`.
+`accounts.balanceAsOfDate` stores the financial reference date of the captured balance. Existing accounts introduced before the field are migrated with `2026-09-21` as their known current-state boundary.
+
+Legacy manual balance corrections for personal and debit accounts remain readable from `account_adjustments`.
+
+New balance corrections are stored as `movements` with `type = adjustment`.
 
 Credit card available credit is not persisted. It is derived from `creditLimitCents - balanceCents`.
 

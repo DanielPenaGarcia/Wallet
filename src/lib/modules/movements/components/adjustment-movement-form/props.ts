@@ -1,15 +1,10 @@
 import type { CardListItem } from '$lib/modules/cards/types/card-list-item.types';
-import type { Category } from '$lib/modules/categories/types/category.types';
-import type { Expense } from '$lib/modules/expenses/types/expense.types';
 import type { Movement } from '../../types/movement.types';
 import type { MovementFormFeedback } from '../../types/movement-form-feedback.types';
 
-export type ExpenseMovementFormProps = {
+export type AdjustmentMovementFormProps = {
 	mode: 'create' | 'edit';
-	movementType?: 'expense' | 'credit_purchase';
 	cards: CardListItem[];
-	expenses: Expense[];
-	categories: Category[];
 	movement?: Movement;
 	feedback?: MovementFormFeedback | null;
 	onBack?: () => void;

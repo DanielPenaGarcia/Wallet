@@ -10,6 +10,8 @@
 	import SearchIcon from '@lucide/svelte/icons/search';
 	import XIcon from '@lucide/svelte/icons/x';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
+	import CreditCardIcon from '@lucide/svelte/icons/credit-card';
+	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
 	import { untrack } from 'svelte';
 	import { ActionButton } from '$lib/components/ui/action-button';
 	import { Input } from '$lib/components/ui/input';
@@ -18,7 +20,7 @@
 	import CategorySelectField from '$lib/modules/categories/components/category-select-field/CategorySelectField.svelte';
 	import { formatCurrencyFromMinorUnits } from '$lib/shared/utils/format-currency';
 	import { formatDateTime } from '$lib/shared/utils/format-date-time';
-	import type { Movement } from '../../types/movement.types';
+	import type { Movement, MovementType } from '../../types/movement.types';
 	import type { MovementListProps } from './props';
 
 	const allFilterValue = 'all';
@@ -37,6 +39,7 @@
 	let selectingMovements = $state(false);
 	let selectedMovementIds = $state<string[]>([]);
 	let categoryFilterValue = $state(untrack(() => filters.categoryId || allFilterValue));
+	let movementTypeFilterValue = $state(untrack(() => filters.type || allFilterValue));
 	let selectedCount = $derived(selectedMovementIds.length);
 	let selectedCardLabel = $derived(
 		filters.cardId
@@ -44,8 +47,18 @@
 			: 'Todas las cuentas'
 	);
 	let hasActiveFilters = $derived(
-		Boolean(filters.startDate || filters.endDate || filters.cardId || filters.categoryId)
+		Boolean(filters.startDate || filters.endDate || filters.cardId || filters.categoryId || filters.type)
 	);
+	let typeItems: Array<{ value: typeof allFilterValue | MovementType; label: string }> = [
+		{ value: allFilterValue, label: 'Todos los tipos' },
+		{ value: 'income', label: 'Ingresos' },
+		{ value: 'expense', label: 'Gastos' },
+		{ value: 'transfer', label: 'Transferencias' },
+		{ value: 'credit_purchase', label: 'Compras crédito' },
+		{ value: 'credit_card_payment', label: 'Pagos tarjeta' },
+		{ value: 'adjustment', label: 'Ajustes' }
+	];
+	let selectedTypeLabel = $derived(typeItems.find((item) => item.value === movementTypeFilterValue)?.label ?? 'Todos los tipos');
 
 	function cardLabel(alias: string | null, lastFourDigits: string | null) {
 		return alias && lastFourDigits ? `${alias} •••• ${lastFourDigits}` : 'Cuenta no disponible';
@@ -55,10 +68,29 @@
 		if (movement.type === 'income') {
 			return `${movement.reason ?? 'Ingreso'} · A ${cardLabel(movement.destinationCardAlias, movement.destinationCardLastFourDigits)}`;
 		}
-		if (movement.type === 'transfer') {
+		if (movement.type === 'transfer' || movement.type === 'credit_card_payment') {
 			return `${cardLabel(movement.sourceCardAlias, movement.sourceCardLastFourDigits)} → ${cardLabel(movement.destinationCardAlias, movement.destinationCardLastFourDigits)}`;
 		}
+		if (movement.type === 'adjustment') {
+			const account = movement.sourceCardId
+				? cardLabel(movement.sourceCardAlias, movement.sourceCardLastFourDigits)
+				: cardLabel(movement.destinationCardAlias, movement.destinationCardLastFourDigits);
+			return `${movement.reason ?? 'Ajuste'} · ${account}`;
+		}
 		return `${movement.classificationName ?? 'Sin clasificación'} · ${cardLabel(movement.sourceCardAlias, movement.sourceCardLastFourDigits)}`;
+	}
+
+	function movementTone(type: MovementType) {
+		if (type === 'expense' || type === 'credit_purchase') return 'expense';
+		if (type === 'income') return 'income';
+		return 'neutral';
+	}
+
+	function amountPrefix(movement: Movement) {
+		if (movement.type === 'expense') return '-';
+		if (movement.type === 'income') return '+';
+		if (movement.type === 'adjustment') return movement.destinationCardId ? '+' : '-';
+		return '';
 	}
 
 	function toggleSelectionMode() {
@@ -81,7 +113,7 @@
 	<div class="flex flex-col gap-4 border-b border-outline px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<h2 class="text-lg font-bold text-on-surface">Lista de movimientos</h2>
-			<p class="mt-1 text-sm text-on-surface-muted">Gastos, ingresos y transferencias ordenados por fecha.</p>
+			<p class="mt-1 text-sm text-on-surface-muted">Movimientos ordenados por fecha financiera.</p>
 		</div>
 		<div class="flex flex-wrap gap-2">
 			<ActionButton type="button" intent="secondary" onclick={onExport}><DownloadIcon />Exportar</ActionButton>
@@ -95,7 +127,7 @@
 			<p class="text-sm font-bold text-on-surface">Filtros</p>
 			<p class="mt-1 text-xs text-on-surface-muted">Consulta por periodo, cuenta o categoría.</p>
 		</div>
-		<div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+		<div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
 			<div class="grid gap-2">
 				<Label for="movement-period-start">Fecha inicio</Label>
 				<Input id="movement-period-start" name="startDate" type="date" value={filters.startDate} class="h-11 border-outline bg-surface" />
@@ -128,6 +160,19 @@
 				allLabel="Todas las categorías"
 				bind:value={categoryFilterValue}
 			/>
+			<div class="grid gap-2">
+				<Label for="movement-type-filter">Tipo</Label>
+				<Select.Root type="single" name="type" bind:value={movementTypeFilterValue} items={typeItems}>
+					<Select.Trigger id="movement-type-filter" class="h-11 w-full border-outline bg-surface px-3">
+						<span class="truncate">{selectedTypeLabel}</span>
+					</Select.Trigger>
+					<Select.Content>
+						{#each typeItems as item}
+							<Select.Item value={item.value} label={item.label}>{item.label}</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
+			</div>
 		</div>
 		<div class="flex flex-wrap gap-2">
 			<ActionButton type="submit" intent="secondary"><SearchIcon />Consultar</ActionButton>
@@ -139,7 +184,7 @@
 	{#if movements.length === 0}
 		<div class="px-6 py-12 text-center">
 			<p class="font-bold text-on-surface-variant">Aún no hay movimientos</p>
-			<p class="mt-1 text-sm text-on-surface-muted">Registra un gasto, ingreso o transferencia para comenzar.</p>
+			<p class="mt-1 text-sm text-on-surface-muted">Registra una operación para comenzar.</p>
 		</div>
 	{:else}
 		<form method="POST" action="?/bulkDeleteMovements">
@@ -172,19 +217,19 @@
 								class="size-4 rounded border-outline"
 							/>
 						{/if}
-						<span class="grid size-9 shrink-0 place-items-center rounded-full {movement.type === 'expense' ? 'bg-destructive/10 text-destructive' : movement.type === 'income' ? 'bg-secondary/10 text-secondary' : 'bg-primary/10 text-primary'}">
-							{#if movement.type === 'expense'}<ArrowUpRightIcon class="size-5" />{:else if movement.type === 'income'}<ArrowDownLeftIcon class="size-5" />{:else}<ArrowLeftRightIcon class="size-5" />{/if}
+						<span class="grid size-9 shrink-0 place-items-center rounded-full {movementTone(movement.type) === 'expense' ? 'bg-destructive/10 text-destructive' : movementTone(movement.type) === 'income' ? 'bg-secondary/10 text-secondary' : 'bg-primary/10 text-primary'}">
+							{#if movement.type === 'expense'}<ArrowUpRightIcon class="size-5" />{:else if movement.type === 'income'}<ArrowDownLeftIcon class="size-5" />{:else if movement.type === 'credit_purchase' || movement.type === 'credit_card_payment'}<CreditCardIcon class="size-5" />{:else if movement.type === 'adjustment'}<SlidersHorizontalIcon class="size-5" />{:else}<ArrowLeftRightIcon class="size-5" />{/if}
 						</span>
 						<div class="min-w-0 flex-1">
 							<p class="font-bold text-on-surface">{movement.title}</p>
 							<p class="mt-1 truncate text-sm text-on-surface-muted">{detail(movement)}</p>
-							{#if movement.type === 'expense' && movement.paymentMode === 'installments'}
+							{#if (movement.type === 'expense' || movement.type === 'credit_purchase') && movement.paymentMode === 'installments'}
 								<p class="mt-1 text-xs font-semibold text-on-surface-muted">{movement.installmentCount} meses{movement.interestFree ? ' sin intereses' : ''}</p>
 							{/if}
 						</div>
 						<div class="sm:text-right">
-							<p class="text-lg font-bold {movement.type === 'expense' ? 'text-destructive' : movement.type === 'income' ? 'text-secondary' : 'text-primary'}">
-								{movement.type === 'expense' ? '−' : movement.type === 'income' ? '+' : ''}{formatCurrencyFromMinorUnits(movement.amount, movement.currencyCode)}
+							<p class="text-lg font-bold {movementTone(movement.type) === 'expense' ? 'text-destructive' : movementTone(movement.type) === 'income' ? 'text-secondary' : 'text-primary'}">
+								{amountPrefix(movement)}{formatCurrencyFromMinorUnits(movement.amount, movement.currencyCode)}
 							</p>
 							<p class="text-xs text-on-surface-muted">{formatDateTime(movement.occurredAt)}</p>
 						</div>

@@ -3,7 +3,14 @@ import type { IsoDateTime } from '$lib/shared/types/date.types';
 
 export const movementPaymentModes = ['cash', 'installments'] as const;
 export const movementClassificationKinds = ['expense', 'category'] as const;
-export const movementTypes = ['expense', 'income', 'transfer'] as const;
+export const movementTypes = [
+	'income',
+	'expense',
+	'transfer',
+	'credit_purchase',
+	'credit_card_payment',
+	'adjustment'
+] as const;
 
 export type MovementPaymentMode = (typeof movementPaymentModes)[number];
 export type MovementClassificationKind = (typeof movementClassificationKinds)[number];

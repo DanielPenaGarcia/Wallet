@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import LandmarkIcon from '@lucide/svelte/icons/landmark';
+	import ListIcon from '@lucide/svelte/icons/list';
 	import RepeatIcon from '@lucide/svelte/icons/repeat';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import TargetIcon from '@lucide/svelte/icons/target';
@@ -16,6 +17,7 @@
 
 	let { currentPath, isOpen, onClose }: AppSidebarProps = $props();
 	let isRecurringActive = $derived(currentPath.startsWith('/recurrentes'));
+	let isMovementsActive = $derived(currentPath.startsWith('/movimientos'));
 	let isGoalsActive = $derived(currentPath.startsWith('/metas'));
 	let isAccountsActive = $derived(currentPath.startsWith('/cuentas'));
 	let isSettingsActive = $derived(currentPath.startsWith('/settings'));
@@ -94,6 +96,15 @@
 		>
 			<RepeatIcon class="size-5" />
 			Recurrentes
+		</a>
+		<a
+			href="/movimientos"
+			class="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-semibold transition {isMovementsActive ? 'bg-on-primary text-primary shadow-sm' : 'text-on-primary/90 hover:bg-on-primary/10'}"
+			onclick={onClose}
+			aria-current={isMovementsActive ? 'page' : undefined}
+		>
+			<ListIcon class="size-5" />
+			Movimientos
 		</a>
 		<a
 			href="/metas"

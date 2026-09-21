@@ -4,7 +4,10 @@ import type { MovementFormFeedback } from '../../types/movement-form-feedback.ty
 
 export type TransferMovementFormProps = {
 	mode: 'create' | 'edit';
+	movementType?: 'transfer' | 'credit_card_payment';
 	cards: CardListItem[];
+	sourceCards?: CardListItem[];
+	destinationCards?: CardListItem[];
 	movement?: Movement;
 	feedback?: MovementFormFeedback | null;
 	onBack?: () => void;

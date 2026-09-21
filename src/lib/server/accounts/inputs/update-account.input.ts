@@ -5,6 +5,7 @@ export type UpdateAccountInput = {
 	cardLastFourDigits: string | null;
 	cardColor: string | null;
 	balanceCents: number | null;
+	balanceAsOfDate: string | null;
 	creditLimitCents: number | null;
 	statementDay: number | null;
 	paymentDueDay: number | null;

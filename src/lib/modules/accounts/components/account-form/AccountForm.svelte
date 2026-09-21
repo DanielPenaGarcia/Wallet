@@ -27,6 +27,7 @@
 	let isPersonal = $derived(account?.type === 'personal');
 	let isDebit = $derived(!isPersonal && accountType === 'debit');
 	let isCredit = $derived(!isPersonal && accountType === 'credit');
+	let today = new Date().toISOString().slice(0, 10);
 	let accountTypeItems = [
 		{ value: 'debit', label: 'Débito' },
 		{ value: 'credit', label: 'Crédito' }
@@ -144,7 +145,7 @@
 		</div>
 	{/if}
 
-	{#if mode === 'create' || isCredit}
+	{#if mode === 'create'}
 		<div class="grid gap-2">
 			<Label for={`${idPrefix}-initial-balance`}>{isCredit ? 'Saldo consumido' : 'Saldo inicial'}</Label>
 			<Input
@@ -159,6 +160,22 @@
 				aria-invalid={fieldError('initialBalance') ? 'true' : undefined}
 			/>
 			{#if fieldError('initialBalance')}<span class="text-xs text-destructive">{fieldError('initialBalance')}</span>{/if}
+		</div>
+	{/if}
+
+	{#if !isPersonal}
+		<div class="grid gap-2">
+			<Label for={`${idPrefix}-balance-as-of-date`}>Saldo conocido al</Label>
+			<Input
+				id={`${idPrefix}-balance-as-of-date`}
+				name="balanceAsOfDate"
+				required
+				type="date"
+				value={matchingFeedback?.values?.balanceAsOfDate ?? account?.balanceAsOfDate ?? today}
+				class="h-11 border-outline"
+				aria-invalid={fieldError('balanceAsOfDate') ? 'true' : undefined}
+			/>
+			{#if fieldError('balanceAsOfDate')}<span class="text-xs text-destructive">{fieldError('balanceAsOfDate')}</span>{/if}
 		</div>
 	{/if}
 

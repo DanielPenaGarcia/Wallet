@@ -12,6 +12,7 @@
 
 	let {
 		mode,
+		movementType = 'expense',
 		cards,
 		expenses,
 		categories,
@@ -23,12 +24,12 @@
 	let expectedAction = $derived(mode === 'create' ? 'create-movement' : 'update-movement');
 	let matchingFeedback = $derived(
 		feedback?.action === expectedAction &&
-		feedback.values?.type === 'expense' &&
+		feedback.values?.type === movementType &&
 		(mode === 'create' || feedback.targetId === movement?.id)
 			? feedback
 			: null
 	);
-	let idPrefix = $derived(mode === 'create' ? 'create-expense-movement' : `edit-movement-${movement?.id ?? ''}`);
+	let idPrefix = $derived(mode === 'create' ? `create-${movementType}-movement` : `edit-movement-${movement?.id ?? ''}`);
 	let paymentMode = $state<MovementPaymentMode>(
 		untrack(() => matchingFeedback?.values?.paymentMode ?? movement?.paymentMode ?? 'cash')
 	);
@@ -48,7 +49,7 @@
 </script>
 
 <form method="POST" action={mode === 'create' ? '?/createMovement' : '?/updateMovement'} class="grid gap-4 sm:grid-cols-2">
-	<input type="hidden" name="type" value="expense" />
+	<input type="hidden" name="type" value={movementType} />
 	{#if mode === 'edit' && movement}<input type="hidden" name="id" value={movement.id} />{/if}
 	<MovementCommonFields
 		{idPrefix}

@@ -11,6 +11,7 @@ export type MovementListProps = {
 		endDate: string;
 		cardId: string;
 		categoryId: string;
+		type: string;
 	};
 	onCreate: () => void;
 	onBulkCreate: () => void;

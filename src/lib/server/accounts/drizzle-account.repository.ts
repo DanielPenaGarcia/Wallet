@@ -3,7 +3,6 @@ import type { Account, AccountAdjustment, AccountType } from '$lib/modules/accou
 import { db, type Database } from '$lib/server/db';
 import { accountAdjustments, accounts, banks } from '$lib/server/db/schema';
 import type { AccountRepository } from './account.repository';
-import type { AdjustAccountBalanceInput } from './inputs/adjust-account-balance.input';
 import type { CreateAccountInput } from './inputs/create-account.input';
 import type { UpdateAccountInput } from './inputs/update-account.input';
 
@@ -54,6 +53,7 @@ class DrizzleAccountRepository implements AccountRepository {
 			cardLastFourDigits: null,
 			cardColor: null,
 			balanceCents: 0,
+			balanceAsOfDate: now.slice(0, 10),
 			creditLimitCents: null,
 			statementDay: null,
 			paymentDueDay: null,
@@ -76,6 +76,7 @@ class DrizzleAccountRepository implements AccountRepository {
 			cardLastFourDigits: input.cardLastFourDigits,
 			cardColor: input.cardColor,
 			balanceCents: input.initialBalanceCents,
+			balanceAsOfDate: input.balanceAsOfDate,
 			creditLimitCents: input.creditLimitCents,
 			statementDay: input.statementDay,
 			paymentDueDay: input.paymentDueDay,
@@ -99,6 +100,7 @@ class DrizzleAccountRepository implements AccountRepository {
 				cardLastFourDigits: input.cardLastFourDigits,
 				cardColor: input.cardColor,
 				balanceCents: input.balanceCents ?? undefined,
+				balanceAsOfDate: input.balanceAsOfDate ?? undefined,
 				creditLimitCents: input.creditLimitCents,
 				statementDay: input.statementDay,
 				paymentDueDay: input.paymentDueDay,
@@ -122,32 +124,6 @@ class DrizzleAccountRepository implements AccountRepository {
 		await this.database.delete(accounts).where(eq(accounts.id, id));
 	}
 
-	async adjustBalance(input: AdjustAccountBalanceInput) {
-		const account = await this.findById(input.id);
-		if (!account) return;
-		const now = new Date().toISOString();
-
-		await this.database.transaction(async (tx) => {
-			await tx
-				.update(accounts)
-				.set({
-					balanceCents: input.newBalanceCents,
-					updatedAt: now
-				})
-				.where(eq(accounts.id, input.id));
-
-			await tx.insert(accountAdjustments).values({
-				id: crypto.randomUUID(),
-				accountId: input.id,
-				previousBalanceCents: account.balanceCents,
-				newBalanceCents: input.newBalanceCents,
-				differenceCents: input.newBalanceCents - account.balanceCents,
-				reason: input.reason,
-				createdAt: now
-			});
-		});
-	}
-
 	private accountSelection() {
 		return this.database
 			.select({
@@ -158,6 +134,7 @@ class DrizzleAccountRepository implements AccountRepository {
 				cardLastFourDigits: accounts.cardLastFourDigits,
 				cardColor: accounts.cardColor,
 				balanceCents: accounts.balanceCents,
+				balanceAsOfDate: accounts.balanceAsOfDate,
 				creditLimitCents: accounts.creditLimitCents,
 				statementDay: accounts.statementDay,
 				paymentDueDay: accounts.paymentDueDay,
@@ -198,6 +175,7 @@ class DrizzleAccountRepository implements AccountRepository {
 			cardLastFourDigits: account.cardLastFourDigits,
 			cardColor: account.cardColor,
 			balanceCents: account.balanceCents,
+			balanceAsOfDate: account.balanceAsOfDate,
 			creditLimitCents: account.creditLimitCents,
 			statementDay: account.statementDay,
 			paymentDueDay: account.paymentDueDay,

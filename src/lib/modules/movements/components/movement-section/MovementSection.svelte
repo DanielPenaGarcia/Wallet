@@ -3,6 +3,7 @@
 	import { browser } from '$app/environment';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import type { Movement, MovementType } from '../../types/movement.types';
+	import AdjustmentMovementForm from '../adjustment-movement-form/AdjustmentMovementForm.svelte';
 	import BulkMovementForm from '../bulk-movement-form/BulkMovementForm.svelte';
 	import DeleteMovementForm from '../delete-movement-form/DeleteMovementForm.svelte';
 	import ExportMovementsForm from '../export-movements-form/ExportMovementsForm.svelte';
@@ -14,6 +15,8 @@
 	import type { MovementSectionProps } from './props';
 
 	let { movements, cards, expenses, categories, filters, feedback = null }: MovementSectionProps = $props();
+	let realCards = $derived(cards.filter((card) => card.kind !== 'credit'));
+	let creditCards = $derived(cards.filter((card) => card.kind === 'credit'));
 	let createOpen = $state(
 		untrack(() => feedback?.action === 'create-movement' && Boolean(feedback.errors || feedback.message))
 	);
@@ -62,6 +65,16 @@
 		createOpen = open;
 		if (!open) selectedType = null;
 	}
+
+	function movementTypeLabel(type: MovementType | null | undefined) {
+		if (type === 'income') return 'ingreso';
+		if (type === 'expense') return 'gasto';
+		if (type === 'transfer') return 'transferencia';
+		if (type === 'credit_purchase') return 'compra con crédito';
+		if (type === 'credit_card_payment') return 'pago de tarjeta';
+		if (type === 'adjustment') return 'ajuste';
+		return 'movimiento';
+	}
 </script>
 
 {#if feedback?.success}<p class="mb-5 rounded-md border border-secondary/20 bg-secondary/10 px-4 py-3 text-sm font-semibold text-secondary">{feedback.success}</p>{/if}
@@ -71,17 +84,23 @@
 <Dialog.Root open={createOpen} onOpenChange={createDialogChanged}>
 	<Dialog.Content class="sm:max-w-2xl">
 		<Dialog.Header>
-			<Dialog.Title>{selectedType ? `Nuevo ${selectedType === 'expense' ? 'gasto' : selectedType === 'income' ? 'ingreso' : 'transferencia'}` : 'Nuevo movimiento'}</Dialog.Title>
+			<Dialog.Title>{selectedType ? `Nuevo ${movementTypeLabel(selectedType)}` : 'Nuevo movimiento'}</Dialog.Title>
 			<Dialog.Description>{selectedType ? 'Completa los datos del movimiento.' : 'Selecciona el tipo de movimiento que deseas registrar.'}</Dialog.Description>
 		</Dialog.Header>
 		{#if selectedType === null}
 			<MovementTypePicker onSelect={(type) => (selectedType = type)} />
 		{:else if selectedType === 'expense'}
-			<ExpenseMovementForm mode="create" {cards} {expenses} {categories} {feedback} onBack={() => (selectedType = null)} />
+			<ExpenseMovementForm mode="create" cards={realCards} {expenses} {categories} {feedback} onBack={() => (selectedType = null)} />
+		{:else if selectedType === 'credit_purchase'}
+			<ExpenseMovementForm mode="create" movementType="credit_purchase" cards={creditCards} {expenses} {categories} {feedback} onBack={() => (selectedType = null)} />
 		{:else if selectedType === 'income'}
-			<IncomeMovementForm mode="create" {cards} {feedback} onBack={() => (selectedType = null)} />
-		{:else}
-			<TransferMovementForm mode="create" {cards} {feedback} onBack={() => (selectedType = null)} />
+			<IncomeMovementForm mode="create" cards={realCards} {feedback} onBack={() => (selectedType = null)} />
+		{:else if selectedType === 'transfer'}
+			<TransferMovementForm mode="create" cards={realCards} {feedback} onBack={() => (selectedType = null)} />
+		{:else if selectedType === 'credit_card_payment'}
+			<TransferMovementForm mode="create" movementType="credit_card_payment" {cards} sourceCards={realCards} destinationCards={creditCards} {feedback} onBack={() => (selectedType = null)} />
+		{:else if selectedType === 'adjustment'}
+			<AdjustmentMovementForm mode="create" cards={realCards} {feedback} onBack={() => (selectedType = null)} />
 		{/if}
 	</Dialog.Content>
 </Dialog.Root>
@@ -108,13 +127,19 @@
 
 <Dialog.Root open={editingMovement !== null} onOpenChange={(open) => { if (!open) editingMovement = null; }}>
 	<Dialog.Content class="sm:max-w-2xl">
-		<Dialog.Header><Dialog.Title>Editar movimiento</Dialog.Title><Dialog.Description>Actualiza los datos del {editingMovement?.type === 'expense' ? 'gasto' : editingMovement?.type === 'income' ? 'ingreso' : 'transferencia'}.</Dialog.Description></Dialog.Header>
+		<Dialog.Header><Dialog.Title>Editar movimiento</Dialog.Title><Dialog.Description>Actualiza los datos del {movementTypeLabel(editingMovement?.type)}.</Dialog.Description></Dialog.Header>
 		{#if editingMovement?.type === 'expense'}
-			<ExpenseMovementForm mode="edit" movement={editingMovement} {cards} {expenses} {categories} {feedback} onCancel={() => (editingMovement = null)} />
+			<ExpenseMovementForm mode="edit" movement={editingMovement} cards={realCards} {expenses} {categories} {feedback} onCancel={() => (editingMovement = null)} />
+		{:else if editingMovement?.type === 'credit_purchase'}
+			<ExpenseMovementForm mode="edit" movementType="credit_purchase" movement={editingMovement} cards={creditCards} {expenses} {categories} {feedback} onCancel={() => (editingMovement = null)} />
 		{:else if editingMovement?.type === 'income'}
-			<IncomeMovementForm mode="edit" movement={editingMovement} {cards} {feedback} onCancel={() => (editingMovement = null)} />
+			<IncomeMovementForm mode="edit" movement={editingMovement} cards={realCards} {feedback} onCancel={() => (editingMovement = null)} />
 		{:else if editingMovement?.type === 'transfer'}
-			<TransferMovementForm mode="edit" movement={editingMovement} {cards} {feedback} onCancel={() => (editingMovement = null)} />
+			<TransferMovementForm mode="edit" movement={editingMovement} cards={realCards} {feedback} onCancel={() => (editingMovement = null)} />
+		{:else if editingMovement?.type === 'credit_card_payment'}
+			<TransferMovementForm mode="edit" movementType="credit_card_payment" movement={editingMovement} {cards} sourceCards={realCards} destinationCards={creditCards} {feedback} onCancel={() => (editingMovement = null)} />
+		{:else if editingMovement?.type === 'adjustment'}
+			<AdjustmentMovementForm mode="edit" movement={editingMovement} cards={realCards} {feedback} onCancel={() => (editingMovement = null)} />
 		{/if}
 	</Dialog.Content>
 </Dialog.Root>

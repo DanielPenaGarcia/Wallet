@@ -9,7 +9,6 @@ import {
 } from './account.errors';
 import type { AccountRepository } from './account.repository';
 import { drizzleAccountRepository } from './drizzle-account.repository';
-import type { AdjustAccountBalanceInput } from './inputs/adjust-account-balance.input';
 import type { CreateAccountInput } from './inputs/create-account.input';
 import type { UpdateAccountInput } from './inputs/update-account.input';
 
@@ -34,6 +33,12 @@ export class AccountService {
 		return account;
 	}
 
+	async getAccount(id: string) {
+		const account = await this.accountRepository.findById(id);
+		if (!account) throw new AccountNotFoundError();
+		return account;
+	}
+
 	async createAccount(input: CreateAccountInput): Promise<void> {
 		await this.ensurePersonalAccount();
 		const normalizedInput = this.normalizeCreateInput(input);
@@ -52,7 +57,8 @@ export class AccountService {
 			bankId: account.type === 'personal' ? null : input.bankId?.trim() || null,
 			cardLastFourDigits: account.type === 'personal' ? null : input.cardLastFourDigits?.trim() || null,
 			cardColor: account.type === 'personal' ? null : colorInputToHex(input.cardColor ?? '') ?? null,
-			balanceCents: account.type === 'credit' ? input.balanceCents : account.balanceCents,
+			balanceCents: account.balanceCents,
+			balanceAsOfDate: account.type === 'personal' ? account.balanceAsOfDate : input.balanceAsOfDate,
 			creditLimitCents: account.type === 'credit' ? input.creditLimitCents : null,
 			statementDay: account.type === 'credit' ? input.statementDay : null,
 			paymentDueDay: account.type === 'credit' ? input.paymentDueDay : null,
@@ -71,6 +77,9 @@ export class AccountService {
 				errors.cardLastFourDigits = ['Captura exactamente 4 dígitos.'];
 			}
 			if (!normalizedInput.cardColor) errors.cardColor = ['El color debe ser hexadecimal o rgb válido.'];
+			if (!this.isValidIsoDate(normalizedInput.balanceAsOfDate)) {
+				errors.balanceAsOfDate = ['Captura una fecha de referencia válida.'];
+			}
 		}
 		if (account.type === 'credit') {
 			this.validateCreditConfiguration(normalizedInput, errors);
@@ -99,28 +108,6 @@ export class AccountService {
 		await this.accountRepository.delete(id);
 	}
 
-	async adjustBalance(input: AdjustAccountBalanceInput): Promise<void> {
-		const account = await this.accountRepository.findById(input.id);
-		if (!account) throw new AccountNotFoundError();
-		if (account.type === 'credit') {
-			throw new AccountValidationError({ id: ['El saldo de una tarjeta de crédito se edita desde su configuración básica.'] });
-		}
-
-		const normalizedInput = {
-			...input,
-			reason: input.reason.trim()
-		};
-		const errors: Record<string, string[]> = {};
-		if (!Number.isInteger(normalizedInput.newBalanceCents) || normalizedInput.newBalanceCents < 0) {
-			errors.newBalance = ['El nuevo saldo no puede ser negativo.'];
-		}
-		if (normalizedInput.reason.length === 0) errors.reason = ['El motivo es obligatorio.'];
-		if (normalizedInput.reason.length > 200) errors.reason = ['El motivo debe tener máximo 200 caracteres.'];
-		if (Object.keys(errors).length > 0) throw new AccountValidationError(errors);
-
-		await this.accountRepository.adjustBalance(normalizedInput);
-	}
-
 	private async ensurePersonalAccount() {
 		if (!(await this.accountRepository.findPersonal())) {
 			await this.accountRepository.createPersonal();
@@ -133,7 +120,8 @@ export class AccountService {
 			name: input.name.trim(),
 			bankId: input.bankId.trim(),
 			cardLastFourDigits: input.cardLastFourDigits?.trim() || null,
-			cardColor: colorInputToHex(input.cardColor) ?? input.cardColor.trim()
+			cardColor: colorInputToHex(input.cardColor) ?? input.cardColor.trim(),
+			balanceAsOfDate: input.balanceAsOfDate.trim()
 		};
 	}
 
@@ -145,6 +133,9 @@ export class AccountService {
 		if (input.name.length > 100) errors.name = ['El nombre debe tener máximo 100 caracteres.'];
 		if (input.bankId.length === 0 || !(await this.bankRepository.findById(input.bankId))) {
 			errors.bankId = ['Selecciona un banco existente.'];
+		}
+		if (!this.isValidIsoDate(input.balanceAsOfDate)) {
+			errors.balanceAsOfDate = ['Captura una fecha de referencia válida.'];
 		}
 		if (input.type === 'debit' && (!input.cardLastFourDigits || !/^\d{4}$/.test(input.cardLastFourDigits))) {
 			errors.cardLastFourDigits = ['Captura exactamente 4 dígitos.'];
@@ -197,6 +188,10 @@ export class AccountService {
 
 	private isValidRecurringMonthDay(day: number | null) {
 		return Number.isInteger(day) && day !== null && day >= 1 && day <= 31;
+	}
+
+	private isValidIsoDate(value: string | null) {
+		return Boolean(value && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(`${value}T00:00:00`)));
 	}
 
 	private async assertUniqueAccountName(name: string, ignoredId?: string) {

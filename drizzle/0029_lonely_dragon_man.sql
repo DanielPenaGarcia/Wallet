@@ -1,0 +1,1 @@
+ALTER TABLE `accounts` ADD `balance_as_of_date` text DEFAULT '2026-09-21' NOT NULL;

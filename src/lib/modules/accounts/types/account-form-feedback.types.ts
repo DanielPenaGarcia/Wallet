@@ -6,6 +6,7 @@ export type AccountFormValues = {
 	cardLastFourDigits?: string;
 	cardColor?: string;
 	initialBalance?: string;
+	balanceAsOfDate?: string;
 	creditLimit?: string;
 	statementDay?: string;
 	paymentDueDay?: string;

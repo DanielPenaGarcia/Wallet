@@ -52,4 +52,4 @@ Shared recurrence date calculation lives in `src/lib/shared/utils/recurring-paym
 
 ## Movements
 
-Movement is the conceptual base for financial operations that actually happened. Movement-backed balance changes are still evolving, but future balance mutations should flow through explicit financial events instead of unrelated modules changing balances independently.
+Movement is the conceptual base for financial operations that actually happened. Movement-backed creation, edition, and deletion update persisted account balances transactionally, and future ordinary balance mutations should flow through explicit financial events instead of unrelated modules changing balances independently.

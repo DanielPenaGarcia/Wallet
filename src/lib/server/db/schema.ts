@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { integer, sqliteTable, text, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
 
 export const banks = sqliteTable('banks', {
 	id: text('id').primaryKey(),
@@ -85,6 +85,7 @@ export const accounts = sqliteTable('accounts', {
 	cardLastFourDigits: text('card_last_four_digits'),
 	cardColor: text('card_color'),
 	balanceCents: integer('balance_cents').notNull().default(0),
+	balanceAsOfDate: text('balance_as_of_date').notNull().default('2026-09-21'),
 	creditLimitCents: integer('credit_limit_cents'),
 	statementDay: integer('statement_day'),
 	paymentDueDay: integer('payment_due_day'),
@@ -129,3 +130,29 @@ export const creditCardStatements = sqliteTable('credit_card_statements', {
 	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 });
+
+export const movements = sqliteTable('movements', {
+	id: text('id').primaryKey(),
+	type: text('type').notNull(),
+	title: text('title').notNull(),
+	description: text('description'),
+	amountCents: integer('amount_cents').notNull(),
+	currencyCode: text('currency_code').notNull().default('MXN'),
+	occurredAt: text('occurred_at').notNull(),
+	sourceAccountId: text('source_account_id').references(() => accounts.id),
+	destinationAccountId: text('destination_account_id').references(() => accounts.id),
+	categoryId: text('category_id').references(() => categories.id),
+	recurringExpenseId: text('recurring_expense_id').references(() => recurringExpenses.id),
+	recurringIncomeId: text('recurring_income_id').references(() => recurringIncomes.id),
+	active: integer('active', { mode: 'boolean' }).notNull().default(true),
+	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+	deletedAt: text('deleted_at')
+}, (table) => [
+	index('movements_occurred_at_idx').on(table.occurredAt),
+	index('movements_source_account_idx').on(table.sourceAccountId),
+	index('movements_destination_account_idx').on(table.destinationAccountId),
+	index('movements_category_idx').on(table.categoryId),
+	index('movements_recurring_expense_idx').on(table.recurringExpenseId),
+	index('movements_recurring_income_idx').on(table.recurringIncomeId)
+]);

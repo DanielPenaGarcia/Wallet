@@ -1,5 +1,4 @@
 import type { Account } from '$lib/modules/accounts/types/account.types';
-import type { AdjustAccountBalanceInput } from './inputs/adjust-account-balance.input';
 import type { CreateAccountInput } from './inputs/create-account.input';
 import type { UpdateAccountInput } from './inputs/update-account.input';
 
@@ -12,5 +11,4 @@ export interface AccountRepository {
 	update(input: UpdateAccountInput): Promise<void>;
 	updateActive(id: string, isActive: boolean): Promise<void>;
 	delete(id: string): Promise<void>;
-	adjustBalance(input: AdjustAccountBalanceInput): Promise<void>;
 }

@@ -6,6 +6,8 @@ import {
 } from '$lib/server/accounts/account.errors';
 import { accountService } from '$lib/server/accounts/account.service';
 import { bankService } from '$lib/server/banks/bank.service';
+import { MovementValidationError } from '$lib/server/movements/movement.errors';
+import { movementService } from '$lib/server/movements/movement.service';
 import { colorInputToHex } from '$lib/shared/utils/color';
 
 export async function load() {
@@ -50,6 +52,7 @@ function accountValues(formData: FormData) {
 		cardLastFourDigits: formValue(formData, 'cardLastFourDigits'),
 		cardColor: formValue(formData, 'cardColor'),
 		initialBalance: formValue(formData, 'initialBalance'),
+		balanceAsOfDate: formValue(formData, 'balanceAsOfDate'),
 		creditLimit: formValue(formData, 'creditLimit'),
 		statementDay: formValue(formData, 'statementDay'),
 		paymentDueDay: formValue(formData, 'paymentDueDay'),
@@ -65,6 +68,10 @@ function adjustValues(formData: FormData) {
 	};
 }
 
+function isValidIsoDate(value: string) {
+	return /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(`${value}T00:00:00`));
+}
+
 export const actions: Actions = {
 	createAccount: async ({ request }) => {
 		const values = accountValues(await request.formData());
@@ -76,6 +83,7 @@ export const actions: Actions = {
 		if (!['debit', 'credit'].includes(values.accountType)) errors.accountType = ['Selecciona un tipo de cuenta válido.'];
 		if (values.name.trim().length === 0) errors.name = ['El nombre es obligatorio.'];
 		if (values.bankId.trim().length === 0) errors.bankId = ['Selecciona un banco.'];
+		if (!isValidIsoDate(values.balanceAsOfDate)) errors.balanceAsOfDate = ['Captura una fecha de referencia válida.'];
 		if (values.accountType === 'debit' && !/^\d{4}$/.test(values.cardLastFourDigits.trim())) errors.cardLastFourDigits = ['Captura exactamente 4 dígitos.'];
 		if (!colorInputToHex(values.cardColor)) errors.cardColor = ['El color debe ser hexadecimal o rgb válido.'];
 		if (!Number.isInteger(initialBalanceCents) || initialBalanceCents < 0) {
@@ -105,6 +113,7 @@ export const actions: Actions = {
 				cardLastFourDigits: values.cardLastFourDigits || null,
 				cardColor: values.cardColor,
 				initialBalanceCents,
+				balanceAsOfDate: values.balanceAsOfDate,
 				creditLimitCents: values.accountType === 'credit' ? creditLimitCents : null,
 				statementDay: values.accountType === 'credit' ? statementDay : null,
 				paymentDueDay: values.accountType === 'credit' ? paymentDueDay : null,
@@ -127,17 +136,14 @@ export const actions: Actions = {
 		const paymentDueDay = optionalInteger(values.paymentDueDay);
 		if (values.id.trim().length === 0) errors.id = ['La cuenta es obligatoria.'];
 		if (values.name.trim().length === 0) errors.name = ['El nombre es obligatorio.'];
+		if (values.accountType !== 'personal' && !isValidIsoDate(values.balanceAsOfDate)) {
+			errors.balanceAsOfDate = ['Captura una fecha de referencia válida.'];
+		}
 		if (values.accountType === 'debit' && values.bankId && !/^\d{4}$/.test(values.cardLastFourDigits.trim())) errors.cardLastFourDigits = ['Captura exactamente 4 dígitos.'];
 		if (values.bankId && !colorInputToHex(values.cardColor)) errors.cardColor = ['El color debe ser hexadecimal o rgb válido.'];
 		if (values.accountType === 'credit') {
-			if (!Number.isInteger(initialBalanceCents) || initialBalanceCents < 0) {
-				errors.initialBalance = ['El saldo no puede ser negativo.'];
-			}
 			if (!Number.isInteger(creditLimitCents) || creditLimitCents === null || creditLimitCents <= 0) {
 				errors.creditLimit = ['El límite de crédito debe ser mayor a 0.'];
-			}
-			if (Number.isInteger(creditLimitCents) && Number.isInteger(initialBalanceCents) && creditLimitCents !== null && initialBalanceCents > creditLimitCents) {
-				errors.initialBalance = ['El saldo no debe superar el límite de crédito.'];
 			}
 			if (!Number.isInteger(statementDay) || statementDay === null || statementDay < 1 || statementDay > 31) {
 				errors.statementDay = ['El día de corte debe estar entre 1 y 31.'];
@@ -157,7 +163,8 @@ export const actions: Actions = {
 				bankId: values.bankId || null,
 				cardLastFourDigits: values.cardLastFourDigits || null,
 				cardColor: values.cardColor || null,
-				balanceCents: values.accountType === 'credit' ? initialBalanceCents : null,
+				balanceCents: null,
+				balanceAsOfDate: values.accountType !== 'personal' ? values.balanceAsOfDate : null,
 				creditLimitCents: values.accountType === 'credit' ? creditLimitCents : null,
 				statementDay: values.accountType === 'credit' ? statementDay : null,
 				paymentDueDay: values.accountType === 'credit' ? paymentDueDay : null,
@@ -204,14 +211,42 @@ export const actions: Actions = {
 		}
 
 		try {
-			await accountService.adjustBalance({
-				id: values.id,
-				newBalanceCents,
-				reason: values.reason
+			const account = await accountService.getAccount(values.id);
+			if (account.type === 'credit') {
+				return fail(400, {
+					action: 'adjust-account-balance' as const,
+					targetId: values.id,
+					message: 'Las tarjetas se corrigen registrando compras o pagos de tarjeta.',
+					values
+				});
+			}
+
+			const differenceCents = newBalanceCents - account.balanceCents;
+			if (differenceCents === 0) {
+				return fail(400, {
+					action: 'adjust-account-balance' as const,
+					targetId: values.id,
+					errors: { newBalance: ['El nuevo saldo debe ser diferente al saldo actual.'] },
+					values
+				});
+			}
+
+			await movementService.createMovement({
+				type: 'adjustment',
+				title: `Ajuste de saldo: ${account.name}`,
+				description: values.reason,
+				amountCents: Math.abs(differenceCents),
+				currencyCode: 'MXN',
+				occurredAt: new Date().toISOString(),
+				sourceAccountId: differenceCents < 0 ? account.id : null,
+				destinationAccountId: differenceCents > 0 ? account.id : null,
+				categoryId: null,
+				recurringExpenseId: null,
+				recurringIncomeId: null
 			});
-			return { action: 'adjust-account-balance' as const, success: 'Saldo ajustado.' };
+			return { action: 'adjust-account-balance' as const, success: 'Ajuste registrado como movimiento.' };
 		} catch (error) {
-			if (error instanceof AccountValidationError) {
+			if (error instanceof MovementValidationError) {
 				return fail(400, { action: 'adjust-account-balance' as const, targetId: values.id, errors: error.errors, values });
 			}
 			if (error instanceof AccountNotFoundError) {
