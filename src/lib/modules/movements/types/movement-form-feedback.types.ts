@@ -20,6 +20,7 @@ export type MovementFormValues = {
 	classificationKind?: MovementClassificationKind;
 	classificationId?: string;
 	recurringIncomeId?: string;
+	loanId?: string;
 };
 
 export type MovementFormFeedback = {

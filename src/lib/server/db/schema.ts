@@ -131,6 +131,22 @@ export const creditCardStatements = sqliteTable('credit_card_statements', {
 	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 });
 
+export const loans = sqliteTable('loans', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	direction: text('direction').notNull(),
+	counterpartyName: text('counterparty_name').notNull(),
+	principalAmountCents: integer('principal_amount_cents').notNull(),
+	totalRepaymentCents: integer('total_repayment_cents').notNull(),
+	installmentCount: integer('installment_count').notNull(),
+	firstPaymentDate: text('first_payment_date').notNull(),
+	currencyCode: text('currency_code').notNull().default('MXN'),
+	status: text('status').notNull().default('active'),
+	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+	cancelledAt: text('cancelled_at')
+});
+
 export const movements = sqliteTable('movements', {
 	id: text('id').primaryKey(),
 	type: text('type').notNull(),
@@ -144,6 +160,7 @@ export const movements = sqliteTable('movements', {
 	categoryId: text('category_id').references(() => categories.id),
 	recurringExpenseId: text('recurring_expense_id').references(() => recurringExpenses.id),
 	recurringIncomeId: text('recurring_income_id').references(() => recurringIncomes.id),
+	loanId: text('loan_id'),
 	active: integer('active', { mode: 'boolean' }).notNull().default(true),
 	createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),

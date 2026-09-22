@@ -51,6 +51,7 @@ export class DrizzleMovementRepository implements MovementRepository {
 			));
 		}
 		if (input.categoryId) filters.push(eq(movements.categoryId, input.categoryId));
+		if (input.loanId) filters.push(eq(movements.loanId, input.loanId));
 		if (input.type) filters.push(eq(movements.type, input.type));
 		if (input.startDate) filters.push(gte(movements.occurredAt, input.startDate));
 		if (input.endDate) filters.push(lte(movements.occurredAt, input.endDate));
@@ -82,6 +83,7 @@ export class DrizzleMovementRepository implements MovementRepository {
 			categoryId: input.categoryId,
 			recurringExpenseId: input.recurringExpenseId,
 			recurringIncomeId: input.recurringIncomeId,
+			loanId: input.loanId,
 			active: true,
 			createdAt: now,
 			updatedAt: now,
@@ -124,6 +126,7 @@ export class DrizzleMovementRepository implements MovementRepository {
 					categoryId: input.categoryId,
 					recurringExpenseId: input.recurringExpenseId,
 					recurringIncomeId: input.recurringIncomeId,
+					loanId: input.loanId,
 					updatedAt: now
 				})
 				.where(eq(movements.id, input.id))

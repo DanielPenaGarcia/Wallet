@@ -12,6 +12,7 @@
 - Recurring incomes.
 - Recurring expenses.
 - Financial goals and projection from recurring configuration.
+- Loans for borrowed and lent money with monthly installment schedules.
 
 ## Foundation Cleanup
 
@@ -25,7 +26,6 @@
 
 - Full Allocation Engine.
 - Dashboard read model for current summary, monthly activity, recurring events, credit obligations, active goals, and recent movements.
-- Accounts receivable.
 - Reserved funds.
 - Future commitments.
 - Movement-backed account and card balance changes.

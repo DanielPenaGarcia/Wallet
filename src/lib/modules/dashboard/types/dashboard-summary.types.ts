@@ -59,12 +59,31 @@ export type DashboardGoalSummary = {
 
 export type DashboardRecentMovement = {
 	id: string;
-	type: 'income' | 'expense' | 'transfer' | 'credit_purchase' | 'credit_card_payment' | 'adjustment';
+	type: 'income' | 'expense' | 'transfer' | 'credit_purchase' | 'credit_card_payment' | 'adjustment' | 'loan_received' | 'loan_disbursement' | 'loan_payment' | 'loan_collection';
 	title: string;
 	amountCents: number;
 	currencyCode: string;
 	occurredAt: string;
 	accountLabel: string | null;
+};
+
+export type DashboardLoanSummary = {
+	borrowedOutstandingCents: number;
+	lentOutstandingCents: number;
+	nextBorrowedInstallment: {
+		loanId: string;
+		name: string;
+		dueDate: string;
+		amountCents: number;
+		currencyCode: string;
+	} | null;
+	nextLentInstallment: {
+		loanId: string;
+		name: string;
+		dueDate: string;
+		amountCents: number;
+		currencyCode: string;
+	} | null;
 };
 
 export type DashboardSummary = {
@@ -74,6 +93,7 @@ export type DashboardSummary = {
 	upcomingIncome: DashboardUpcomingIncome;
 	upcomingExpenses: DashboardUpcomingExpense[];
 	creditCards: DashboardCreditCardObligation[];
+	loans: DashboardLoanSummary;
 	goals: DashboardGoalSummary[];
 	recentMovements: DashboardRecentMovement[];
 };

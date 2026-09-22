@@ -12,4 +12,5 @@ export type CreateMovementInput = {
 	categoryId: string | null;
 	recurringExpenseId: string | null;
 	recurringIncomeId: string | null;
+	loanId: string | null;
 };

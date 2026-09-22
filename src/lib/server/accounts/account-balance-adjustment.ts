@@ -21,6 +21,7 @@ export function buildAccountBalanceAdjustmentMovement(input: {
 		destinationAccountId: differenceCents > 0 ? input.account.id : null,
 		categoryId: null,
 		recurringExpenseId: null,
-		recurringIncomeId: null
+		recurringIncomeId: null,
+		loanId: null
 	};
 }

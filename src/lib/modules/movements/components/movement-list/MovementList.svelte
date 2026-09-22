@@ -11,6 +11,7 @@
 	import XIcon from '@lucide/svelte/icons/x';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import CreditCardIcon from '@lucide/svelte/icons/credit-card';
+	import HandCoinsIcon from '@lucide/svelte/icons/hand-coins';
 	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
 	import { untrack } from 'svelte';
 	import { ActionButton } from '$lib/components/ui/action-button';
@@ -56,7 +57,11 @@
 		{ value: 'transfer', label: 'Transferencias' },
 		{ value: 'credit_purchase', label: 'Compras crédito' },
 		{ value: 'credit_card_payment', label: 'Pagos tarjeta' },
-		{ value: 'adjustment', label: 'Ajustes' }
+		{ value: 'adjustment', label: 'Ajustes' },
+		{ value: 'loan_received', label: 'Préstamo recibido' },
+		{ value: 'loan_disbursement', label: 'Préstamo entregado' },
+		{ value: 'loan_payment', label: 'Pago préstamo' },
+		{ value: 'loan_collection', label: 'Cobro préstamo' }
 	];
 	let selectedTypeLabel = $derived(typeItems.find((item) => item.value === movementTypeFilterValue)?.label ?? 'Todos los tipos');
 
@@ -77,18 +82,30 @@
 				: cardLabel(movement.destinationCardAlias, movement.destinationCardLastFourDigits);
 			return `${movement.reason ?? 'Ajuste'} · ${account}`;
 		}
+		if (movement.type === 'loan_received') {
+			return `${movement.loanName ?? 'Préstamo'} · A ${cardLabel(movement.destinationCardAlias, movement.destinationCardLastFourDigits)}`;
+		}
+		if (movement.type === 'loan_disbursement') {
+			return `${movement.loanName ?? 'Préstamo'} · Desde ${cardLabel(movement.sourceCardAlias, movement.sourceCardLastFourDigits)}`;
+		}
+		if (movement.type === 'loan_payment') {
+			return `${movement.loanName ?? 'Préstamo'} · Pago desde ${cardLabel(movement.sourceCardAlias, movement.sourceCardLastFourDigits)}`;
+		}
+		if (movement.type === 'loan_collection') {
+			return `${movement.loanName ?? 'Préstamo'} · Cobro a ${cardLabel(movement.destinationCardAlias, movement.destinationCardLastFourDigits)}`;
+		}
 		return `${movement.classificationName ?? 'Sin clasificación'} · ${cardLabel(movement.sourceCardAlias, movement.sourceCardLastFourDigits)}`;
 	}
 
 	function movementTone(type: MovementType) {
-		if (type === 'expense' || type === 'credit_purchase') return 'expense';
-		if (type === 'income') return 'income';
+		if (type === 'expense' || type === 'credit_purchase' || type === 'loan_disbursement' || type === 'loan_payment') return 'expense';
+		if (type === 'income' || type === 'loan_received' || type === 'loan_collection') return 'income';
 		return 'neutral';
 	}
 
 	function amountPrefix(movement: Movement) {
-		if (movement.type === 'expense') return '-';
-		if (movement.type === 'income') return '+';
+		if (movement.type === 'expense' || movement.type === 'loan_disbursement' || movement.type === 'loan_payment') return '-';
+		if (movement.type === 'income' || movement.type === 'loan_received' || movement.type === 'loan_collection') return '+';
 		if (movement.type === 'adjustment') return movement.destinationCardId ? '+' : '-';
 		return '';
 	}
@@ -218,7 +235,7 @@
 							/>
 						{/if}
 						<span class="grid size-9 shrink-0 place-items-center rounded-full {movementTone(movement.type) === 'expense' ? 'bg-destructive/10 text-destructive' : movementTone(movement.type) === 'income' ? 'bg-secondary/10 text-secondary' : 'bg-primary/10 text-primary'}">
-							{#if movement.type === 'expense'}<ArrowUpRightIcon class="size-5" />{:else if movement.type === 'income'}<ArrowDownLeftIcon class="size-5" />{:else if movement.type === 'credit_purchase' || movement.type === 'credit_card_payment'}<CreditCardIcon class="size-5" />{:else if movement.type === 'adjustment'}<SlidersHorizontalIcon class="size-5" />{:else}<ArrowLeftRightIcon class="size-5" />{/if}
+							{#if movement.type === 'expense'}<ArrowUpRightIcon class="size-5" />{:else if movement.type === 'income'}<ArrowDownLeftIcon class="size-5" />{:else if movement.type === 'credit_purchase' || movement.type === 'credit_card_payment'}<CreditCardIcon class="size-5" />{:else if movement.type === 'adjustment'}<SlidersHorizontalIcon class="size-5" />{:else if movement.type.startsWith('loan_')}<HandCoinsIcon class="size-5" />{:else}<ArrowLeftRightIcon class="size-5" />{/if}
 						</span>
 						<div class="min-w-0 flex-1">
 							<p class="font-bold text-on-surface">{movement.title}</p>

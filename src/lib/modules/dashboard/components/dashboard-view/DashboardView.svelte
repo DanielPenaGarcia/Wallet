@@ -3,6 +3,7 @@
 	import CreditCardIcon from '@lucide/svelte/icons/credit-card';
 	import LandmarkIcon from '@lucide/svelte/icons/landmark';
 	import ListIcon from '@lucide/svelte/icons/list';
+	import HandCoinsIcon from '@lucide/svelte/icons/hand-coins';
 	import RepeatIcon from '@lucide/svelte/icons/repeat';
 	import TargetIcon from '@lucide/svelte/icons/target';
 	import WalletCardsIcon from '@lucide/svelte/icons/wallet-cards';
@@ -20,7 +21,11 @@
 		transfer: 'Transferencia',
 		credit_purchase: 'Compra credito',
 		credit_card_payment: 'Pago tarjeta',
-		adjustment: 'Ajuste'
+		adjustment: 'Ajuste',
+		loan_received: 'Préstamo recibido',
+		loan_disbursement: 'Préstamo entregado',
+		loan_payment: 'Pago préstamo',
+		loan_collection: 'Cobro préstamo'
 	};
 
 	function money(amountCents: number, currencyCode = summary.currencyCode) {
@@ -166,6 +171,43 @@
 	</section>
 
 	<section class="grid gap-6 xl:grid-cols-2">
+		<div class="rounded-lg border border-outline bg-surface shadow-sm">
+			<div class="flex items-center justify-between gap-3 border-b border-outline px-5 py-4">
+				<div class="flex items-center gap-2">
+					<HandCoinsIcon class="size-5 text-primary" />
+					<h2 class="font-bold text-on-surface">Préstamos</h2>
+				</div>
+				<a class="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover" href="/prestamos">
+					Ver préstamos
+					<ArrowRightIcon class="size-4" />
+				</a>
+			</div>
+			<div class="grid gap-4 p-5 sm:grid-cols-2">
+				<div class="rounded-md bg-surface-subtle p-4">
+					<p class="text-xs font-bold tracking-[0.12em] text-on-surface-muted uppercase">Por pagar</p>
+					<p class="mt-2 text-xl font-bold text-on-surface">{money(summary.loans.borrowedOutstandingCents)}</p>
+					{#if summary.loans.nextBorrowedInstallment}
+						<p class="mt-2 text-xs text-on-surface-muted">
+							{summary.loans.nextBorrowedInstallment.name} · {formatIsoDate(summary.loans.nextBorrowedInstallment.dueDate)} · {money(summary.loans.nextBorrowedInstallment.amountCents, summary.loans.nextBorrowedInstallment.currencyCode)}
+						</p>
+					{:else}
+						<p class="mt-2 text-xs text-on-surface-muted">Sin próximas cuotas por pagar.</p>
+					{/if}
+				</div>
+				<div class="rounded-md bg-surface-subtle p-4">
+					<p class="text-xs font-bold tracking-[0.12em] text-on-surface-muted uppercase">Por cobrar</p>
+					<p class="mt-2 text-xl font-bold text-on-surface">{money(summary.loans.lentOutstandingCents)}</p>
+					{#if summary.loans.nextLentInstallment}
+						<p class="mt-2 text-xs text-on-surface-muted">
+							{summary.loans.nextLentInstallment.name} · {formatIsoDate(summary.loans.nextLentInstallment.dueDate)} · {money(summary.loans.nextLentInstallment.amountCents, summary.loans.nextLentInstallment.currencyCode)}
+						</p>
+					{:else}
+						<p class="mt-2 text-xs text-on-surface-muted">Sin próximos cobros esperados.</p>
+					{/if}
+				</div>
+			</div>
+		</div>
+
 		<div class="rounded-lg border border-outline bg-surface shadow-sm">
 			<div class="flex items-center justify-between gap-3 border-b border-outline px-5 py-4">
 				<div class="flex items-center gap-2">

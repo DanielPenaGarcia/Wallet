@@ -1,16 +1,17 @@
 import { fail, type Actions } from '@sveltejs/kit';
 import type { Account } from '$lib/modules/accounts/types/account.types';
-import type { CardListItem } from '$lib/modules/cards/types/card-list-item.types';
 import type { CardColor } from '$lib/modules/cards/types/card.types';
 import type { Category } from '$lib/modules/categories/types/category.types';
 import type { Expense, ExpenseAmountKind, ExpenseFrequency } from '$lib/modules/expenses/types/expense.types';
 import { movementTypes, type Movement, type MovementClassificationKind, type MovementType } from '$lib/modules/movements/types/movement.types';
 import type { MovementFormValues } from '$lib/modules/movements/types/movement-form-feedback.types';
 import { getCategoryPath } from '$lib/modules/expenses/utils/category-path';
+import { toCardListItem } from '$lib/modules/accounts/utils/account-card-list-item';
 import { accountService } from '$lib/server/accounts/account.service';
 import { categoryService } from '$lib/server/categories/category.service';
 import { MovementNotFoundError, MovementValidationError } from '$lib/server/movements/movement.errors';
 import { movementService } from '$lib/server/movements/movement.service';
+import { loanService } from '$lib/server/loans/loan.service';
 import type { CreateMovementInput } from '$lib/server/movements/inputs/create-movement.input';
 import type { UpdateMovementInput } from '$lib/server/movements/inputs/update-movement.input';
 import type { MovementOutput } from '$lib/server/movements/outputs/movement.output';
@@ -36,6 +37,7 @@ export async function load({ url }) {
 		recurringExpenseService.getRecurringExpenses(),
 		recurringIncomeService.getRecurringIncomes()
 	]);
+	const loans = await loanService.getLoans();
 	const movements = await movementService.listMovements({
 		accountId: filters.cardId || undefined,
 		categoryId: filters.categoryId || undefined,
@@ -45,7 +47,7 @@ export async function load({ url }) {
 	});
 
 	return {
-		movements: movements.map((movement) => toMovement(movement, accounts, categories, recurringExpenses, recurringIncomes)),
+		movements: movements.map((movement) => toMovement(movement, accounts, categories, recurringExpenses, recurringIncomes, loans)),
 		cards: accounts.map(toCardListItem),
 		expenses: recurringExpenses.map((expense) => toExpense(expense, categories)),
 		incomes: recurringIncomes,
@@ -97,6 +99,7 @@ function movementValues(formData: FormData): MovementFormValues & {
 		destinationCardId: formValue(formData, 'destinationCardId'),
 		classificationKind: formValue(formData, 'classificationKind') as MovementClassificationKind,
 		classificationId: formValue(formData, 'classificationId'),
+		loanId: formValue(formData, 'loanId'),
 		recurringIncomeId: normalizedOptionalSelect(formValue(formData, 'recurringIncomeId')),
 		paymentMode: formValue(formData, 'paymentMode') === 'installments' ? 'installments' : 'cash',
 		installmentCount: formValue(formData, 'installmentCount'),
@@ -127,7 +130,8 @@ function validateMovementValues(values: ReturnType<typeof movementValues>) {
 		destinationAccountId: values.destinationCardId || null,
 		categoryId: values.classificationKind === 'category' ? values.classificationId || null : null,
 		recurringExpenseId: values.classificationKind === 'expense' ? values.classificationId || null : null,
-		recurringIncomeId: values.recurringIncomeId || null
+		recurringIncomeId: values.recurringIncomeId || null,
+		loanId: values.loanId || null
 	};
 
 	if (input.type === 'income') {
@@ -135,16 +139,19 @@ function validateMovementValues(values: ReturnType<typeof movementValues>) {
 		input.sourceAccountId = null;
 		input.categoryId = null;
 		input.recurringExpenseId = null;
+		input.loanId = null;
 	}
 	if (input.type === 'transfer' || input.type === 'credit_card_payment') {
 		input.description = null;
 		input.categoryId = null;
 		input.recurringExpenseId = null;
+		input.loanId = null;
 	}
 	if (input.type === 'adjustment') {
 		input.description = values.reason || null;
 		input.categoryId = null;
 		input.recurringExpenseId = null;
+		input.loanId = null;
 		input.sourceAccountId = values.adjustmentDirection === 'decrease' ? values.adjustmentAccountId || null : null;
 		input.destinationAccountId = values.adjustmentDirection === 'increase' ? values.adjustmentAccountId || null : null;
 	}
@@ -235,30 +242,6 @@ export const actions: Actions = {
 	}
 };
 
-function toCardListItem(account: Account): CardListItem {
-	const color = account.cardColor ?? account.bank?.color ?? '#123a63';
-	return {
-		id: account.id,
-		kind: account.type === 'credit' ? 'credit' : 'debit',
-		alias: account.type === 'personal' ? 'Efectivo' : account.name,
-		bankId: account.bankId ?? 'personal',
-		bankName: account.bank?.name ?? 'Efectivo',
-		isDefault: account.type === 'personal',
-		color: color as CardColor,
-		lastFourDigits: account.cardLastFourDigits ?? '',
-		currencyCode: 'MXN',
-		initialBalance: account.balanceCents,
-		currentBalance: account.balanceCents,
-		cashExpenseAmount: null,
-		interestFreeOutstandingAmount: null,
-		accountId: account.id,
-		maximumOfferedCredit: account.creditLimitCents,
-		statementDay: account.statementDay,
-		paymentDueDay: account.paymentDueDay,
-		interestFreeInstallmentPurchases: []
-	};
-}
-
 function toExpense(expense: RecurringExpense, categories: Category[]): Expense {
 	const category = categories.find((item) => item.id === expense.categoryId);
 	return {
@@ -290,13 +273,15 @@ function toMovement(
 	accounts: Account[],
 	categories: Category[],
 	recurringExpenses: RecurringExpense[],
-	recurringIncomes: RecurringIncome[]
+	recurringIncomes: RecurringIncome[],
+	loans: Awaited<ReturnType<typeof loanService.getLoans>>
 ): Movement {
 	const source = movement.sourceAccountId ? accounts.find((account) => account.id === movement.sourceAccountId) ?? null : null;
 	const destination = movement.destinationAccountId ? accounts.find((account) => account.id === movement.destinationAccountId) ?? null : null;
 	const category = movement.categoryId ? categories.find((item) => item.id === movement.categoryId) ?? null : null;
 	const recurringExpense = movement.recurringExpenseId ? recurringExpenses.find((expense) => expense.id === movement.recurringExpenseId) ?? null : null;
 	const recurringIncome = movement.recurringIncomeId ? recurringIncomes.find((income) => income.id === movement.recurringIncomeId) ?? null : null;
+	const loan = movement.loanId ? loans.find((item) => item.id === movement.loanId) ?? null : null;
 
 	return {
 		id: movement.id,
@@ -320,6 +305,8 @@ function toMovement(
 		classificationKind: movement.recurringIncomeId ? 'income' : movement.recurringExpenseId ? 'expense' : movement.categoryId ? 'category' : null,
 		classificationId: movement.recurringIncomeId ?? movement.recurringExpenseId ?? movement.categoryId,
 		classificationName: recurringIncome?.title ?? recurringExpense?.name ?? (category ? getCategoryPath(category, categories) : null),
+		loanId: movement.loanId,
+		loanName: loan?.name ?? null,
 		active: movement.active,
 		registeredAt: movement.createdAt,
 		updatedAt: movement.updatedAt,

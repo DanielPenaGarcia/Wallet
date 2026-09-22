@@ -1,6 +1,7 @@
 import type { RecurringExpense } from '$lib/modules/recurring-expenses/types/recurring-expense.types';
 import type { RecurringIncome } from '$lib/modules/recurring-incomes/types/recurring-income.types';
 import type { FinancialPlanningPeriod } from '$lib/modules/goals/types/goal-projection.types';
+import type { LoanSummary } from '$lib/modules/loans/types/loan.types';
 import { toIsoDate } from '$lib/shared/utils/local-date';
 import { parseLocalDate, startOfLocalDay } from '$lib/shared/utils/recurrence-date';
 import { nextRecurringPaymentDate } from '$lib/shared/utils/recurring-payment-schedule';
@@ -17,7 +18,8 @@ export class FinancialPlanningService {
 	projectFreeMoneyPeriods(
 		recurringIncomes: RecurringIncome[],
 		recurringExpenses: RecurringExpense[],
-		from = new Date()
+		from = new Date(),
+		loans: LoanSummary[] = []
 	): FinancialPlanningPeriod[] {
 		const startsAt = startOfLocalDay(from);
 		const endsAt = new Date(startsAt.getFullYear() + projectionYearLimit, startsAt.getMonth(), startsAt.getDate());
@@ -27,7 +29,10 @@ export class FinancialPlanningService {
 		const incomeEventsByDate = this.groupAmountsByDate(incomeEvents).slice(0, projectionIncomeLimit);
 		const lastIncomeDate = parseLocalDate(incomeEventsByDate[incomeEventsByDate.length - 1].date) ?? endsAt;
 		const expenseEventsByDate = this.groupAmountsByDate(
-			this.projectExpenseEvents(recurringExpenses, startsAt, lastIncomeDate)
+			[
+				...this.projectExpenseEvents(recurringExpenses, startsAt, lastIncomeDate),
+				...this.projectLoanPaymentEvents(loans, startsAt, lastIncomeDate)
+			]
 		);
 
 		let previousIncomeDate = startsAt;
@@ -88,6 +93,23 @@ export class FinancialPlanningService {
 			}
 
 			return events;
+		});
+	}
+
+	private projectLoanPaymentEvents(loans: LoanSummary[], startsAt: Date, endsAt: Date): DatedAmount[] {
+		return loans.flatMap((loan) => {
+			if (loan.status !== 'active' || loan.direction !== 'borrowed') return [];
+
+			return loan.installments
+				.filter((installment) => {
+					if (installment.remainingAmountCents <= 0) return false;
+					const dueDate = parseLocalDate(installment.dueDate);
+					return Boolean(dueDate && dueDate > startsAt && dueDate <= endsAt);
+				})
+				.map((installment) => ({
+					date: installment.dueDate,
+					amountCents: installment.remainingAmountCents
+				}));
 		});
 	}
 

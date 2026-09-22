@@ -8,17 +8,19 @@ import { financialGoalService } from '$lib/server/goals/financial-goal.service';
 import { financialPlanningService } from '$lib/server/planning/financial-planning.service';
 import { recurringExpenseService } from '$lib/server/recurring-expenses/recurring-expense.service';
 import { recurringIncomeService } from '$lib/server/recurring-incomes/recurring-income.service';
+import { loanService } from '$lib/server/loans/loan.service';
 
 export async function load() {
-	const [goals, recurringIncomes, recurringExpenses] = await Promise.all([
+	const [goals, recurringIncomes, recurringExpenses, loans] = await Promise.all([
 		financialGoalService.getFinancialGoals(),
 		recurringIncomeService.getRecurringIncomes(),
-		recurringExpenseService.getRecurringExpenses()
+		recurringExpenseService.getRecurringExpenses(),
+		loanService.getLoans()
 	]);
 
 	return {
 		goals,
-		planningPeriods: financialPlanningService.projectFreeMoneyPeriods(recurringIncomes, recurringExpenses)
+		planningPeriods: financialPlanningService.projectFreeMoneyPeriods(recurringIncomes, recurringExpenses, new Date(), loans)
 	};
 }
 

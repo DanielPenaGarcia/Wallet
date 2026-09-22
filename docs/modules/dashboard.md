@@ -54,3 +54,14 @@ The outstanding statement amount is derived from `statementBalanceCents - paidAm
 The dashboard lists active goals and their current progress. The next contribution is an estimate from the first projected free-money period and each goal's distribution percentage.
 
 Projected free money is not presented as real available balance.
+
+## Loans
+
+The dashboard summarizes active loans separately from cash:
+
+- Pending borrowed debt.
+- Pending lent receivables.
+- Next loan payment.
+- Next expected loan collection.
+
+Receivables are not added to available money until a `loan_collection` movement exists.

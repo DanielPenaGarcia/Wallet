@@ -16,6 +16,7 @@ export function toMovementOutput(movement: typeof movements.$inferSelect): Movem
 		categoryId: movement.categoryId,
 		recurringExpenseId: movement.recurringExpenseId,
 		recurringIncomeId: movement.recurringIncomeId,
+		loanId: movement.loanId,
 		active: movement.active,
 		createdAt: movement.createdAt,
 		updatedAt: movement.updatedAt,

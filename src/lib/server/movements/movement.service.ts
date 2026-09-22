@@ -8,6 +8,8 @@ import { drizzleRecurringExpenseRepository } from '$lib/server/recurring-expense
 import type { RecurringExpenseRepository } from '$lib/server/recurring-expenses/recurring-expense.repository';
 import { drizzleRecurringIncomeRepository } from '$lib/server/recurring-incomes/drizzle-recurring-income.repository';
 import type { RecurringIncomeRepository } from '$lib/server/recurring-incomes/recurring-income.repository';
+import { drizzleLoanRepository } from '$lib/server/loans/drizzle-loan.repository';
+import type { LoanRepository } from '$lib/server/loans/loan.repository';
 import { drizzleMovementRepository } from './drizzle-movement.repository';
 import type { AccountBalanceChangeInput } from './inputs/account-balance-change.input';
 import type { CreateMovementInput } from './inputs/create-movement.input';
@@ -23,7 +25,8 @@ export class MovementService {
 		private readonly accountRepository: AccountRepository,
 		private readonly categoryRepository: CategoryRepository,
 		private readonly recurringExpenseRepository: RecurringExpenseRepository,
-		private readonly recurringIncomeRepository: RecurringIncomeRepository
+		private readonly recurringIncomeRepository: RecurringIncomeRepository,
+		private readonly loanRepository: LoanRepository
 	) {}
 
 	async getMovement(id: string) {
@@ -100,7 +103,8 @@ export class MovementService {
 			destinationAccountId: input.destinationAccountId?.trim() || null,
 			categoryId: input.categoryId?.trim() || null,
 			recurringExpenseId: input.recurringExpenseId?.trim() || null,
-			recurringIncomeId: input.recurringIncomeId?.trim() || null
+			recurringIncomeId: input.recurringIncomeId?.trim() || null,
+			loanId: input.loanId?.trim() || null
 		};
 	}
 
@@ -203,7 +207,8 @@ export class MovementService {
 			destinationAccountId: movement.destinationAccountId,
 			categoryId: movement.categoryId,
 			recurringExpenseId: movement.recurringExpenseId,
-			recurringIncomeId: movement.recurringIncomeId
+			recurringIncomeId: movement.recurringIncomeId,
+			loanId: movement.loanId
 		};
 	}
 
@@ -223,6 +228,9 @@ export class MovementService {
 		if (input.recurringIncomeId && !(await this.recurringIncomeRepository.findById(input.recurringIncomeId))) {
 			errors.recurringIncomeId = ['Selecciona un ingreso recurrente existente.'];
 		}
+		if (input.loanId && !(await this.loanRepository.findById(input.loanId))) {
+			errors.loanId = ['Selecciona un préstamo existente.'];
+		}
 	}
 
 	private async validateFinancialShape(input: CreateMovementInput, errors: Record<string, string[]>) {
@@ -231,33 +239,63 @@ export class MovementService {
 			await this.requireRealDestinationAccount(input, errors);
 			if (input.categoryId) errors.categoryId = ['Un ingreso no se clasifica como categoría de gasto.'];
 			if (input.recurringExpenseId) errors.recurringExpenseId = ['Un ingreso no materializa un gasto recurrente.'];
+			this.rejectLoan(input, errors);
 		}
 		if (input.type === 'expense') {
 			this.requireSourceOnly(input, errors);
 			await this.requireRealSourceAccount(input, errors);
 			this.requireExpenseClassification(input, errors);
 			if (input.recurringIncomeId) errors.recurringIncomeId = ['Un gasto no materializa un ingreso recurrente.'];
+			this.rejectLoan(input, errors);
 		}
 		if (input.type === 'credit_purchase') {
 			this.requireSourceOnly(input, errors);
 			await this.requireCreditSourceAccount(input, errors);
 			this.requireExpenseClassification(input, errors);
 			if (input.recurringIncomeId) errors.recurringIncomeId = ['Una compra con crédito no materializa un ingreso recurrente.'];
+			this.rejectLoan(input, errors);
 		}
 		if (input.type === 'transfer') {
 			this.requireSourceAndDestination(input, errors);
 			await this.requireRealSourceAccount(input, errors);
 			await this.requireRealDestinationAccount(input, errors);
 			this.rejectClassification(input, errors);
+			this.rejectLoan(input, errors);
 		}
 		if (input.type === 'credit_card_payment') {
 			this.requireSourceAndDestination(input, errors);
 			await this.requireRealSourceAccount(input, errors);
 			await this.requireCreditDestinationAccount(input, errors);
 			this.rejectClassification(input, errors);
+			this.rejectLoan(input, errors);
 		}
 		if (input.type === 'adjustment') {
 			this.requireSingleAccount(input, errors);
+			this.rejectClassification(input, errors);
+			this.rejectLoan(input, errors);
+		}
+		if (input.type === 'loan_received') {
+			this.requireDestinationOnly(input, errors);
+			await this.requireRealDestinationAccount(input, errors);
+			await this.requireLoanDirection(input, 'borrowed', errors);
+			this.rejectClassification(input, errors);
+		}
+		if (input.type === 'loan_disbursement') {
+			this.requireSourceOnly(input, errors);
+			await this.requireRealSourceAccount(input, errors);
+			await this.requireLoanDirection(input, 'lent', errors);
+			this.rejectClassification(input, errors);
+		}
+		if (input.type === 'loan_payment') {
+			this.requireSourceOnly(input, errors);
+			await this.requireRealSourceAccount(input, errors);
+			await this.requireLoanDirection(input, 'borrowed', errors);
+			this.rejectClassification(input, errors);
+		}
+		if (input.type === 'loan_collection') {
+			this.requireDestinationOnly(input, errors);
+			await this.requireRealDestinationAccount(input, errors);
+			await this.requireLoanDirection(input, 'lent', errors);
 			this.rejectClassification(input, errors);
 		}
 	}
@@ -272,6 +310,10 @@ export class MovementService {
 		if (input.type === 'income') applyDelta(input.destinationAccountId, input.amountCents);
 		if (input.type === 'expense') applyDelta(input.sourceAccountId, -input.amountCents);
 		if (input.type === 'credit_purchase') applyDelta(input.sourceAccountId, input.amountCents);
+		if (input.type === 'loan_received') applyDelta(input.destinationAccountId, input.amountCents);
+		if (input.type === 'loan_disbursement') applyDelta(input.sourceAccountId, -input.amountCents);
+		if (input.type === 'loan_payment') applyDelta(input.sourceAccountId, -input.amountCents);
+		if (input.type === 'loan_collection') applyDelta(input.destinationAccountId, input.amountCents);
 		if (input.type === 'credit_card_payment') {
 			applyDelta(input.sourceAccountId, -input.amountCents);
 			applyDelta(input.destinationAccountId, -input.amountCents);
@@ -440,6 +482,31 @@ export class MovementService {
 		if (input.recurringIncomeId) errors.recurringIncomeId = ['Este tipo de movimiento no materializa un ingreso recurrente.'];
 	}
 
+	private rejectLoan(input: CreateMovementInput, errors: Record<string, string[]>) {
+		if (input.loanId) errors.loanId = ['Este tipo de movimiento no se vincula a préstamos.'];
+	}
+
+	private async requireLoanDirection(
+		input: CreateMovementInput,
+		direction: 'borrowed' | 'lent',
+		errors: Record<string, string[]>
+	) {
+		if (!input.loanId) {
+			errors.loanId = ['Selecciona un préstamo.'];
+			return;
+		}
+		const loan = await this.loanRepository.findById(input.loanId);
+		if (!loan) return;
+		if (loan.status !== 'active') {
+			errors.loanId = ['El préstamo debe estar activo.'];
+		}
+		if (loan.direction !== direction) {
+			errors.loanId = [direction === 'borrowed'
+				? 'Selecciona un préstamo por pagar.'
+				: 'Selecciona un préstamo por cobrar.'];
+		}
+	}
+
 	private isMovementType(type: string): type is MovementType {
 		return movementTypes.includes(type as MovementType);
 	}
@@ -455,5 +522,6 @@ export const movementService = new MovementService(
 	drizzleAccountRepository,
 	drizzleCategoryRepository,
 	drizzleRecurringExpenseRepository,
-	drizzleRecurringIncomeRepository
+	drizzleRecurringIncomeRepository,
+	drizzleLoanRepository
 );

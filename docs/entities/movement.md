@@ -12,6 +12,10 @@ It is the domain concept that backs balance changes instead of allowing unrelate
 - `credit_purchase`: a purchase made with a credit account.
 - `credit_card_payment`: money leaving a real-money account to reduce consumed credit.
 - `adjustment`: an explicit one-account correction that preserves traceability.
+- `loan_received`: principal from a borrowed loan enters a real-money account; not ordinary income.
+- `loan_disbursement`: principal from a lent loan leaves a real-money account; not ordinary expense.
+- `loan_payment`: payment of a borrowed loan from a real-money account; not ordinary expense.
+- `loan_collection`: collection of a lent loan into a real-money account; not ordinary income.
 
 ## Fields
 
@@ -35,6 +39,7 @@ The current client-safe `Movement` shape includes:
 - `categoryId`: persisted category reference when the movement is categorizable.
 - `recurringExpenseId`: optional recurring expense configuration materialized by the movement.
 - `recurringIncomeId`: optional recurring income configuration materialized by the movement.
+- `loanId`: optional loan reference for loan-specific movement types.
 - `active`: whether the movement is active.
 - `registeredAt`: creation timestamp.
 - `createdAt`: persisted creation timestamp.
@@ -51,6 +56,8 @@ Future balance-changing workflows should be movement-backed:
 - Credit purchase increases consumed credit.
 - Credit card payment decreases the payment source balance and decreases consumed credit.
 - Adjustment affects exactly one account and must remain explicit. For credit accounts it corrects consumed credit.
+- Loan received and loan collection increase a real-money destination account without counting as ordinary income.
+- Loan disbursement and loan payment decrease a real-money source account without counting as ordinary expense.
 - Account balance correction forms create `adjustment` movements instead of writing balances directly.
 
 Historical credit card statements and installment purchases remain explanatory records. They do not replace movements and do not mutate balances by themselves.
@@ -85,5 +92,6 @@ The UI has movement components and client-safe types. The server module defines 
 - Income movements may reference a recurring income configuration and cannot reference expense categories or recurring expenses.
 - Active recurring materializations are unique by recurring configuration, movement type, and effective date to prevent duplicate balance impact from repeated submissions.
 - Transfers, credit card payments, and adjustments do not carry category or recurring configuration references.
+- Loan movements require an active loan reference, must match the loan direction, and do not carry category or recurring configuration references.
 - Persisted account, category, recurring expense, and recurring income references are verified before creation.
 - Soft deletion preserves historical context with `active = false` and `deletedAt`.

@@ -10,6 +10,8 @@ import type { AccountRepository } from '$lib/server/accounts/account.repository'
 import type { CategoryRepository } from '$lib/server/categories/category.repository';
 import type { RecurringExpenseRepository } from '$lib/server/recurring-expenses/recurring-expense.repository';
 import type { RecurringIncomeRepository } from '$lib/server/recurring-incomes/recurring-income.repository';
+import type { Loan } from '$lib/modules/loans/types/loan.types';
+import type { LoanRepository, LoanPaymentTotals } from '$lib/server/loans/loan.repository';
 import { buildAccountBalanceAdjustmentMovement } from '$lib/server/accounts/account-balance-adjustment';
 import { DrizzleAccountRepository } from '$lib/server/accounts/drizzle-account.repository';
 import * as schema from '$lib/server/db/schema';
@@ -160,8 +162,41 @@ class InMemoryMovementRepository implements MovementRepository {
 			categoryId: input.categoryId,
 			recurringExpenseId: input.recurringExpenseId,
 			recurringIncomeId: input.recurringIncomeId,
+			loanId: input.loanId,
 			...state
 		};
+	}
+}
+
+class InMemoryLoanRepository implements LoanRepository {
+	constructor(private readonly loans: Map<string, Loan> = new Map()) {}
+
+	list() {
+		return Promise.resolve(Array.from(this.loans.values()));
+	}
+
+	findById(id: string) {
+		return Promise.resolve(this.loans.get(id));
+	}
+
+	listPaymentTotals(): Promise<LoanPaymentTotals[]> {
+		return Promise.resolve([]);
+	}
+
+	getPaymentTotal() {
+		return Promise.resolve(0);
+	}
+
+	async create(): Promise<Loan> {
+		throw new Error('Not used in movement tests.');
+	}
+
+	async update() {
+		throw new Error('Not used in movement tests.');
+	}
+
+	async cancel() {
+		throw new Error('Not used in movement tests.');
 	}
 }
 
@@ -273,7 +308,11 @@ describe('MovementService balance invariants', () => {
 			accountRepository,
 			new InMemoryCategoryRepository(new Map([['groceries', category('groceries')]])),
 			new InMemoryRecurringExpenseRepository(new Map([['rent', recurringExpense('rent', 'groceries')]])),
-			new InMemoryRecurringIncomeRepository(new Map([['payroll', recurringIncome('payroll')]]))
+			new InMemoryRecurringIncomeRepository(new Map([['payroll', recurringIncome('payroll')]])),
+			new InMemoryLoanRepository(new Map([
+				['borrowed-loan', loan({ id: 'borrowed-loan', direction: 'borrowed' })],
+				['lent-loan', loan({ id: 'lent-loan', direction: 'lent' })]
+			]))
 		);
 	});
 
@@ -398,6 +437,7 @@ describe('MovementService balance invariants', () => {
 				category_id TEXT,
 				recurring_expense_id TEXT,
 				recurring_income_id TEXT,
+				loan_id TEXT,
 				active INTEGER NOT NULL DEFAULT 1,
 				created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 				updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -427,7 +467,8 @@ describe('MovementService balance invariants', () => {
 			accountRepository,
 			new InMemoryCategoryRepository(new Map()),
 			new InMemoryRecurringExpenseRepository(new Map()),
-			new InMemoryRecurringIncomeRepository(new Map())
+			new InMemoryRecurringIncomeRepository(new Map()),
+			new InMemoryLoanRepository()
 		);
 		const debit = await accountRepository.findById('debit-db');
 		if (!debit) throw new Error('Debit account was not persisted.');
@@ -463,6 +504,56 @@ describe('MovementService balance invariants', () => {
 		const [payment] = await service.listMovements();
 		expect(payment.categoryId).toBeNull();
 		expect(payment.recurringExpenseId).toBeNull();
+	});
+
+	it('handles borrowed loan money without ordinary income semantics', async () => {
+		await service.createMovement(movement({
+			type: 'loan_received',
+			amountCents: 100_00,
+			destinationAccountId: 'cash',
+			loanId: 'borrowed-loan'
+		}));
+		await service.createMovement(movement({
+			type: 'loan_payment',
+			amountCents: 25_00,
+			sourceAccountId: 'cash',
+			loanId: 'borrowed-loan'
+		}));
+
+		expect(accounts.get('cash')?.balanceCents).toBe(175_00);
+		const movements = await service.listMovements();
+		expect(movements).toHaveLength(2);
+		expect(movements.every((item) => item.categoryId === null && item.recurringIncomeId === null)).toBe(true);
+	});
+
+	it('handles lent loan disbursement and collection without ordinary expense or income semantics', async () => {
+		await service.createMovement(movement({
+			type: 'loan_disbursement',
+			amountCents: 80_00,
+			sourceAccountId: 'debit',
+			loanId: 'lent-loan'
+		}));
+		await service.createMovement(movement({
+			type: 'loan_collection',
+			amountCents: 30_00,
+			destinationAccountId: 'debit',
+			loanId: 'lent-loan'
+		}));
+
+		expect(accounts.get('debit')?.balanceCents).toBe(150_00);
+		const movements = await service.listMovements();
+		expect(movements).toHaveLength(2);
+		expect(movements.every((item) => item.categoryId === null && item.recurringExpenseId === null)).toBe(true);
+	});
+
+	it('rejects mismatched loan directions for loan movements', async () => {
+		await expect(service.createMovement(movement({
+			type: 'loan_payment',
+			amountCents: 10_00,
+			sourceAccountId: 'cash',
+			loanId: 'lent-loan'
+		}))).rejects.toBeInstanceOf(MovementValidationError);
+		expect(accounts.get('cash')?.balanceCents).toBe(100_00);
 	});
 
 	it('materializes recurring expenses only through linked expense movements', async () => {
@@ -544,6 +635,26 @@ function movement(overrides: Partial<CreateMovementInput> = {}): CreateMovementI
 		categoryId: null,
 		recurringExpenseId: null,
 		recurringIncomeId: null,
+		loanId: null,
+		...overrides
+	};
+}
+
+function loan(overrides: Partial<Loan>): Loan {
+	return {
+		id: 'loan',
+		name: 'Loan',
+		direction: 'borrowed',
+		counterpartyName: 'Counterparty',
+		principalAmountCents: 100_00,
+		totalRepaymentCents: 120_00,
+		installmentCount: 3,
+		firstPaymentDate: '2026-10-01',
+		currencyCode: 'MXN',
+		status: 'active',
+		createdAt: now,
+		updatedAt: now,
+		cancelledAt: null,
 		...overrides
 	};
 }

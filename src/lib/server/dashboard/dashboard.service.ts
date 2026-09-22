@@ -2,6 +2,7 @@ import { getStatementOutstandingAmount } from '$lib/modules/credit-card-statemen
 import type {
 	DashboardCreditCardObligation,
 	DashboardGoalSummary,
+	DashboardLoanSummary,
 	DashboardRecentMovement,
 	DashboardSummary,
 	DashboardUpcomingExpense,
@@ -16,6 +17,7 @@ import { financialGoalService, type FinancialGoalService } from '$lib/server/goa
 import { movementService, type MovementService } from '$lib/server/movements/movement.service';
 import type { MovementOutput } from '$lib/server/movements/outputs/movement.output';
 import { financialPlanningService, type FinancialPlanningService } from '$lib/server/planning/financial-planning.service';
+import { loanService, type LoanService } from '$lib/server/loans/loan.service';
 import { recurringExpenseService, type RecurringExpenseService } from '$lib/server/recurring-expenses/recurring-expense.service';
 import { recurringIncomeService, type RecurringIncomeService } from '$lib/server/recurring-incomes/recurring-income.service';
 import { toIsoDate } from '$lib/shared/utils/local-date';
@@ -32,12 +34,13 @@ export class DashboardService {
 		private readonly recurringExpenses: RecurringExpenseService,
 		private readonly creditCardStatements: CreditCardStatementService,
 		private readonly goals: FinancialGoalService,
-		private readonly planning: FinancialPlanningService
+		private readonly planning: FinancialPlanningService,
+		private readonly loans: LoanService
 	) {}
 
 	async getSummary(referenceDate = new Date()): Promise<DashboardSummary> {
 		const monthRange = this.monthRange(referenceDate);
-		const [accounts, monthMovements, recentMovements, recurringIncomes, recurringExpenses, goals] = await Promise.all([
+		const [accounts, monthMovements, recentMovements, recurringIncomes, recurringExpenses, goals, loans] = await Promise.all([
 			this.accounts.getAccounts(),
 			this.movements.listMovements({
 				startDate: `${monthRange.startsOn}T00:00:00.000Z`,
@@ -46,13 +49,14 @@ export class DashboardService {
 			this.movements.listMovements({ limit: dashboardMovementLimit }),
 			this.recurringIncomes.getRecurringIncomes(),
 			this.recurringExpenses.getRecurringExpenses(),
-			this.goals.getFinancialGoals()
+			this.goals.getFinancialGoals(),
+			this.loans.getLoans()
 		]);
 		const creditAccounts = accounts.filter((account) => account.type === 'credit');
 		const latestStatements = await Promise.all(
 			creditAccounts.map((account) => this.creditCardStatements.getLatestStatement(account.id))
 		);
-		const planningPeriods = this.planning.projectFreeMoneyPeriods(recurringIncomes, recurringExpenses, referenceDate);
+		const planningPeriods = this.planning.projectFreeMoneyPeriods(recurringIncomes, recurringExpenses, referenceDate, loans);
 		const accountNames = new Map(accounts.map((account) => [
 			account.id,
 			account.type === 'personal' ? 'Efectivo' : account.name
@@ -94,6 +98,7 @@ export class DashboardService {
 					isActive: account.isActive
 				};
 			}),
+			loans: this.loanSummary(loans),
 			goals: this.goalSummaries(goals, planningPeriods[0]),
 			recentMovements: recentMovements.map((movement) => this.recentMovement(movement, accountNames))
 		};
@@ -183,6 +188,43 @@ export class DashboardService {
 			.sort((a, b) => b.distributionPercentage - a.distributionPercentage || a.name.localeCompare(b.name));
 	}
 
+	private loanSummary(loans: Awaited<ReturnType<LoanService['getLoans']>>): DashboardLoanSummary {
+		const activeLoans = loans.filter((loan) => loan.status === 'active' && loan.outstandingAmountCents > 0);
+		const nextBorrowedLoan = activeLoans
+			.filter((loan) => loan.direction === 'borrowed' && loan.nextInstallment)
+			.sort((a, b) => (a.nextInstallment?.dueDate ?? '').localeCompare(b.nextInstallment?.dueDate ?? ''))[0];
+		const nextLentLoan = activeLoans
+			.filter((loan) => loan.direction === 'lent' && loan.nextInstallment)
+			.sort((a, b) => (a.nextInstallment?.dueDate ?? '').localeCompare(b.nextInstallment?.dueDate ?? ''))[0];
+
+		return {
+			borrowedOutstandingCents: activeLoans
+				.filter((loan) => loan.direction === 'borrowed')
+				.reduce((total, loan) => total + loan.outstandingAmountCents, 0),
+			lentOutstandingCents: activeLoans
+				.filter((loan) => loan.direction === 'lent')
+				.reduce((total, loan) => total + loan.outstandingAmountCents, 0),
+			nextBorrowedInstallment: nextBorrowedLoan?.nextInstallment
+				? {
+					loanId: nextBorrowedLoan.id,
+					name: nextBorrowedLoan.name,
+					dueDate: nextBorrowedLoan.nextInstallment.dueDate,
+					amountCents: nextBorrowedLoan.nextInstallment.remainingAmountCents,
+					currencyCode: nextBorrowedLoan.currencyCode
+				}
+				: null,
+			nextLentInstallment: nextLentLoan?.nextInstallment
+				? {
+					loanId: nextLentLoan.id,
+					name: nextLentLoan.name,
+					dueDate: nextLentLoan.nextInstallment.dueDate,
+					amountCents: nextLentLoan.nextInstallment.remainingAmountCents,
+					currencyCode: nextLentLoan.currencyCode
+				}
+				: null
+		};
+	}
+
 	private recentMovement(movement: MovementOutput, accountNames: Map<string, string>): DashboardRecentMovement {
 		return {
 			id: movement.id,
@@ -210,5 +252,6 @@ export const dashboardService = new DashboardService(
 	recurringExpenseService,
 	creditCardStatementService,
 	financialGoalService,
-	financialPlanningService
+	financialPlanningService,
+	loanService
 );

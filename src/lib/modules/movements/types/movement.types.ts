@@ -9,7 +9,11 @@ export const movementTypes = [
 	'transfer',
 	'credit_purchase',
 	'credit_card_payment',
-	'adjustment'
+	'adjustment',
+	'loan_received',
+	'loan_disbursement',
+	'loan_payment',
+	'loan_collection'
 ] as const;
 
 export type MovementPaymentMode = (typeof movementPaymentModes)[number];
@@ -38,6 +42,8 @@ export type Movement = {
 	classificationKind: MovementClassificationKind | null;
 	classificationId: string | null;
 	classificationName: string | null;
+	loanId: string | null;
+	loanName: string | null;
 	active: boolean;
 	registeredAt: IsoDateTime;
 	updatedAt: IsoDateTime | null;

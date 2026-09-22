@@ -13,6 +13,7 @@ export type MovementOutput = {
 	categoryId: string | null;
 	recurringExpenseId: string | null;
 	recurringIncomeId: string | null;
+	loanId: string | null;
 	active: boolean;
 	createdAt: string;
 	updatedAt: string;

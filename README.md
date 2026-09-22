@@ -45,15 +45,14 @@ Wallet currently includes:
 - Recurring incomes.
 - Recurring expenses.
 - Financial goals with projected contributions from recurring income and expense configuration.
+- Loans for borrowed and lent money with movement-backed payments and collections.
+- Dashboard read model for cash, credit, recurring events, goals, loans, and recent movement activity.
 
 Still planned or conceptual:
 
 - Full Allocation Engine.
-- Accounts receivable.
 - Reserved funds.
 - Future commitments.
-- Movement-backed balance changes for cards and accounts.
-- Dashboard distribution workflow.
 
 ## Architecture
 
@@ -97,6 +96,7 @@ Entity docs:
 - [Credit Card Statement](docs/entities/credit-card-statement.md)
 - [Financial Goal](docs/entities/financial-goal.md)
 - [Installment Purchase](docs/entities/installment-purchase.md)
+- [Loan](docs/entities/loan.md)
 - [Movement](docs/entities/movement.md)
 - [Recurring Expense](docs/entities/recurring-expense.md)
 - [Recurring Income](docs/entities/recurring-income.md)
@@ -106,6 +106,7 @@ Module docs:
 - [Accounts](docs/modules/accounts.md)
 - [Allocation Engine](docs/modules/allocation-engine.md)
 - [Financial Goals](docs/modules/financial-goals.md)
+- [Loans](docs/modules/loans.md)
 - [Movements](docs/modules/movements.md)
 - [Recurring](docs/modules/recurring.md)
 - [Settings](docs/modules/settings.md)

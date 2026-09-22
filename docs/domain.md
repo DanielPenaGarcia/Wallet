@@ -25,6 +25,8 @@ Examples:
 - Goal progress is `currentAmountCents / targetAmountCents`.
 - Statement outstanding balance is `statementBalanceCents - paidAmountCents`.
 - Installment purchase outstanding amount is derived from installment counters.
+- Loan financing cost is `totalRepaymentCents - principalAmountCents`.
+- Loan outstanding amount is derived from active payment or collection movements.
 
 ## Reference Safety
 
@@ -53,3 +55,5 @@ Shared recurrence date calculation lives in `src/lib/shared/utils/recurring-paym
 ## Movements
 
 Movement is the conceptual base for financial operations that actually happened. Movement-backed creation, edition, and deletion update persisted account balances transactionally, and future ordinary balance mutations should flow through explicit financial events instead of unrelated modules changing balances independently.
+
+Loan operations are movement-backed but not ordinary income or expense: receiving a borrowed principal is not income, lending principal is not expense, paying a borrowed loan is not an expense category, and collecting a lent loan is not ordinary income.

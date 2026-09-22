@@ -21,6 +21,7 @@ The server-side movement module has an initial persistence layer:
 - Explicit adjustment movements for post-start balance corrections from the accounts UI, including consumed-credit corrections.
 - Linked recurring income and recurring expense materializations without letting the recurring records mutate balances by themselves.
 - Bounded list queries for read models such as the dashboard, while preserving the default chronological order by `occurredAt DESC` and `createdAt DESC`.
+- Loan-specific movement types for received principal, disbursed principal, payments, and collections. These movements update real-money accounts without being classified as ordinary income or expense.
 
 Reading movements does not modify account balances and account reads still use the persisted `accounts.balanceCents` value directly.
 
