@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import HomeIcon from '@lucide/svelte/icons/house';
 	import LandmarkIcon from '@lucide/svelte/icons/landmark';
 	import ListIcon from '@lucide/svelte/icons/list';
 	import RepeatIcon from '@lucide/svelte/icons/repeat';
@@ -16,6 +17,7 @@
 	import type { AppSidebarProps } from './props';
 
 	let { currentPath, isOpen, onClose }: AppSidebarProps = $props();
+	let isHomeActive = $derived(currentPath === '/');
 	let isRecurringActive = $derived(currentPath.startsWith('/recurrentes'));
 	let isMovementsActive = $derived(currentPath.startsWith('/movimientos'));
 	let isGoalsActive = $derived(currentPath.startsWith('/metas'));
@@ -88,6 +90,15 @@
 	</div>
 
 	<nav class="grid flex-1 content-start gap-1 px-3 py-6">
+		<a
+			href="/"
+			class="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-semibold transition {isHomeActive ? 'bg-on-primary text-primary shadow-sm' : 'text-on-primary/90 hover:bg-on-primary/10'}"
+			onclick={onClose}
+			aria-current={isHomeActive ? 'page' : undefined}
+		>
+			<HomeIcon class="size-5" />
+			Dashboard
+		</a>
 		<a
 			href="/recurrentes"
 			class="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-semibold transition {isRecurringActive ? 'bg-on-primary text-primary shadow-sm' : 'text-on-primary/90 hover:bg-on-primary/10'}"

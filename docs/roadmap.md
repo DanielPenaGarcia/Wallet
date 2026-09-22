@@ -24,7 +24,7 @@
 ## Planned Product Areas
 
 - Full Allocation Engine.
-- Dashboard distribution workflow.
+- Dashboard read model for current summary, monthly activity, recurring events, credit obligations, active goals, and recent movements.
 - Accounts receivable.
 - Reserved funds.
 - Future commitments.

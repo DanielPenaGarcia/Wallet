@@ -7,4 +7,5 @@ export type ListMovementsInput = {
 	startDate?: string;
 	endDate?: string;
 	includeDeleted?: boolean;
+	limit?: number;
 };

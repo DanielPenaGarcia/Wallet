@@ -55,11 +55,14 @@ export class DrizzleMovementRepository implements MovementRepository {
 		if (input.startDate) filters.push(gte(movements.occurredAt, input.startDate));
 		if (input.endDate) filters.push(lte(movements.occurredAt, input.endDate));
 
-		const rows = await this.database
+		const query = this.database
 			.select()
 			.from(movements)
 			.where(filters.length > 0 ? and(...filters) : undefined)
 			.orderBy(desc(movements.occurredAt), desc(movements.createdAt));
+		const rows = input.limit && input.limit > 0
+			? await query.limit(input.limit)
+			: await query;
 
 		return rows.map(toMovementOutput);
 	}
