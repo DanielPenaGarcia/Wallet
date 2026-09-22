@@ -4,7 +4,6 @@
 	import SearchIcon from '@lucide/svelte/icons/search';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import CategoryTreeItem from '../category-tree-item/CategoryTreeItem.svelte';
-	import { ActionButton } from '$lib/components/ui/action-button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import type { CategoryNode } from '../../types/category.types';

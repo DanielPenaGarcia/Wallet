@@ -6,7 +6,7 @@
 - SQLite and Drizzle schema.
 - Settings for application profile, color palettes, banks, and categories.
 - Accounts for personal cash, debit, and credit.
-- Manual balance adjustments for personal and debit accounts.
+- Explicit balance adjustments for personal, debit, and credit accounts.
 - Historical credit card statements.
 - Historical installment purchases.
 - Recurring incomes.

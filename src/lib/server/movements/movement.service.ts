@@ -346,7 +346,11 @@ export class MovementService {
 	private validateCreditTrackingBoundary(input: CreateMovementInput, accountsById: Map<string, Account>) {
 		const movementDate = input.occurredAt.slice(0, 10);
 		const blockedAccount = Array.from(accountsById.values()).find(
-			(account) => account.type === 'credit' && movementDate <= account.balanceAsOfDate
+			(account) =>
+				account.type === 'credit' &&
+				(input.type === 'adjustment'
+					? movementDate < account.balanceAsOfDate
+					: movementDate <= account.balanceAsOfDate)
 		);
 
 		if (blockedAccount) {

@@ -20,6 +20,7 @@ import { recurringIncomeService } from '$lib/server/recurring-incomes/recurring-
 import type { RecurringIncome } from '$lib/modules/recurring-incomes/types/recurring-income.types';
 
 const allFilterValue = 'all';
+const noSelectionValue = 'none';
 
 export async function load({ url }) {
 	const filters = {
@@ -57,6 +58,10 @@ function normalizedFilter(value: string | null) {
 	return !value || value === allFilterValue ? '' : value;
 }
 
+function normalizedOptionalSelect(value: string | null) {
+	return !value || value === allFilterValue || value === noSelectionValue ? '' : value;
+}
+
 function formValue(formData: FormData, field: string) {
 	const value = formData.get(field);
 	return typeof value === 'string' ? value : '';
@@ -92,7 +97,7 @@ function movementValues(formData: FormData): MovementFormValues & {
 		destinationCardId: formValue(formData, 'destinationCardId'),
 		classificationKind: formValue(formData, 'classificationKind') as MovementClassificationKind,
 		classificationId: formValue(formData, 'classificationId'),
-		recurringIncomeId: normalizedFilter(formValue(formData, 'recurringIncomeId')),
+		recurringIncomeId: normalizedOptionalSelect(formValue(formData, 'recurringIncomeId')),
 		paymentMode: formValue(formData, 'paymentMode') === 'installments' ? 'installments' : 'cash',
 		installmentCount: formValue(formData, 'installmentCount'),
 		interestFree: formData.get('interestFree') === 'true' || formData.get('interestFree') === 'on',

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Run All Tests After Changes"
+  short_description: "Require full test execution after repository changes"

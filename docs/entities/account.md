@@ -39,7 +39,7 @@ Fields:
 - `reason`: user-facing explanation for the correction.
 - `createdAt`: adjustment timestamp.
 
-New balance corrections are represented as explicit `adjustment` movements. Credit card balances are not adjusted through this history, and credit card corrections must be represented by the appropriate purchase or payment movement after the initial balance reference date.
+New balance corrections are represented as explicit `adjustment` movements. Credit card balances are not adjusted through this legacy history; current credit corrections are represented by movement-backed adjustments.
 
 ## Derived Values
 
@@ -82,7 +82,8 @@ Credit statement cycles and payment due dates are derived from `statementDay` an
 - Credit available must remain derivable and is not persisted.
 - Creating movements changes `balanceCents` directly in the same transaction that persists the movement.
 - Post-start balance corrections must be explicit adjustment movements, not direct account writes.
-- Credit movements that affect balance must occur after the credit account's `balanceAsOfDate`.
+- Ordinary credit movements that affect balance must occur after the credit account's `balanceAsOfDate`.
+- Explicit credit adjustment movements may occur on the credit account's `balanceAsOfDate` because they correct the captured balance itself.
 - Historical credit installment purchases do not mutate `balanceCents` when created, edited, or deleted.
 - Historical credit card statements do not mutate `balanceCents` when created.
 - Account `statementDay` and `paymentDueDay` can be used to prefill statement dates, but persisted statement dates remain historical and do not change if account configuration changes later.

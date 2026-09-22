@@ -15,6 +15,8 @@ export type MovementFormValues = {
 	occurredAt?: string;
 	sourceCardId?: string;
 	destinationCardId?: string;
+	adjustmentDirection?: string;
+	adjustmentAccountId?: string;
 	classificationKind?: MovementClassificationKind;
 	classificationId?: string;
 	recurringIncomeId?: string;

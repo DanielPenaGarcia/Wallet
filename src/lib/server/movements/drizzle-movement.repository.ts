@@ -9,7 +9,7 @@ import type { RecurringMaterializationInput } from './inputs/recurring-materiali
 import type { UpdateMovementInput } from './inputs/update-movement.input';
 import { toMovementOutput } from './movement.mapper';
 
-class DrizzleMovementRepository implements MovementRepository {
+export class DrizzleMovementRepository implements MovementRepository {
 	constructor(private readonly database: Database = db) {}
 
 	async findById(id: string) {
@@ -85,17 +85,18 @@ class DrizzleMovementRepository implements MovementRepository {
 			deletedAt: null
 		};
 
-		await this.database.transaction(async (tx) => {
-			await tx.insert(movements).values(movement);
+		this.database.transaction((tx) => {
+			tx.insert(movements).values(movement).run();
 
 			for (const change of balanceChanges) {
-				await tx
+				tx
 					.update(accounts)
 					.set({
 						balanceCents: change.newBalanceCents,
 						updatedAt: now
 					})
-					.where(eq(accounts.id, change.accountId));
+					.where(eq(accounts.id, change.accountId))
+					.run();
 			}
 		});
 
@@ -105,8 +106,8 @@ class DrizzleMovementRepository implements MovementRepository {
 	async updateWithBalanceChanges(input: UpdateMovementInput, balanceChanges: AccountBalanceChangeInput[]) {
 		const now = new Date().toISOString();
 
-		await this.database.transaction(async (tx) => {
-			await tx
+		this.database.transaction((tx) => {
+			tx
 				.update(movements)
 				.set({
 					type: input.type,
@@ -122,9 +123,10 @@ class DrizzleMovementRepository implements MovementRepository {
 					recurringIncomeId: input.recurringIncomeId,
 					updatedAt: now
 				})
-				.where(eq(movements.id, input.id));
+				.where(eq(movements.id, input.id))
+				.run();
 
-			await this.applyBalanceChanges(tx, balanceChanges, now);
+			this.applyBalanceChanges(tx, balanceChanges, now);
 		});
 
 		const updated = await this.findById(input.id);
@@ -135,33 +137,35 @@ class DrizzleMovementRepository implements MovementRepository {
 	async softDeleteWithBalanceChanges(id: string, balanceChanges: AccountBalanceChangeInput[]) {
 		const now = new Date().toISOString();
 
-		await this.database.transaction(async (tx) => {
-			await tx
+		this.database.transaction((tx) => {
+			tx
 				.update(movements)
 				.set({
 					active: false,
 					updatedAt: now,
 					deletedAt: now
 				})
-				.where(eq(movements.id, id));
+				.where(eq(movements.id, id))
+				.run();
 
-			await this.applyBalanceChanges(tx, balanceChanges, now);
+			this.applyBalanceChanges(tx, balanceChanges, now);
 		});
 	}
 
-	private async applyBalanceChanges(
+	private applyBalanceChanges(
 		tx: Parameters<Parameters<Database['transaction']>[0]>[0],
 		balanceChanges: AccountBalanceChangeInput[],
 		updatedAt: string
 	) {
 		for (const change of balanceChanges) {
-			await tx
+			tx
 				.update(accounts)
 				.set({
 					balanceCents: change.newBalanceCents,
 					updatedAt
 				})
-				.where(eq(accounts.id, change.accountId));
+				.where(eq(accounts.id, change.accountId))
+				.run();
 		}
 	}
 }

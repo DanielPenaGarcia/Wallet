@@ -5,6 +5,7 @@ import {
 	PersonalAccountDeleteError
 } from '$lib/server/accounts/account.errors';
 import { accountService } from '$lib/server/accounts/account.service';
+import { buildAccountBalanceAdjustmentMovement } from '$lib/server/accounts/account-balance-adjustment';
 import { bankService } from '$lib/server/banks/bank.service';
 import { MovementValidationError } from '$lib/server/movements/movement.errors';
 import { movementService } from '$lib/server/movements/movement.service';
@@ -212,17 +213,13 @@ export const actions: Actions = {
 
 		try {
 			const account = await accountService.getAccount(values.id);
-			if (account.type === 'credit') {
-				return fail(400, {
-					action: 'adjust-account-balance' as const,
-					targetId: values.id,
-					message: 'Las tarjetas se corrigen registrando compras o pagos de tarjeta.',
-					values
-				});
-			}
-
-			const differenceCents = newBalanceCents - account.balanceCents;
-			if (differenceCents === 0) {
+			const adjustmentMovement = buildAccountBalanceAdjustmentMovement({
+				account,
+				newBalanceCents,
+				reason: values.reason,
+				occurredAt: new Date().toISOString()
+			});
+			if (!adjustmentMovement) {
 				return fail(400, {
 					action: 'adjust-account-balance' as const,
 					targetId: values.id,
@@ -231,19 +228,7 @@ export const actions: Actions = {
 				});
 			}
 
-			await movementService.createMovement({
-				type: 'adjustment',
-				title: `Ajuste de saldo: ${account.name}`,
-				description: values.reason,
-				amountCents: Math.abs(differenceCents),
-				currencyCode: 'MXN',
-				occurredAt: new Date().toISOString(),
-				sourceAccountId: differenceCents < 0 ? account.id : null,
-				destinationAccountId: differenceCents > 0 ? account.id : null,
-				categoryId: null,
-				recurringExpenseId: null,
-				recurringIncomeId: null
-			});
+			await movementService.createMovement(adjustmentMovement);
 			return { action: 'adjust-account-balance' as const, success: 'Ajuste registrado como movimiento.' };
 		} catch (error) {
 			if (error instanceof MovementValidationError) {

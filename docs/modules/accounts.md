@@ -18,7 +18,7 @@ It does not implement minimum payments, payment to avoid interest, interest, com
 
 - `Nueva cuenta`: opens a modal to register a debit account or credit card.
 - `Editar`: opens a modal with the selected account configuration.
-- `Ajustar saldo`: registers an explicit adjustment movement for personal and debit balances.
+- `Ajustar saldo`: registers an explicit adjustment movement for personal, debit, and credit balances.
 - `Activar` / `Desactivar`: toggles credit card active state.
 - `Eliminar`: deletes debit and credit accounts. The personal account cannot be deleted. Deleting an account does not delete the bank record.
 - `Ver detalle`: opens a credit-card-only detail page for summary and installment purchases.
@@ -108,9 +108,9 @@ If the previous statement outstanding amount plus future MSI exceeds the current
 
 ## Balance Responsibilities
 
-Personal and debit account balances can be corrected through explicit adjustment movements and changed by movement creation.
+Personal, debit, and credit account balances can be corrected through explicit adjustment movements and changed by movement creation.
 
-Credit card balance is part of the credit card's current state at setup. Its balance reference date defines the last known state that movements should not replay. After creation, ordinary credit balance changes must be represented as purchases or card payments. Historical MSI purchase registration and historical statement registration explain composition only; those actions do not increase or decrease the card balance. Movement creation is responsible for ordinary credit purchases and card payments that increase or decrease consumed credit after that reference date.
+Credit card balance is part of the credit card's current state at setup. Its balance reference date defines the last known state that ordinary movements should not replay. After creation, ordinary credit balance changes must be represented as purchases or card payments. Explicit adjustment movements can correct the consumed balance, including on the balance reference date, while still respecting negative-balance and credit-limit invariants. Historical MSI purchase registration and historical statement registration explain composition only; those actions do not increase or decrease the card balance. Movement creation is responsible for ordinary credit purchases and card payments that increase or decrease consumed credit after that reference date.
 
 ## Persistence
 

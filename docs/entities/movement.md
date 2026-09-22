@@ -50,7 +50,7 @@ Future balance-changing workflows should be movement-backed:
 - Transfer decreases the source and increases the destination.
 - Credit purchase increases consumed credit.
 - Credit card payment decreases the payment source balance and decreases consumed credit.
-- Adjustment affects exactly one account and must remain explicit.
+- Adjustment affects exactly one account and must remain explicit. For credit accounts it corrects consumed credit.
 - Account balance correction forms create `adjustment` movements instead of writing balances directly.
 
 Historical credit card statements and installment purchases remain explanatory records. They do not replace movements and do not mutate balances by themselves.
@@ -79,7 +79,8 @@ The UI has movement components and client-safe types. The server module defines 
 - Editing or deleting a movement is rejected if the reversal or final state would violate balance invariants.
 - A movement cannot leave a real-money balance negative.
 - A movement cannot leave consumed credit negative or above the configured credit limit.
-- A credit-affecting movement must occur after the credit account's balance reference date.
+- Ordinary credit-affecting movements must occur after the credit account's balance reference date.
+- Explicit credit adjustments may occur on the balance reference date, but not before it.
 - Expense and credit purchase movements require exactly one classification: category or recurring expense.
 - Income movements may reference a recurring income configuration and cannot reference expense categories or recurring expenses.
 - Active recurring materializations are unique by recurring configuration, movement type, and effective date to prevent duplicate balance impact from repeated submissions.

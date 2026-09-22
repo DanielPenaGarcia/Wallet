@@ -12,7 +12,7 @@ type AccountRow = typeof accounts.$inferSelect & {
 	bankColor: string | null;
 };
 
-class DrizzleAccountRepository implements AccountRepository {
+export class DrizzleAccountRepository implements AccountRepository {
 	constructor(private readonly database: Database = db) {}
 
 	async findById(id: string) {

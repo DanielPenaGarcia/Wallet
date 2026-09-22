@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import DatabaseClient from 'better-sqlite3';
+import { eq } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 import type { Account } from '$lib/modules/accounts/types/account.types';
 import type { Category } from '$lib/modules/categories/types/category.types';
 import type { RecurringExpense } from '$lib/modules/recurring-expenses/types/recurring-expense.types';
@@ -7,10 +10,14 @@ import type { AccountRepository } from '$lib/server/accounts/account.repository'
 import type { CategoryRepository } from '$lib/server/categories/category.repository';
 import type { RecurringExpenseRepository } from '$lib/server/recurring-expenses/recurring-expense.repository';
 import type { RecurringIncomeRepository } from '$lib/server/recurring-incomes/recurring-income.repository';
+import { buildAccountBalanceAdjustmentMovement } from '$lib/server/accounts/account-balance-adjustment';
+import { DrizzleAccountRepository } from '$lib/server/accounts/drizzle-account.repository';
+import * as schema from '$lib/server/db/schema';
 import type { AccountBalanceChangeInput } from '$lib/server/movements/inputs/account-balance-change.input';
 import type { CreateMovementInput } from '$lib/server/movements/inputs/create-movement.input';
 import type { RecurringMaterializationInput } from '$lib/server/movements/inputs/recurring-materialization.input';
 import type { UpdateMovementInput } from '$lib/server/movements/inputs/update-movement.input';
+import { DrizzleMovementRepository } from '$lib/server/movements/drizzle-movement.repository';
 import { MovementValidationError } from '$lib/server/movements/movement.errors';
 import type { MovementRepository } from '$lib/server/movements/movement.repository';
 import { MovementService } from '$lib/server/movements/movement.service';
@@ -301,12 +308,151 @@ describe('MovementService balance invariants', () => {
 		expect(accounts.get('credit')?.balanceCents).toBe(50_00);
 	});
 
+	it('allows explicit credit balance adjustments on the balance reference date', async () => {
+		await service.createMovement(movement({
+			type: 'adjustment',
+			amountCents: 25_00,
+			occurredAt: '2026-09-20T12:00:00.000Z',
+			destinationAccountId: 'credit'
+		}));
+
+		expect(accounts.get('credit')?.balanceCents).toBe(75_00);
+	});
+
 	it('updates both accounts for transfers without changing total real money', async () => {
 		await service.createMovement(movement({ type: 'transfer', amountCents: 75_00, sourceAccountId: 'debit', destinationAccountId: 'cash' }));
 
 		expect(accounts.get('debit')?.balanceCents).toBe(125_00);
 		expect(accounts.get('cash')?.balanceCents).toBe(175_00);
 		expect((accounts.get('debit')?.balanceCents ?? 0) + (accounts.get('cash')?.balanceCents ?? 0)).toBe(300_00);
+	});
+
+	it('sets a debit card balance to the entered adjustment amount and records a movement', async () => {
+		const debit = accounts.get('debit');
+		if (!debit) throw new Error('Debit account fixture is missing.');
+		const adjustment = buildAccountBalanceAdjustmentMovement({
+			account: debit,
+			newBalanceCents: 260_00,
+			reason: 'Conciliacion bancaria',
+			occurredAt
+		});
+		if (!adjustment) throw new Error('Adjustment movement was not created.');
+
+		const created = await service.createMovement(adjustment);
+		const movements = await service.listMovements();
+
+		expect(accounts.get('debit')?.balanceCents).toBe(260_00);
+		expect(created.type).toBe('adjustment');
+		expect(created.amountCents).toBe(60_00);
+		expect(created.destinationAccountId).toBe('debit');
+		expect(created.sourceAccountId).toBeNull();
+		expect(created.description).toBe('Conciliacion bancaria');
+		expect(movements).toHaveLength(1);
+		expect(movements[0]?.id).toBe(created.id);
+	});
+
+	it('persists debit balance adjustments atomically through Drizzle', async () => {
+		const sqlite = new DatabaseClient(':memory:');
+		sqlite.exec(`
+			CREATE TABLE banks (
+				id TEXT PRIMARY KEY,
+				name TEXT NOT NULL,
+				alias TEXT NOT NULL,
+				color TEXT NOT NULL
+			);
+			CREATE TABLE accounts (
+				id TEXT PRIMARY KEY,
+				name TEXT NOT NULL,
+				type TEXT NOT NULL,
+				bank_id TEXT,
+				card_last_four_digits TEXT,
+				card_color TEXT,
+				balance_cents INTEGER NOT NULL DEFAULT 0,
+				balance_as_of_date TEXT NOT NULL DEFAULT '2026-09-21',
+				credit_limit_cents INTEGER,
+				statement_day INTEGER,
+				payment_due_day INTEGER,
+				is_active INTEGER NOT NULL DEFAULT 1,
+				created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+			);
+			CREATE TABLE account_adjustments (
+				id TEXT PRIMARY KEY,
+				account_id TEXT NOT NULL,
+				previous_balance_cents INTEGER NOT NULL,
+				new_balance_cents INTEGER NOT NULL,
+				difference_cents INTEGER NOT NULL,
+				reason TEXT NOT NULL,
+				created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+			);
+			CREATE TABLE movements (
+				id TEXT PRIMARY KEY,
+				type TEXT NOT NULL,
+				title TEXT NOT NULL,
+				description TEXT,
+				amount_cents INTEGER NOT NULL,
+				currency_code TEXT NOT NULL DEFAULT 'MXN',
+				occurred_at TEXT NOT NULL,
+				source_account_id TEXT,
+				destination_account_id TEXT,
+				category_id TEXT,
+				recurring_expense_id TEXT,
+				recurring_income_id TEXT,
+				active INTEGER NOT NULL DEFAULT 1,
+				created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				deleted_at TEXT
+			);
+		`);
+		const database = drizzle(sqlite, { schema });
+		await database.insert(schema.accounts).values({
+			id: 'debit-db',
+			name: 'Debit DB',
+			type: 'debit',
+			bankId: null,
+			cardLastFourDigits: '1234',
+			cardColor: '#123a63',
+			balanceCents: 200_00,
+			balanceAsOfDate: '2026-09-21',
+			creditLimitCents: null,
+			statementDay: null,
+			paymentDueDay: null,
+			isActive: true,
+			createdAt: now,
+			updatedAt: now
+		});
+		const accountRepository = new DrizzleAccountRepository(database);
+		const service = new MovementService(
+			new DrizzleMovementRepository(database),
+			accountRepository,
+			new InMemoryCategoryRepository(new Map()),
+			new InMemoryRecurringExpenseRepository(new Map()),
+			new InMemoryRecurringIncomeRepository(new Map())
+		);
+		const debit = await accountRepository.findById('debit-db');
+		if (!debit) throw new Error('Debit account was not persisted.');
+		const adjustment = buildAccountBalanceAdjustmentMovement({
+			account: debit,
+			newBalanceCents: 260_00,
+			reason: 'Conciliacion bancaria',
+			occurredAt
+		});
+		if (!adjustment) throw new Error('Adjustment movement was not created.');
+
+		const created = await service.createMovement(adjustment);
+		const [persistedDebit] = await database
+			.select()
+			.from(schema.accounts)
+			.where(eq(schema.accounts.id, 'debit-db'));
+		const persistedMovements = await database.select().from(schema.movements);
+
+		expect(persistedDebit?.balanceCents).toBe(260_00);
+		expect(persistedMovements).toHaveLength(1);
+		expect(persistedMovements[0]?.id).toBe(created.id);
+		expect(persistedMovements[0]?.type).toBe('adjustment');
+		expect(persistedMovements[0]?.amountCents).toBe(60_00);
+		expect(persistedMovements[0]?.destinationAccountId).toBe('debit-db');
+		expect(persistedMovements[0]?.sourceAccountId).toBeNull();
 	});
 
 	it('reduces real money and credit debt for credit card payments without creating an expense', async () => {

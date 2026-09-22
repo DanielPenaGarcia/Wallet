@@ -18,7 +18,7 @@ The server-side movement module has an initial persistence layer:
 - Atomic creation that inserts the movement and updates affected account balances in the same database transaction.
 - Atomic edition that reverses the original movement, applies the replacement movement, and updates affected balances without relying on simple amount differences.
 - Atomic soft deletion that archives the movement and reverses its original balance impact.
-- Explicit adjustment movements for post-start balance corrections from the accounts UI.
+- Explicit adjustment movements for post-start balance corrections from the accounts UI, including consumed-credit corrections.
 - Linked recurring income and recurring expense materializations without letting the recurring records mutate balances by themselves.
 
 Reading movements does not modify account balances and account reads still use the persisted `accounts.balanceCents` value directly.

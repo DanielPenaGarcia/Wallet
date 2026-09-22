@@ -19,10 +19,23 @@
 	);
 	let idPrefix = $derived(mode === 'create' ? 'create-adjustment-movement' : `edit-movement-${movement?.id ?? ''}`);
 	let direction = $state<'increase' | 'decrease'>(
-		untrack(() => movement?.sourceCardId ? 'decrease' : 'increase')
+		untrack(() =>
+			matchingFeedback?.values?.adjustmentDirection === 'decrease' || matchingFeedback?.values?.adjustmentDirection === 'increase'
+				? matchingFeedback.values.adjustmentDirection
+				: movement?.sourceCardId
+					? 'decrease'
+					: 'increase'
+		)
 	);
 	let accountId = $state(
-		untrack(() => matchingFeedback?.values?.sourceCardId ?? matchingFeedback?.values?.destinationCardId ?? movement?.sourceCardId ?? movement?.destinationCardId ?? '')
+		untrack(() =>
+			matchingFeedback?.values?.adjustmentAccountId ??
+			matchingFeedback?.values?.sourceCardId ??
+			matchingFeedback?.values?.destinationCardId ??
+			movement?.sourceCardId ??
+			movement?.destinationCardId ??
+			''
+		)
 	);
 
 	function fieldError(field: string) {

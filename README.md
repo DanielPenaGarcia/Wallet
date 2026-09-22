@@ -39,7 +39,7 @@ Wallet currently includes:
 - Bank catalog.
 - Hierarchical expense categories.
 - Personal cash, debit, and credit accounts.
-- Manual balance adjustments for cash and debit accounts.
+- Explicit balance adjustments for cash, debit, and credit accounts.
 - Historical credit card statements.
 - Historical months-without-interest installment purchases.
 - Recurring incomes.
