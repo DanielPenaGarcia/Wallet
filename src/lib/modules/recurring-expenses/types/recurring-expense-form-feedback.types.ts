@@ -8,6 +8,7 @@ export type RecurringExpenseFormValues = {
 	id?: string;
 	name?: string;
 	categoryId?: string;
+	paymentAccountId?: string;
 	amount?: string;
 	amountKind?: ExpenseAmountKind;
 	frequency?: RecurringExpenseFrequency;

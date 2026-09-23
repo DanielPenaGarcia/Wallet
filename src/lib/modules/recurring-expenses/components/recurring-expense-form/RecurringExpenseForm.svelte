@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import CategorySelectField from '$lib/modules/categories/components/category-select-field/CategorySelectField.svelte';
+	import CardSelectField from '$lib/modules/cards/components/card-select-field/CardSelectField.svelte';
 	import ExpenseAmountKindField from '$lib/modules/expenses/components/expense-amount-kind-field/ExpenseAmountKindField.svelte';
 	import ExpenseFrequencyField from '$lib/modules/expenses/components/expense-frequency-field/ExpenseFrequencyField.svelte';
 	import { ActionButton } from '$lib/components/ui/action-button';
@@ -18,7 +19,7 @@
 	import type { RecurringExpenseFrequency } from '../../types/recurring-expense.types';
 	import type { RecurringExpenseFormProps } from './props';
 
-	let { mode, expense, categories, feedback = null, onCancel }: RecurringExpenseFormProps = $props();
+	let { mode, expense, categories, paymentAccounts, feedback = null, onCancel }: RecurringExpenseFormProps = $props();
 	let expectedAction = $derived(mode === 'create' ? 'create-recurring-expense' : 'update-recurring-expense');
 	let matchingFeedback = $derived(
 		feedback?.action === expectedAction && (mode === 'create' || feedback.targetId === expense?.id)
@@ -27,6 +28,7 @@
 	);
 	let idPrefix = $derived(mode === 'create' ? 'create-recurring-expense' : `edit-recurring-expense-${expense?.id ?? ''}`);
 	let categoryId = $state(untrack(() => matchingFeedback?.values?.categoryId ?? expense?.categoryId ?? ''));
+	let paymentAccountId = $state(untrack(() => matchingFeedback?.values?.paymentAccountId ?? expense?.paymentAccountId ?? ''));
 	let amountKind = $state<ExpenseAmountKind>(untrack(() => matchingFeedback?.values?.amountKind ?? expense?.amountKind ?? 'fixed'));
 	let frequency = $state<RecurringExpenseFrequency>(untrack(() => matchingFeedback?.values?.frequency ?? expense?.frequency ?? 'monthly'));
 	let customIntervalCount = $state(untrack(() => matchingFeedback?.values?.customIntervalCount ?? String(expense?.customIntervalCount ?? '2')));
@@ -109,6 +111,18 @@
 		bind:value={categoryId}
 		required
 		error={fieldError('categoryId')}
+	/>
+
+	<CardSelectField
+		id={`${idPrefix}-payment-account`}
+		name="paymentAccountId"
+		label="Cuenta de pago esperada"
+		cards={paymentAccounts}
+		bind:value={paymentAccountId}
+		required={false}
+		emptyLabel="Sin cuenta asignada"
+		placeholder="Selecciona débito o crédito"
+		error={fieldError('paymentAccountId')}
 	/>
 
 	<div class="grid gap-4 sm:grid-cols-2">

@@ -8,5 +8,7 @@ export type CardSelectFieldProps = {
 	value: string;
 	error?: string;
 	placeholder?: string;
+	required?: boolean;
+	emptyLabel?: string;
 	class?: string;
 };

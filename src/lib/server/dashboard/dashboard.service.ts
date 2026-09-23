@@ -1,4 +1,5 @@
 import { getStatementOutstandingAmount } from '$lib/modules/credit-card-statements/utils/credit-card-statement-calculations';
+import { getAccountDisplayName, isRealMoneyAccount, sumRealMoneyBalances } from '$lib/modules/accounts/utils/account-labels';
 import type {
 	DashboardCreditCardObligation,
 	DashboardGoalSummary,
@@ -59,17 +60,15 @@ export class DashboardService {
 		const planningPeriods = this.planning.projectFreeMoneyPeriods(recurringIncomes, recurringExpenses, referenceDate, loans);
 		const accountNames = new Map(accounts.map((account) => [
 			account.id,
-			account.type === 'personal' ? 'Efectivo' : account.name
+			getAccountDisplayName(account)
 		]));
 
 		return {
 			currencyCode,
 			current: {
-				availableMoneyCents: accounts
-					.filter((account) => account.type === 'personal' || account.type === 'debit')
-					.reduce((total, account) => total + account.balanceCents, 0),
+				availableMoneyCents: sumRealMoneyBalances(accounts),
 				consumedCreditCents: creditAccounts.reduce((total, account) => total + Math.max(account.balanceCents, 0), 0),
-				realMoneyAccountCount: accounts.filter((account) => account.type === 'personal' || account.type === 'debit').length,
+				realMoneyAccountCount: accounts.filter(isRealMoneyAccount).length,
 				creditAccountCount: creditAccounts.length
 			},
 			monthlyActivity: {

@@ -1,0 +1,1 @@
+ALTER TABLE `recurring_expenses` ADD `payment_account_id` text REFERENCES accounts(id);

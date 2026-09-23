@@ -12,15 +12,18 @@ The `Gastos` tab manages `RecurringExpense` records.
 
 Available actions:
 
-- `Registrar`: opens a modal to create a recurring expense with category, amount, amount kind, frequency, payment schedule, optional statement day, last paid date, and active state.
+- `Registrar`: opens a modal to create a recurring expense with category, optional expected payment account, amount, amount kind, frequency, payment schedule, optional statement day, last paid date, and active state.
 - `Editar`: opens a modal with the selected recurring expense data.
 - `Eliminar`: removes the recurring expense configuration.
 
-The tab displays configured expenses with category, amount, amount kind, frequency, payment schedule, next occurrence, active state, and row actions.
+The tab displays configured expenses with category, expected payment account, amount, amount kind, frequency, payment schedule, next occurrence, active state, and row actions.
 
 Rules:
 
 - A recurring expense requires an existing category.
+- Expected payment account is optional.
+- When selected, the expected payment account must be an active debit or credit account.
+- Selecting an expected payment account does not register a real payment and does not change account balances.
 - Supported amount kinds are `Fijo` and `Estimado`.
 - Supported frequencies are `Diario`, `Semanal`, `Quincenal`, `Mensual`, `Anual`, and `Personalizado`.
 - Custom frequency requires an interval count and interval unit.
@@ -54,6 +57,8 @@ Rules:
 ## Shared Planning Use
 
 Financial goal projections read active recurring incomes and active recurring expenses to estimate free money periods. Recurring configuration does not create movements by itself.
+
+Recurring expenses expose a reusable read model grouped by expected payment account type. `debit` expenses represent direct cash needs, `credit` expenses represent expected card consumption, and `unassigned` expenses need user attention before planning can classify them. The group is derived from `Account.type`.
 
 Income and expense next-date calculations share the recurrence helper in `src/lib/shared/utils/recurring-payment-schedule.ts`; module-specific code is responsible for validating which frequencies each record type supports.
 

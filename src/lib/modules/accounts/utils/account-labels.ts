@@ -15,6 +15,16 @@ export function getAccountDisplayName(account: Pick<Account, 'type' | 'name'>) {
 	return account.type === 'personal' ? 'Efectivo' : account.name;
 }
 
+export function isRealMoneyAccount(account: Pick<Account, 'type'>) {
+	return account.type === 'personal' || account.type === 'debit';
+}
+
+export function sumRealMoneyBalances(accounts: Pick<Account, 'type' | 'balanceCents'>[]) {
+	return accounts
+		.filter(isRealMoneyAccount)
+		.reduce((total, account) => total + account.balanceCents, 0);
+}
+
 export function formatAccountBalance(balanceCents: number) {
 	return formatCurrencyFromMinorUnits(balanceCents, 'MXN');
 }

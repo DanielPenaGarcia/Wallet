@@ -7,6 +7,8 @@ import type {
 	WorkSchedule
 } from '$lib/modules/recurring-incomes/types/recurring-income.types';
 import type { ExpenseAmountKind, ExpenseIntervalUnit } from '$lib/modules/expenses/types/expense.types';
+import { toCardListItem } from '$lib/modules/accounts/utils/account-card-list-item';
+import { accountService } from '$lib/server/accounts/account.service';
 import type {
 	RecurringExpenseFrequency,
 	RecurringExpensePaymentSchedule,
@@ -25,10 +27,20 @@ import {
 import { recurringExpenseService } from '$lib/server/recurring-expenses/recurring-expense.service';
 
 export async function load() {
+	const [recurringExpenses, recurringIncomes, categories, accounts] = await Promise.all([
+		recurringExpenseService.getRecurringExpenses(),
+		recurringIncomeService.getRecurringIncomes(),
+		categoryService.getCategories(),
+		accountService.getAccounts()
+	]);
+
 	return {
-		recurringExpenses: await recurringExpenseService.getRecurringExpenses(),
-		recurringIncomes: await recurringIncomeService.getRecurringIncomes(),
-		categories: await categoryService.getCategories()
+		recurringExpenses,
+		recurringIncomes,
+		categories,
+		paymentAccounts: accounts
+			.filter((account) => account.isActive && (account.type === 'debit' || account.type === 'credit'))
+			.map(toCardListItem)
 	};
 }
 
@@ -62,6 +74,7 @@ function recurringExpenseValues(formData: FormData) {
 		id: formValue(formData, 'id'),
 		name: formValue(formData, 'name'),
 		categoryId: formValue(formData, 'categoryId'),
+		paymentAccountId: formValue(formData, 'paymentAccountId'),
 		amount: formValue(formData, 'amount'),
 		amountKind: formValue(formData, 'amountKind') as ExpenseAmountKind,
 		frequency: formValue(formData, 'frequency') as RecurringExpenseFrequency,
@@ -156,6 +169,7 @@ function validateRecurringExpenseValues(values: ReturnType<typeof recurringExpen
 		input: {
 			name,
 			categoryId: values.categoryId,
+			paymentAccountId: values.paymentAccountId.trim() || null,
 			amountCents,
 			amountKind: values.amountKind,
 			frequency: values.frequency,

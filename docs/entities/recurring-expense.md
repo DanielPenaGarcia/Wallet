@@ -7,6 +7,7 @@
 - `id`: unique recurring expense identifier.
 - `name`: user-facing expense name.
 - `categoryId`: related category identifier.
+- `paymentAccountId`: optional expected payment account identifier. It may reference a debit account or credit account.
 - `amountCents`: expected amount stored as an integer number of cents.
 - `amountKind`: whether the amount is `fixed` or `estimated`.
 - `frequency`: supported values are `daily`, `weekly`, `semimonthly`, `monthly`, `yearly`, and `custom`.
@@ -35,6 +36,9 @@ The payment schedule describes when the expense is expected to be due.
 - Name is required.
 - Amount must be greater than `0`.
 - Category must exist.
+- Payment account is optional.
+- Payment account, when present, must exist, be active, and be a `debit` or `credit` account.
+- Payment account represents expected planning configuration only. It does not create movements or change balances.
 - Payment schedule must match the selected frequency.
 - Custom recurrence requires a positive interval count and supported interval unit.
 - Statement day, when present, must be from `1` to `31`.
@@ -44,6 +48,14 @@ The payment schedule describes when the expense is expected to be due.
 ## Derived Values
 
 `nextOccurrenceAt` is derived from the recurrence configuration and the last paid date or creation date. It is not persisted as an independent source of truth.
+
+Recurring expenses can also be read grouped by expected payment account type:
+
+- `debit`: obligations expected to require real money directly.
+- `credit`: obligations expected to consume credit first.
+- `unassigned`: obligations without an expected payment account.
+
+The group is derived from the related `Account.type`; the expense does not store a duplicated payment type.
 
 ## Server Module
 

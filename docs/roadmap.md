@@ -12,6 +12,7 @@
 - Recurring incomes.
 - Recurring expenses.
 - Financial goals and projection from recurring configuration.
+- Next-income planning for recurring obligations, card payments, existing real money, and goal distribution.
 - Loans for borrowed and lent money with monthly installment schedules.
 
 ## Foundation Cleanup

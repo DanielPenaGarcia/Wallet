@@ -3,6 +3,7 @@ import type {
 	ExpenseFrequency,
 	ExpenseIntervalUnit
 } from '$lib/modules/expenses/types/expense.types';
+import type { Account, AccountType } from '$lib/modules/accounts/types/account.types';
 import type { Category } from '$lib/modules/categories/types/category.types';
 
 export const recurringExpenseFrequencies = [
@@ -39,12 +40,18 @@ export type RecurringExpensePaymentSchedule =
 	| { type: 'custom' };
 
 export type RecurringExpenseCategory = Pick<Category, 'id' | 'name' | 'color' | 'isEssential'>;
+export type RecurringExpensePaymentAccount = Pick<
+	Account,
+	'id' | 'name' | 'type' | 'bank' | 'cardLastFourDigits' | 'cardColor' | 'isActive'
+>;
 
 export type RecurringExpense = {
 	id: string;
 	name: string;
 	categoryId: string;
 	category: RecurringExpenseCategory | null;
+	paymentAccountId: string | null;
+	paymentAccount: RecurringExpensePaymentAccount | null;
 	amountCents: number;
 	amountKind: ExpenseAmountKind;
 	frequency: RecurringExpenseFrequency;
@@ -58,3 +65,10 @@ export type RecurringExpense = {
 	createdAt: string;
 	updatedAt: string;
 };
+
+export type RecurringExpensePaymentAccountType = Extract<AccountType, 'debit' | 'credit'> | 'unassigned';
+
+export type RecurringExpensesByPaymentAccountType = Record<
+	RecurringExpensePaymentAccountType,
+	RecurringExpense[]
+>;

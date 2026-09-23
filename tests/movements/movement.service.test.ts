@@ -704,6 +704,8 @@ function recurringExpense(id: string, categoryId: string): RecurringExpense {
 			color: '#2f80ed',
 			isEssential: true
 		},
+		paymentAccountId: null,
+		paymentAccount: null,
 		amountCents: 60_00,
 		amountKind: 'fixed',
 		frequency: 'monthly',

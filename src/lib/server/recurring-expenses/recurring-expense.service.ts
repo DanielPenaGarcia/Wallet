@@ -5,12 +5,15 @@ import {
 import {
 	recurringExpenseFrequencies
 } from '$lib/modules/recurring-expenses/types/recurring-expense.types';
+import { groupRecurringExpensesByPaymentAccountType } from '$lib/modules/recurring-expenses/utils/group-recurring-expenses-by-payment-account-type';
 import {
 	isNumericRecurrenceMonthDay,
 	isRecurringPaymentScheduleForFrequency
 } from '$lib/shared/utils/recurring-payment-schedule';
 import { drizzleCategoryRepository } from '$lib/server/categories/drizzle-category.repository';
 import type { CategoryRepository } from '$lib/server/categories/category.repository';
+import { drizzleAccountRepository } from '$lib/server/accounts/drizzle-account.repository';
+import type { AccountRepository } from '$lib/server/accounts/account.repository';
 import { drizzleRecurringExpenseRepository } from './drizzle-recurring-expense.repository';
 import type { CreateRecurringExpenseInput } from './inputs/create-recurring-expense.input';
 import type { UpdateRecurringExpenseInput } from './inputs/update-recurring-expense.input';
@@ -23,11 +26,16 @@ import type { RecurringExpenseRepository } from './recurring-expense.repository'
 export class RecurringExpenseService {
 	constructor(
 		private readonly recurringExpenseRepository: RecurringExpenseRepository,
-		private readonly categoryRepository: CategoryRepository
+		private readonly categoryRepository: CategoryRepository,
+		private readonly accountRepository: AccountRepository
 	) {}
 
 	getRecurringExpenses() {
 		return this.recurringExpenseRepository.list();
+	}
+
+	async getRecurringExpensesByPaymentAccountType() {
+		return groupRecurringExpensesByPaymentAccountType(await this.recurringExpenseRepository.list());
 	}
 
 	async createRecurringExpense(input: CreateRecurringExpenseInput): Promise<void> {
@@ -59,6 +67,7 @@ export class RecurringExpenseService {
 			...input,
 			name: input.name.trim(),
 			categoryId: input.categoryId.trim(),
+			paymentAccountId: input.paymentAccountId?.trim() || null,
 			customIntervalCount: input.frequency === 'custom' ? input.customIntervalCount : null,
 			customIntervalUnit: input.frequency === 'custom' ? input.customIntervalUnit : null,
 			statementDay: input.statementDay,
@@ -78,6 +87,16 @@ export class RecurringExpenseService {
 		if (!recurringExpenseFrequencies.includes(input.frequency)) errors.frequency = ['La frecuencia no es válida.'];
 		if (input.categoryId.length === 0 || !(await this.categoryRepository.findById(input.categoryId))) {
 			errors.categoryId = ['Selecciona una categoría existente.'];
+		}
+		if (input.paymentAccountId !== null) {
+			const paymentAccount = await this.accountRepository.findById(input.paymentAccountId);
+			if (!paymentAccount) {
+				errors.paymentAccountId = ['Selecciona una cuenta existente.'];
+			} else if (paymentAccount.type !== 'debit' && paymentAccount.type !== 'credit') {
+				errors.paymentAccountId = ['Selecciona una cuenta de débito o crédito.'];
+			} else if (!paymentAccount.isActive) {
+				errors.paymentAccountId = ['Selecciona una cuenta activa.'];
+			}
 		}
 		if (!isRecurringPaymentScheduleForFrequency(input.paymentSchedule, input.frequency)) {
 			errors.paymentSchedule = ['La configuración de pago no corresponde a la frecuencia.'];
@@ -110,5 +129,6 @@ export class RecurringExpenseService {
 
 export const recurringExpenseService = new RecurringExpenseService(
 	drizzleRecurringExpenseRepository,
-	drizzleCategoryRepository
+	drizzleCategoryRepository,
+	drizzleAccountRepository
 );

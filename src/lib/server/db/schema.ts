@@ -50,6 +50,7 @@ export const recurringExpenses = sqliteTable('recurring_expenses', {
 	id: text('id').primaryKey(),
 	name: text('name').notNull(),
 	categoryId: text('category_id').notNull().references(() => categories.id),
+	paymentAccountId: text('payment_account_id').references((): AnySQLiteColumn => accounts.id),
 	amountCents: integer('amount_cents').notNull(),
 	amountKind: text('amount_kind').notNull(),
 	frequency: text('frequency').notNull(),

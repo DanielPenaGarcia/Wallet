@@ -7,6 +7,7 @@ import type {
 export type CreateRecurringExpenseInput = {
 	name: string;
 	categoryId: string;
+	paymentAccountId: string | null;
 	amountCents: number;
 	amountKind: ExpenseAmountKind;
 	frequency: RecurringExpenseFrequency;

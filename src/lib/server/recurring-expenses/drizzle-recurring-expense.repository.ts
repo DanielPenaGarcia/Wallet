@@ -1,4 +1,5 @@
-import { asc, desc, eq } from 'drizzle-orm';
+import { aliasedTable, asc, desc, eq } from 'drizzle-orm';
+import type { AccountType } from '$lib/modules/accounts/types/account.types';
 import type { ExpenseAmountKind, ExpenseIntervalUnit } from '$lib/modules/expenses/types/expense.types';
 import type {
 	RecurringExpense,
@@ -7,7 +8,7 @@ import type {
 } from '$lib/modules/recurring-expenses/types/recurring-expense.types';
 import { calculateNextRecurringExpenseOccurrence } from '$lib/modules/recurring-expenses/utils/next-recurring-expense-occurrence';
 import { db, type Database } from '$lib/server/db';
-import { categories, recurringExpenses } from '$lib/server/db/schema';
+import { accounts, banks, categories, recurringExpenses } from '$lib/server/db/schema';
 import type { CreateRecurringExpenseInput } from './inputs/create-recurring-expense.input';
 import type { UpdateRecurringExpenseInput } from './inputs/update-recurring-expense.input';
 import type { RecurringExpenseRepository } from './recurring-expense.repository';
@@ -16,9 +17,21 @@ type RecurringExpenseRow = typeof recurringExpenses.$inferSelect & {
 	categoryName: string | null;
 	categoryColor: string | null;
 	categoryIsEssential: boolean | null;
+	paymentAccountName: string | null;
+	paymentAccountType: string | null;
+	paymentAccountBankId: string | null;
+	paymentAccountBankName: string | null;
+	paymentAccountBankAlias: string | null;
+	paymentAccountBankColor: string | null;
+	paymentAccountCardLastFourDigits: string | null;
+	paymentAccountCardColor: string | null;
+	paymentAccountIsActive: boolean | null;
 };
 
-class DrizzleRecurringExpenseRepository implements RecurringExpenseRepository {
+const paymentAccounts = aliasedTable(accounts, 'payment_accounts');
+const paymentAccountBanks = aliasedTable(banks, 'payment_account_banks');
+
+export class DrizzleRecurringExpenseRepository implements RecurringExpenseRepository {
 	constructor(private readonly database: Database = db) {}
 
 	async findById(id: string) {
@@ -26,6 +39,8 @@ class DrizzleRecurringExpenseRepository implements RecurringExpenseRepository {
 			.select(this.selection())
 			.from(recurringExpenses)
 			.leftJoin(categories, eq(recurringExpenses.categoryId, categories.id))
+			.leftJoin(paymentAccounts, eq(recurringExpenses.paymentAccountId, paymentAccounts.id))
+			.leftJoin(paymentAccountBanks, eq(paymentAccounts.bankId, paymentAccountBanks.id))
 			.where(eq(recurringExpenses.id, id))
 			.limit(1);
 
@@ -37,6 +52,8 @@ class DrizzleRecurringExpenseRepository implements RecurringExpenseRepository {
 			.select(this.selection())
 			.from(recurringExpenses)
 			.leftJoin(categories, eq(recurringExpenses.categoryId, categories.id))
+			.leftJoin(paymentAccounts, eq(recurringExpenses.paymentAccountId, paymentAccounts.id))
+			.leftJoin(paymentAccountBanks, eq(paymentAccounts.bankId, paymentAccountBanks.id))
 			.orderBy(desc(recurringExpenses.isActive), asc(recurringExpenses.name));
 
 		return expenses.map((expense) => this.toRecurringExpense(expense));
@@ -48,6 +65,7 @@ class DrizzleRecurringExpenseRepository implements RecurringExpenseRepository {
 			id: crypto.randomUUID(),
 			name: input.name,
 			categoryId: input.categoryId,
+			paymentAccountId: input.paymentAccountId,
 			amountCents: input.amountCents,
 			amountKind: input.amountKind,
 			frequency: input.frequency,
@@ -73,6 +91,7 @@ class DrizzleRecurringExpenseRepository implements RecurringExpenseRepository {
 			.set({
 				name: input.name,
 				categoryId: input.categoryId,
+				paymentAccountId: input.paymentAccountId,
 				amountCents: input.amountCents,
 				amountKind: input.amountKind,
 				frequency: input.frequency,
@@ -96,6 +115,7 @@ class DrizzleRecurringExpenseRepository implements RecurringExpenseRepository {
 			id: recurringExpenses.id,
 			name: recurringExpenses.name,
 			categoryId: recurringExpenses.categoryId,
+			paymentAccountId: recurringExpenses.paymentAccountId,
 			amountCents: recurringExpenses.amountCents,
 			amountKind: recurringExpenses.amountKind,
 			frequency: recurringExpenses.frequency,
@@ -109,7 +129,16 @@ class DrizzleRecurringExpenseRepository implements RecurringExpenseRepository {
 			updatedAt: recurringExpenses.updatedAt,
 			categoryName: categories.name,
 			categoryColor: categories.color,
-			categoryIsEssential: categories.isEssential
+			categoryIsEssential: categories.isEssential,
+			paymentAccountName: paymentAccounts.name,
+			paymentAccountType: paymentAccounts.type,
+			paymentAccountBankId: paymentAccounts.bankId,
+			paymentAccountBankName: paymentAccountBanks.name,
+			paymentAccountBankAlias: paymentAccountBanks.alias,
+			paymentAccountBankColor: paymentAccountBanks.color,
+			paymentAccountCardLastFourDigits: paymentAccounts.cardLastFourDigits,
+			paymentAccountCardColor: paymentAccounts.cardColor,
+			paymentAccountIsActive: paymentAccounts.isActive
 		};
 	}
 
@@ -124,6 +153,25 @@ class DrizzleRecurringExpenseRepository implements RecurringExpenseRepository {
 						name: expense.categoryName,
 						color: expense.categoryColor as `#${string}` | null,
 						isEssential: Boolean(expense.categoryIsEssential)
+					}
+				: null,
+			paymentAccountId: expense.paymentAccountId,
+			paymentAccount: expense.paymentAccountId && expense.paymentAccountName && expense.paymentAccountType
+				? {
+						id: expense.paymentAccountId,
+						name: expense.paymentAccountName,
+						type: expense.paymentAccountType as AccountType,
+						bank: expense.paymentAccountBankId && expense.paymentAccountBankName && expense.paymentAccountBankAlias && expense.paymentAccountBankColor
+							? {
+									id: expense.paymentAccountBankId,
+									name: expense.paymentAccountBankName,
+									alias: expense.paymentAccountBankAlias,
+									color: expense.paymentAccountBankColor
+								}
+							: null,
+						cardLastFourDigits: expense.paymentAccountCardLastFourDigits,
+						cardColor: expense.paymentAccountCardColor,
+						isActive: Boolean(expense.paymentAccountIsActive)
 					}
 				: null,
 			amountCents: expense.amountCents,

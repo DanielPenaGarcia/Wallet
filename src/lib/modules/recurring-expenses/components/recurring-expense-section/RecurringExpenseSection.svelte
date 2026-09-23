@@ -7,7 +7,7 @@
 	import RecurringExpenseList from '../recurring-expense-list/RecurringExpenseList.svelte';
 	import type { RecurringExpenseSectionProps } from './props';
 
-	let { expenses, categories, feedback = null }: RecurringExpenseSectionProps = $props();
+	let { expenses, categories, paymentAccounts, feedback = null }: RecurringExpenseSectionProps = $props();
 	let createOpen = $state(untrack(() => feedback?.action === 'create-recurring-expense' && Boolean(feedback.errors || feedback.message)));
 	let editingExpense = $state<RecurringExpense | null>(untrack(() =>
 		feedback?.action === 'update-recurring-expense'
@@ -46,7 +46,7 @@
 			<Dialog.Title>Registrar gasto recurrente</Dialog.Title>
 			<Dialog.Description>Captura la categoría, monto y configuración de recurrencia.</Dialog.Description>
 		</Dialog.Header>
-		<RecurringExpenseForm mode="create" {categories} {feedback} onCancel={() => (createOpen = false)} />
+		<RecurringExpenseForm mode="create" {categories} {paymentAccounts} {feedback} onCancel={() => (createOpen = false)} />
 	</Dialog.Content>
 </Dialog.Root>
 
@@ -56,7 +56,7 @@
 			<Dialog.Title>Editar gasto recurrente</Dialog.Title>
 			<Dialog.Description>Actualiza la configuración de la obligación periódica.</Dialog.Description>
 		</Dialog.Header>
-		{#if editingExpense}<RecurringExpenseForm mode="edit" expense={editingExpense} {categories} {feedback} onCancel={() => (editOpen = false)} />{/if}
+		{#if editingExpense}<RecurringExpenseForm mode="edit" expense={editingExpense} {categories} {paymentAccounts} {feedback} onCancel={() => (editOpen = false)} />{/if}
 	</Dialog.Content>
 </Dialog.Root>
 

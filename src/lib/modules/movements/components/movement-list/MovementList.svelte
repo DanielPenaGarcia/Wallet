@@ -19,6 +19,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
 	import CategorySelectField from '$lib/modules/categories/components/category-select-field/CategorySelectField.svelte';
+	import { formatCardListItemLabel } from '$lib/modules/cards/utils/card-list-item-label';
 	import { formatCurrencyFromMinorUnits } from '$lib/shared/utils/format-currency';
 	import { formatDateTime } from '$lib/shared/utils/format-date-time';
 	import type { Movement, MovementType } from '../../types/movement.types';
@@ -42,9 +43,10 @@
 	let categoryFilterValue = $state(untrack(() => filters.categoryId || allFilterValue));
 	let movementTypeFilterValue = $state(untrack(() => filters.type || allFilterValue));
 	let selectedCount = $derived(selectedMovementIds.length);
+	let selectedCard = $derived(cards.find((card) => card.id === filters.cardId));
 	let selectedCardLabel = $derived(
 		filters.cardId
-			? (cards.find((card) => card.id === filters.cardId)?.alias ?? 'Cuenta seleccionada')
+			? (selectedCard ? formatCardListItemLabel(selectedCard) : 'Cuenta seleccionada')
 			: 'Todas las cuentas'
 	);
 	let hasActiveFilters = $derived(
@@ -155,14 +157,14 @@
 			</div>
 			<div class="grid gap-2">
 				<Label for="movement-card-filter">Cuenta</Label>
-				<Select.Root type="single" name="cardId" value={filters.cardId || allFilterValue} items={[{ value: allFilterValue, label: 'Todas las cuentas' }, ...cards.map((card) => ({ value: card.id, label: card.isDefault ? `${card.alias} · Efectivo` : `${card.alias} •••• ${card.lastFourDigits}` }))]}>
+				<Select.Root type="single" name="cardId" value={filters.cardId || allFilterValue} items={[{ value: allFilterValue, label: 'Todas las cuentas' }, ...cards.map((card) => ({ value: card.id, label: formatCardListItemLabel(card) }))]}>
 					<Select.Trigger id="movement-card-filter" class="h-11 w-full border-outline bg-surface px-3">
 						<span class="truncate">{selectedCardLabel}</span>
 					</Select.Trigger>
 					<Select.Content>
 						<Select.Item value={allFilterValue} label="Todas las cuentas">Todas las cuentas</Select.Item>
 						{#each cards as card (card.id)}
-							<Select.Item value={card.id} label={card.isDefault ? `${card.alias} · Efectivo` : `${card.alias} •••• ${card.lastFourDigits}`}>{card.isDefault ? `${card.alias} · Efectivo` : `${card.alias} •••• ${card.lastFourDigits}`}</Select.Item>
+							<Select.Item value={card.id} label={formatCardListItemLabel(card)}>{formatCardListItemLabel(card)}</Select.Item>
 						{/each}
 					</Select.Content>
 				</Select.Root>

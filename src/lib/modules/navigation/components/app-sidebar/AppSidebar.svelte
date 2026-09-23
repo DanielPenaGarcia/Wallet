@@ -4,6 +4,7 @@
 	import LandmarkIcon from '@lucide/svelte/icons/landmark';
 	import ListIcon from '@lucide/svelte/icons/list';
 	import HandCoinsIcon from '@lucide/svelte/icons/hand-coins';
+	import CalendarCheckIcon from '@lucide/svelte/icons/calendar-check';
 	import RepeatIcon from '@lucide/svelte/icons/repeat';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import TargetIcon from '@lucide/svelte/icons/target';
@@ -21,6 +22,7 @@
 	let isHomeActive = $derived(currentPath === '/');
 	let isRecurringActive = $derived(currentPath.startsWith('/recurrentes'));
 	let isMovementsActive = $derived(currentPath.startsWith('/movimientos'));
+	let isPlanningActive = $derived(currentPath.startsWith('/planificacion'));
 	let isLoansActive = $derived(currentPath.startsWith('/prestamos'));
 	let isGoalsActive = $derived(currentPath.startsWith('/metas'));
 	let isAccountsActive = $derived(currentPath.startsWith('/cuentas'));
@@ -118,6 +120,15 @@
 		>
 			<ListIcon class="size-5" />
 			Movimientos
+		</a>
+		<a
+			href="/planificacion"
+			class="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-semibold transition {isPlanningActive ? 'bg-on-primary text-primary shadow-sm' : 'text-on-primary/90 hover:bg-on-primary/10'}"
+			onclick={onClose}
+			aria-current={isPlanningActive ? 'page' : undefined}
+		>
+			<CalendarCheckIcon class="size-5" />
+			Planificación
 		</a>
 		<a
 			href="/prestamos"

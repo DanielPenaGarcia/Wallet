@@ -40,7 +40,12 @@
 		</Tabs.List>
 
 		<Tabs.Content value="expenses">
-			<RecurringExpenseSection expenses={data.recurringExpenses} categories={data.categories} feedback={expenseFeedback} />
+			<RecurringExpenseSection
+				expenses={data.recurringExpenses}
+				categories={data.categories}
+				paymentAccounts={data.paymentAccounts}
+				feedback={expenseFeedback}
+			/>
 		</Tabs.Content>
 
 		<Tabs.Content value="income">

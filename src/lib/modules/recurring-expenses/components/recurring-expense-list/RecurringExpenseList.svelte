@@ -4,6 +4,7 @@
 	import ReceiptTextIcon from '@lucide/svelte/icons/receipt-text';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import { ActionButton } from '$lib/components/ui/action-button';
+	import { getAccountTypeLabel } from '$lib/modules/accounts/utils/account-labels';
 	import {
 		formatIsoDate,
 		formatPaymentSchedule,
@@ -32,11 +33,12 @@
 		</div>
 	{:else}
 		<div class="overflow-x-auto">
-			<table class="w-full min-w-[1120px] text-left text-sm">
+			<table class="w-full min-w-[1240px] text-left text-sm">
 				<thead class="bg-surface-subtle text-xs font-bold tracking-wide text-on-surface-muted uppercase">
 					<tr>
 						<th class="px-5 py-3">Gasto</th>
 						<th class="px-5 py-3">Categoría</th>
+						<th class="px-5 py-3">Cuenta</th>
 						<th class="px-5 py-3">Monto</th>
 						<th class="px-5 py-3">Frecuencia</th>
 						<th class="px-5 py-3">Pago</th>
@@ -61,6 +63,21 @@
 										<span class="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">Esencial</span>
 									{/if}
 								</div>
+							</td>
+							<td class="px-5 py-4 text-on-surface-variant">
+								{#if expense.paymentAccount}
+									<div class="grid gap-1">
+										<span class="font-semibold text-on-surface">{expense.paymentAccount.name}</span>
+										<span class="text-xs text-on-surface-muted">
+											{getAccountTypeLabel(expense.paymentAccount.type)}
+											{#if expense.paymentAccount.cardLastFourDigits}
+												· •••• {expense.paymentAccount.cardLastFourDigits}
+											{/if}
+										</span>
+									</div>
+								{:else}
+									<span class="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-bold text-on-surface-muted">Sin asignar</span>
+								{/if}
 							</td>
 							<td class="px-5 py-4">
 								<div class="grid">
