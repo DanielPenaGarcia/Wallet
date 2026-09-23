@@ -10,6 +10,8 @@ The base period starts on the next active recurring income date.
 
 The period normally ends on the immediately following recurring income date. Multiple incomes on the same date are grouped into one inflow.
 
+The interval uses `[startDate, endDate)` semantics: obligations on `startDate` are included, and obligations exactly on `endDate` are excluded because they belong to the next income period. The same convention applies to recurring expenses, credit card statement payments, and borrowed-loan installments.
+
 If no following income is found within the planning search horizon, the plan keeps `period.endDate` as `null`, raises an alert, and uses a 30-day operational fallback to avoid returning an empty recommendation.
 
 ## Inputs
@@ -35,19 +37,27 @@ Recurring expenses are classified from their expected payment account:
 
 Expected credit consumption does not also become an immediate cash reserve. Cash need for credit comes from statement payments that are due inside the planning period.
 
+A recurring expense without a payment account remains visible as a user attention item and raises an alert, but it is not treated as debit or cash until the user assigns a payment account. It must not inflate the recommended amount to set aside from the next income.
+
 Borrowed-loan installments due inside the period are treated as cash obligations. Expected collections from lent loans are not counted as available money until actual movements exist.
 
 ## Existing Real Money
 
-Planning adds current personal and debit balances to the next income amount before allocating obligations.
+Planning distinguishes current personal/debit balances from the next income.
 
-It allocates cash obligations in date order and reports covered and uncovered amounts. This allows the UI to show whether an obligation is already covered by existing money or whether the period has insufficient funds.
+It allocates cash obligations in date order using existing real money first and the next income second. Each obligation reports:
+
+- amount covered by existing money.
+- amount recommended to set aside from the next income.
+- amount still uncovered after both sources.
+
+The plan also exposes aggregate totals for existing money used, next-income reserves, and uncovered obligations. These values are derived recommendations only; Planning does not create movements, envelopes, or persisted reserves.
 
 ## Goals
 
-After cash obligations are covered, remaining free cash is distributed to active financial goals using their `distributionPercentage`.
+After recommended obligation reserves are calculated, only the remaining amount from the next income is distributed to active financial goals using their `distributionPercentage`.
 
-Goal allocations are capped by the goal's remaining amount. Any money not consumed by obligations or active goal distribution remains `remainingFreeCashCents`.
+Goal allocations are capped by the goal's remaining amount. Any next-income money not consumed by recommended reserves or active goal distribution remains `remainingNextIncomeCents`.
 
 ## Outputs
 
@@ -55,10 +65,11 @@ The next-income plan returns:
 
 - next income date, amount, and contributing income titles.
 - planned period start and end.
-- existing real money and total cash available.
+- existing real money, total cash available, and existing money already used for obligations.
 - cash obligations, credit consumptions, statement payments, and unassigned recurring expenses.
 - covered and uncovered cash obligation totals.
-- free cash before goals.
-- suggested goal allocations.
-- remaining free cash.
+- recommended amount to set aside from the next income.
+- next-income amount available for goals.
+- suggested goal allocations and their aggregate total.
+- remaining next-income money after obligations and goals.
 - alerts for missing following income, unassigned obligations, and insufficient funds.

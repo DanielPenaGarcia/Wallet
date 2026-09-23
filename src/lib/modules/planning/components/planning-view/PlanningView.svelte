@@ -3,6 +3,7 @@
 	import CalendarCheckIcon from '@lucide/svelte/icons/calendar-check';
 	import CreditCardIcon from '@lucide/svelte/icons/credit-card';
 	import LandmarkIcon from '@lucide/svelte/icons/landmark';
+	import PiggyBankIcon from '@lucide/svelte/icons/piggy-bank';
 	import TargetIcon from '@lucide/svelte/icons/target';
 	import WalletIcon from '@lucide/svelte/icons/wallet';
 	import SectionHeading from '$lib/modules/navigation/components/section-heading/SectionHeading.svelte';
@@ -23,6 +24,10 @@
 		if (obligation.accountName) return obligation.accountName;
 		if (obligation.kind === 'loan_payment') return 'Sin cuenta fija';
 		return 'Sin cuenta asignada';
+	}
+
+	function obligationDetail(obligation: PlanningObligation) {
+		return `Existente: ${money(obligation.coveredByExistingMoneyCents)} · Apartar: ${money(obligation.reservedFromNextIncomeCents)} · Falta: ${money(obligation.uncoveredAmountCents)}`;
 	}
 </script>
 
@@ -54,25 +59,25 @@
 			{#snippet icon()}<CalendarCheckIcon class="size-5 text-primary" />{/snippet}
 		</PlanningMetricCard>
 		<PlanningMetricCard
-			label="Dinero real existente"
-			value={money(planning.existingRealMoneyCents)}
-			description="Efectivo y débito antes del ingreso."
-		>
-			{#snippet icon()}<WalletIcon class="size-5 text-primary" />{/snippet}
-		</PlanningMetricCard>
-		<PlanningMetricCard
-			label="Obligaciones efectivo"
-			value={money(planning.totalCashObligationsCents)}
-			description={`${money(planning.uncoveredCashObligationsCents)} sin cubrir`}
+			label="Debes apartar"
+			value={money(planning.nextIncomeReservedForObligationsCents)}
+			description={`${money(planning.existingMoneyUsedForObligationsCents)} ya cubierto con dinero existente`}
 		>
 			{#snippet icon()}<LandmarkIcon class="size-5 text-primary" />{/snippet}
 		</PlanningMetricCard>
 		<PlanningMetricCard
-			label="Libre tras obligaciones"
-			value={money(planning.freeCashCents)}
-			description={`${money(planning.remainingFreeCashCents)} quedaría sin asignar a metas`}
+			label="Recomendado para metas"
+			value={money(planning.recommendedGoalAllocationCents)}
+			description={`${money(planning.nextIncomeAvailableForGoalsCents)} disponible después de apartar`}
 		>
 			{#snippet icon()}<TargetIcon class="size-5 text-primary" />{/snippet}
+		</PlanningMetricCard>
+		<PlanningMetricCard
+			label="Te quedará libre"
+			value={money(planning.remainingNextIncomeCents)}
+			description={`${money(planning.uncoveredCashObligationsCents)} de obligaciones sin cubrir`}
+		>
+			{#snippet icon()}<PiggyBankIcon class="size-5 text-primary" />{/snippet}
 		</PlanningMetricCard>
 	</section>
 
@@ -89,6 +94,9 @@
 		</div>
 		<div class="grid gap-5 p-5 xl:grid-cols-[1.2fr_0.8fr]">
 			<div class="grid gap-3">
+				<div class="rounded-md bg-surface-subtle p-4 text-sm text-on-surface-muted">
+					Dinero real existente: <span class="font-bold text-on-surface">{money(planning.existingRealMoneyCents)}</span>
+				</div>
 				<p class="text-sm font-bold text-on-surface">Obligaciones que requieren dinero real</p>
 				{#if planning.cashObligations.length > 0}
 					{#each planning.cashObligations as obligation (obligation.id)}
@@ -96,7 +104,7 @@
 							title={obligation.title}
 							meta={`${formatIsoDate(obligation.date)} · ${obligationAccount(obligation)}`}
 							amount={money(obligation.amountCents)}
-							detail={`Cubierto: ${money(obligation.coveredAmountCents)}`}
+							detail={obligationDetail(obligation)}
 						/>
 					{/each}
 				{:else}
@@ -112,6 +120,7 @@
 							title={payment.title}
 							meta={`${formatIsoDate(payment.date)} · ${payment.accountName}`}
 							amount={money(payment.amountCents)}
+							detail={obligationDetail(payment)}
 						/>
 					{/each}
 				{:else}
@@ -120,6 +129,25 @@
 			</div>
 		</div>
 	</section>
+
+	{#if planning.unassignedRecurringExpenses.length > 0}
+		<section class="rounded-lg border border-outline bg-surface shadow-sm">
+			<div class="flex items-center gap-2 border-b border-outline px-5 py-4">
+				<WalletIcon class="size-5 text-primary" />
+				<h2 class="font-bold text-on-surface">Requieren cuenta de pago</h2>
+			</div>
+			<div class="grid gap-3 p-5">
+				{#each planning.unassignedRecurringExpenses as expense (expense.id)}
+					<PlanningAmountRow
+						title={expense.title}
+						meta={`${formatIsoDate(expense.date)} · ${obligationAccount(expense)}`}
+						amount={money(expense.amountCents)}
+						detail="No se incluye en Debes apartar hasta asignar cuenta"
+					/>
+				{/each}
+			</div>
+		</section>
+	{/if}
 
 	<section class="grid gap-6 xl:grid-cols-2">
 		<div class="rounded-lg border border-outline bg-surface shadow-sm">

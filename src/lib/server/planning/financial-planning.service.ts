@@ -41,6 +41,14 @@ type IncomeEvent = DatedAmount & {
 	titles: string[];
 };
 
+type CashAllocation = {
+	obligations: PlanningObligation[];
+	existingMoneyUsedForObligationsCents: number;
+	nextIncomeReservedForObligationsCents: number;
+	coveredCashObligationsCents: number;
+	uncoveredCashObligationsCents: number;
+};
+
 export class FinancialPlanningService {
 	planNextIncome(input: NextIncomePlanningInput): NextIncomePlanning {
 		const referenceDate = startOfLocalDay(input.referenceDate ?? new Date());
@@ -98,16 +106,20 @@ export class FinancialPlanningService {
 		const unassignedRecurringExpenses = recurringObligations
 			.filter((obligation) => obligation.accountId === null)
 			.sort(this.compareObligations);
-		const allocatedCashObligations = this.allocateCash(cashObligations, totalCashAvailableCents);
+		const cashAllocation = this.allocateCashBySource(cashObligations, realMoneyCents, nextIncome.amountCents);
+		const allocatedCashObligations = cashAllocation.obligations;
 		const totalCashObligationsCents = allocatedCashObligations.reduce((total, obligation) => total + obligation.amountCents, 0);
-		const coveredCashObligationsCents = allocatedCashObligations.reduce((total, obligation) => total + obligation.coveredAmountCents, 0);
-		const uncoveredCashObligationsCents = allocatedCashObligations.reduce((total, obligation) => total + obligation.uncoveredAmountCents, 0);
+		const coveredCashObligationsCents = cashAllocation.coveredCashObligationsCents;
+		const uncoveredCashObligationsCents = cashAllocation.uncoveredCashObligationsCents;
 		const freeCashCents = Math.max(totalCashAvailableCents - coveredCashObligationsCents, 0);
-		const goalAllocations = this.allocateGoals(input.goals, freeCashCents);
-		const remainingFreeCashCents = Math.max(
-			freeCashCents - goalAllocations.reduce((total, allocation) => total + allocation.allocatedAmountCents, 0),
+		const nextIncomeAvailableForGoalsCents = Math.max(
+			nextIncome.amountCents - cashAllocation.nextIncomeReservedForObligationsCents,
 			0
 		);
+		const goalAllocations = this.allocateGoals(input.goals, nextIncomeAvailableForGoalsCents);
+		const recommendedGoalAllocationCents = goalAllocations.reduce((total, allocation) => total + allocation.allocatedAmountCents, 0);
+		const remainingNextIncomeCents = Math.max(nextIncomeAvailableForGoalsCents - recommendedGoalAllocationCents, 0);
+		const remainingFreeCashCents = Math.max(freeCashCents - recommendedGoalAllocationCents, 0);
 		const alerts = this.planningAlerts({
 			hasFollowingIncome: Boolean(followingIncome),
 			unassignedRecurringExpenses,
@@ -136,6 +148,11 @@ export class FinancialPlanningService {
 			totalCashObligationsCents,
 			totalCreditConsumptionCents: creditConsumptions.reduce((total, obligation) => total + obligation.amountCents, 0),
 			totalStatementPaymentsCents: statementPayments.reduce((total, obligation) => total + obligation.amountCents, 0),
+			existingMoneyUsedForObligationsCents: cashAllocation.existingMoneyUsedForObligationsCents,
+			nextIncomeReservedForObligationsCents: cashAllocation.nextIncomeReservedForObligationsCents,
+			nextIncomeAvailableForGoalsCents,
+			recommendedGoalAllocationCents,
+			remainingNextIncomeCents,
 			coveredCashObligationsCents,
 			uncoveredCashObligationsCents,
 			freeCashCents,
@@ -250,20 +267,27 @@ export class FinancialPlanningService {
 			const obligations: PlanningObligation[] = [];
 			let nextDate = this.nextExpenseDateAfter(expense, addDays(periodStart, -1));
 
-			while (nextDate && nextDate <= periodEnd) {
+			while (nextDate && nextDate < periodEnd) {
 				if (nextDate >= periodStart) {
 					const accountType = expense.paymentAccount?.type ?? null;
 					const isCredit = accountType === 'credit';
+					const isUnassigned = !expense.paymentAccountId;
 					obligations.push({
 						id: `${expense.id}:${toIsoDate(nextDate)}`,
-						kind: isCredit ? 'recurring_expense_credit' : 'recurring_expense_debit',
-						impact: isCredit ? 'credit_consumption' : 'cash_need',
+						kind: isUnassigned
+							? 'recurring_expense_unassigned'
+							: isCredit
+								? 'recurring_expense_credit'
+								: 'recurring_expense_debit',
+						impact: isUnassigned ? 'requires_attention' : isCredit ? 'credit_consumption' : 'cash_need',
 						title: expense.name,
 						date: toIsoDate(nextDate),
 						amountCents: expense.amountCents,
 						accountId: expense.paymentAccountId,
 						accountName: expense.paymentAccountId ? accountNames.get(expense.paymentAccountId) ?? expense.paymentAccount?.name ?? null : null,
 						accountType,
+						coveredByExistingMoneyCents: 0,
+						reservedFromNextIncomeCents: 0,
 						coveredAmountCents: 0,
 						uncoveredAmountCents: 0
 					});
@@ -285,7 +309,7 @@ export class FinancialPlanningService {
 			.map((statement): PlanningObligation | null => {
 				const amountCents = getStatementOutstandingAmount(statement);
 				if (amountCents <= 0) return null;
-				if (statement.paymentDueDate < periodStartDate || statement.paymentDueDate > periodEndDate) return null;
+				if (statement.paymentDueDate < periodStartDate || statement.paymentDueDate >= periodEndDate) return null;
 				return {
 					id: `statement:${statement.id}`,
 					kind: 'credit_card_statement',
@@ -296,6 +320,8 @@ export class FinancialPlanningService {
 					accountId: statement.accountId,
 					accountName: accountNames.get(statement.accountId) ?? null,
 					accountType: 'credit',
+					coveredByExistingMoneyCents: 0,
+					reservedFromNextIncomeCents: 0,
 					coveredAmountCents: 0,
 					uncoveredAmountCents: 0
 				};
@@ -315,7 +341,7 @@ export class FinancialPlanningService {
 				.filter((installment) =>
 					installment.remainingAmountCents > 0 &&
 					installment.dueDate >= periodStartDate &&
-					installment.dueDate <= periodEndDate
+					installment.dueDate < periodEndDate
 				)
 				.map((installment): PlanningObligation => ({
 					id: `loan:${loan.id}:${installment.number}`,
@@ -327,23 +353,58 @@ export class FinancialPlanningService {
 					accountId: null,
 					accountName: null,
 					accountType: null,
+					coveredByExistingMoneyCents: 0,
+					reservedFromNextIncomeCents: 0,
 					coveredAmountCents: 0,
 					uncoveredAmountCents: 0
 				}));
 		}).sort(this.compareObligations);
 	}
 
-	private allocateCash(obligations: PlanningObligation[], availableCashCents: number): PlanningObligation[] {
-		let remainingCashCents = availableCashCents;
-		return obligations.map((obligation) => {
-			const coveredAmountCents = Math.min(obligation.amountCents, remainingCashCents);
-			remainingCashCents -= coveredAmountCents;
+	private allocateCashBySource(
+		obligations: PlanningObligation[],
+		existingMoneyCents: number,
+		nextIncomeCents: number
+	): CashAllocation {
+		let remainingExistingMoneyCents = existingMoneyCents;
+		let remainingNextIncomeCents = nextIncomeCents;
+		let existingMoneyUsedForObligationsCents = 0;
+		let nextIncomeReservedForObligationsCents = 0;
+		let coveredCashObligationsCents = 0;
+		let uncoveredCashObligationsCents = 0;
+
+		const allocatedObligations = obligations.map((obligation) => {
+			const coveredByExistingMoneyCents = Math.min(obligation.amountCents, remainingExistingMoneyCents);
+			remainingExistingMoneyCents -= coveredByExistingMoneyCents;
+
+			const amountAfterExistingMoneyCents = obligation.amountCents - coveredByExistingMoneyCents;
+			const reservedFromNextIncomeCents = Math.min(amountAfterExistingMoneyCents, remainingNextIncomeCents);
+			remainingNextIncomeCents -= reservedFromNextIncomeCents;
+
+			const coveredAmountCents = coveredByExistingMoneyCents + reservedFromNextIncomeCents;
+			const uncoveredAmountCents = obligation.amountCents - coveredAmountCents;
+
+			existingMoneyUsedForObligationsCents += coveredByExistingMoneyCents;
+			nextIncomeReservedForObligationsCents += reservedFromNextIncomeCents;
+			coveredCashObligationsCents += coveredAmountCents;
+			uncoveredCashObligationsCents += uncoveredAmountCents;
+
 			return {
 				...obligation,
+				coveredByExistingMoneyCents,
+				reservedFromNextIncomeCents,
 				coveredAmountCents,
-				uncoveredAmountCents: obligation.amountCents - coveredAmountCents
+				uncoveredAmountCents
 			};
 		});
+
+		return {
+			obligations: allocatedObligations,
+			existingMoneyUsedForObligationsCents,
+			nextIncomeReservedForObligationsCents,
+			coveredCashObligationsCents,
+			uncoveredCashObligationsCents
+		};
 	}
 
 	private allocateGoals(goals: FinancialGoal[], freeCashCents: number): PlanningGoalAllocation[] {
@@ -408,6 +469,11 @@ export class FinancialPlanningService {
 			totalCashObligationsCents: 0,
 			totalCreditConsumptionCents: 0,
 			totalStatementPaymentsCents: 0,
+			existingMoneyUsedForObligationsCents: 0,
+			nextIncomeReservedForObligationsCents: 0,
+			nextIncomeAvailableForGoalsCents: 0,
+			recommendedGoalAllocationCents: 0,
+			remainingNextIncomeCents: 0,
 			coveredCashObligationsCents: 0,
 			uncoveredCashObligationsCents: 0,
 			freeCashCents: input.existingRealMoneyCents,

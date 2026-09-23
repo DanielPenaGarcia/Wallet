@@ -3,10 +3,11 @@ import type { AccountType } from '$lib/modules/accounts/types/account.types';
 export type PlanningObligationKind =
 	| 'recurring_expense_debit'
 	| 'recurring_expense_credit'
+	| 'recurring_expense_unassigned'
 	| 'credit_card_statement'
 	| 'loan_payment';
 
-export type PlanningObligationImpact = 'cash_need' | 'credit_consumption';
+export type PlanningObligationImpact = 'cash_need' | 'credit_consumption' | 'requires_attention';
 
 export type PlanningObligation = {
 	id: string;
@@ -18,6 +19,8 @@ export type PlanningObligation = {
 	accountId: string | null;
 	accountName: string | null;
 	accountType: AccountType | null;
+	coveredByExistingMoneyCents: number;
+	reservedFromNextIncomeCents: number;
 	coveredAmountCents: number;
 	uncoveredAmountCents: number;
 };
@@ -52,6 +55,11 @@ export type NextIncomePlanning = {
 	totalCashObligationsCents: number;
 	totalCreditConsumptionCents: number;
 	totalStatementPaymentsCents: number;
+	existingMoneyUsedForObligationsCents: number;
+	nextIncomeReservedForObligationsCents: number;
+	nextIncomeAvailableForGoalsCents: number;
+	recommendedGoalAllocationCents: number;
+	remainingNextIncomeCents: number;
 	coveredCashObligationsCents: number;
 	uncoveredCashObligationsCents: number;
 	freeCashCents: number;

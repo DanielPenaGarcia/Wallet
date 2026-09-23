@@ -94,14 +94,58 @@ describe('financial planning next income', () => {
 		expect(planning.cashObligations.find((obligation) => obligation.title === 'Streaming')).toBeUndefined();
 	});
 
-	it('adds existing debit and cash balances to the next income and allocates obligations first', () => {
+	it('uses existing debit and cash balances before reserving from the next income', () => {
 		const planning = service.planNextIncome(baseInput());
 
 		expect(planning.existingRealMoneyCents).toBe(2_000_00);
 		expect(planning.totalCashAvailableCents).toBe(3_000_00);
+		expect(planning.existingMoneyUsedForObligationsCents).toBe(1_400_00);
+		expect(planning.nextIncomeReservedForObligationsCents).toBe(0);
 		expect(planning.coveredCashObligationsCents).toBe(1_400_00);
 		expect(planning.uncoveredCashObligationsCents).toBe(0);
 		expect(planning.freeCashCents).toBe(1_600_00);
+		expect(planning.nextIncomeAvailableForGoalsCents).toBe(1_000_00);
+	});
+
+	it('splits obligation coverage between existing money and the next income', () => {
+		const planning = service.planNextIncome({
+			...baseInput(),
+			accounts: [
+				account('cash', 'personal', 350_00),
+				account('debit', 'debit', 0),
+				account('credit', 'credit', 900_00)
+			],
+			recurringIncomes: [income('payroll', { type: 'weekly', weekday: 'friday' }, { expectedAmountCents: 1_000_00 })],
+			creditCardStatements: [],
+			loans: []
+		});
+
+		expect(planning.cashObligations.map(obligationCoverage)).toEqual([
+			{ title: 'Rent', existing: 350_00, reserve: 250_00, covered: 600_00, uncovered: 0 }
+		]);
+		expect(planning.existingMoneyUsedForObligationsCents).toBe(350_00);
+		expect(planning.nextIncomeReservedForObligationsCents).toBe(250_00);
+		expect(planning.nextIncomeAvailableForGoalsCents).toBe(750_00);
+	});
+
+	it('covers obligations only with the next income when there is no existing real money', () => {
+		const planning = service.planNextIncome({
+			...baseInput(),
+			accounts: [
+				account('cash', 'personal', 0),
+				account('debit', 'debit', 0),
+				account('credit', 'credit', 900_00)
+			],
+			recurringIncomes: [income('payroll', { type: 'weekly', weekday: 'friday' }, { expectedAmountCents: 1_000_00 })],
+			creditCardStatements: [],
+			loans: []
+		});
+
+		expect(planning.cashObligations.map(obligationCoverage)).toEqual([
+			{ title: 'Rent', existing: 0, reserve: 600_00, covered: 600_00, uncovered: 0 }
+		]);
+		expect(planning.nextIncomeReservedForObligationsCents).toBe(600_00);
+		expect(planning.remainingNextIncomeCents).toBe(200_00);
 	});
 
 	it('reports insufficient funds and partial obligation coverage deterministically', () => {
@@ -116,21 +160,21 @@ describe('financial planning next income', () => {
 		});
 
 		expect(planning.totalCashAvailableCents).toBe(700_00);
+		expect(planning.existingMoneyUsedForObligationsCents).toBe(200_00);
+		expect(planning.nextIncomeReservedForObligationsCents).toBe(500_00);
+		expect(planning.nextIncomeAvailableForGoalsCents).toBe(0);
+		expect(planning.remainingNextIncomeCents).toBe(0);
 		expect(planning.coveredCashObligationsCents).toBe(700_00);
 		expect(planning.uncoveredCashObligationsCents).toBe(700_00);
-		expect(planning.cashObligations.map((obligation) => ({
-			title: obligation.title,
-			covered: obligation.coveredAmountCents,
-			uncovered: obligation.uncoveredAmountCents
-		}))).toEqual([
-			{ title: 'Rent', covered: 600_00, uncovered: 0 },
-			{ title: 'Cuota 1: Loan installment', covered: 100_00, uncovered: 200_00 },
-			{ title: 'Pago de tarjeta Credit', covered: 0, uncovered: 500_00 }
+		expect(planning.cashObligations.map(obligationCoverage)).toEqual([
+			{ title: 'Rent', existing: 200_00, reserve: 400_00, covered: 600_00, uncovered: 0 },
+			{ title: 'Cuota 1: Loan installment', existing: 0, reserve: 100_00, covered: 100_00, uncovered: 200_00 },
+			{ title: 'Pago de tarjeta Credit', existing: 0, reserve: 0, covered: 0, uncovered: 500_00 }
 		]);
 		expect(planning.alerts).toContain('El dinero real disponible no cubre todas las obligaciones del periodo.');
 	});
 
-	it('distributes free cash toward active goals after cash obligations', () => {
+	it('distributes only the next income remainder toward active goals after recommended reserves', () => {
 		const planning = service.planNextIncome(baseInput());
 
 		expect(planning.goalAllocations).toEqual([
@@ -138,13 +182,15 @@ describe('financial planning next income', () => {
 				goalId: 'goal',
 				name: 'Emergency fund',
 				distributionPercentage: 50,
-				allocatedAmountCents: 800_00
+				allocatedAmountCents: 500_00
 			})
 		]);
-		expect(planning.remainingFreeCashCents).toBe(800_00);
+		expect(planning.recommendedGoalAllocationCents).toBe(500_00);
+		expect(planning.remainingNextIncomeCents).toBe(500_00);
+		expect(planning.remainingFreeCashCents).toBe(1_100_00);
 	});
 
-	it('keeps unassigned recurring expenses visible for user attention', () => {
+	it('keeps unassigned recurring expenses visible without counting them as cash reserves', () => {
 		const planning = service.planNextIncome({
 			...baseInput(),
 			recurringExpenses: [
@@ -154,9 +200,52 @@ describe('financial planning next income', () => {
 		});
 
 		expect(planning.unassignedRecurringExpenses).toEqual([
-			expect.objectContaining({ title: 'Internet', amountCents: 100_00, accountId: null })
+			expect.objectContaining({
+				kind: 'recurring_expense_unassigned',
+				impact: 'requires_attention',
+				title: 'Internet',
+				amountCents: 100_00,
+				accountId: null
+			})
 		]);
+		expect(planning.cashObligations.find((obligation) => obligation.title === 'Internet')).toBeUndefined();
+		expect(planning.totalCashObligationsCents).toBe(1_400_00);
+		expect(planning.nextIncomeReservedForObligationsCents).toBe(0);
 		expect(planning.alerts).toContain('Hay gastos recurrentes sin cuenta de pago asignada.');
+	});
+
+	it('includes obligations on the period start and excludes obligations on the following income date', () => {
+		const planning = service.planNextIncome({
+			...baseInput(),
+			recurringExpenses: [
+				expense('start', 'Starts today', 100_00, { type: 'monthly', day: 25 }, paymentAccount('debit', 'debit')),
+				expense('end', 'Next income day', 200_00, { type: 'monthly', day: 2 }, paymentAccount('debit', 'debit'))
+			],
+			creditCardStatements: [
+				statement('start-statement', 'credit', '2026-09-25', 300_00, 0),
+				statement('end-statement', 'credit', '2026-10-02', 400_00, 0)
+			],
+			loans: [
+				loan({
+					installments: [
+						loanInstallment(1, '2026-09-25', 500_00),
+						loanInstallment(2, '2026-10-02', 600_00)
+					]
+				})
+			],
+			goals: []
+		});
+
+		expect(planning.cashObligations.map((obligation) => obligation.title)).toEqual([
+			'Cuota 1: Loan installment',
+			'Pago de tarjeta Credit',
+			'Starts today'
+		]);
+		expect(planning.cashObligations.map((obligation) => obligation.date)).toEqual([
+			'2026-09-25',
+			'2026-09-25',
+			'2026-09-25'
+		]);
 	});
 
 	it('returns a stable fallback horizon when there is no following income', () => {
@@ -200,6 +289,22 @@ function baseInput() {
 		goals: [goal('goal', 'Emergency fund', 50)],
 		loans: [loan()],
 		referenceDate
+	};
+}
+
+function obligationCoverage(obligation: {
+	title: string;
+	coveredByExistingMoneyCents: number;
+	reservedFromNextIncomeCents: number;
+	coveredAmountCents: number;
+	uncoveredAmountCents: number;
+}) {
+	return {
+		title: obligation.title,
+		existing: obligation.coveredByExistingMoneyCents,
+		reserve: obligation.reservedFromNextIncomeCents,
+		covered: obligation.coveredAmountCents,
+		uncovered: obligation.uncoveredAmountCents
 	};
 }
 
@@ -324,7 +429,7 @@ function goal(id: string, name: string, distributionPercentage: number): Financi
 	};
 }
 
-function loan(): LoanSummary {
+function loan(overrides: Partial<LoanSummary> = {}): LoanSummary {
 	return {
 		id: 'loan',
 		name: 'Loan installment',
@@ -344,15 +449,18 @@ function loan(): LoanSummary {
 		outstandingAmountCents: 1_200_00,
 		progressPercentage: 0,
 		nextInstallment: null,
-		installments: [
-			{
-				number: 1,
-				dueDate: '2026-09-29',
-				amountCents: 300_00,
-				coveredAmountCents: 0,
-				remainingAmountCents: 300_00,
-				status: 'pending'
-			}
-		]
+		installments: [loanInstallment(1, '2026-09-29', 300_00)],
+		...overrides
+	};
+}
+
+function loanInstallment(number: number, dueDate: string, amountCents: number): LoanSummary['installments'][number] {
+	return {
+		number,
+		dueDate,
+		amountCents,
+		coveredAmountCents: 0,
+		remainingAmountCents: amountCents,
+		status: 'pending'
 	};
 }
