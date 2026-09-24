@@ -32,8 +32,11 @@
 	let clearedAfterSuccess = $state(false);
 	let restoredFromStorage = $state(false);
 	let previousSourceCardId = '';
+	let realCards = $derived(cards.filter((card) => card.kind !== 'credit'));
+	let creditCards = $derived(cards.filter((card) => card.kind === 'credit'));
+	let sourceCards = $derived(selectedType === 'credit_purchase' ? creditCards : realCards);
 	let serializedDrafts = $derived(JSON.stringify(drafts.map(({ id: _id, ...draft }) => draft)));
-	let needsBatchSourceCard = $derived(selectedType === 'expense' || selectedType === 'transfer');
+	let needsBatchSourceCard = $derived(selectedType === 'expense' || selectedType === 'credit_purchase' || selectedType === 'transfer');
 
 	$effect(() => {
 		if (!browser || !restoredFromStorage) return;
@@ -61,7 +64,12 @@
 		if (stored) {
 			try {
 			const parsed = JSON.parse(stored) as { selectedType?: MovementType | null; sourceCardId?: string; drafts?: BulkMovementDraft[] };
-			if (parsed.selectedType === 'expense' || parsed.selectedType === 'income' || parsed.selectedType === 'transfer') {
+			if (
+				parsed.selectedType === 'expense' ||
+				parsed.selectedType === 'credit_purchase' ||
+				parsed.selectedType === 'income' ||
+				parsed.selectedType === 'transfer'
+			) {
 				selectedType = parsed.selectedType;
 			}
 			if (typeof parsed.sourceCardId === 'string') sourceCardId = parsed.sourceCardId;
@@ -126,6 +134,11 @@
 	function draftDetail(draft: BulkMovementDraft) {
 		if (draft.type === 'income') return draft.reason || 'Ingreso';
 		if (draft.type === 'transfer') return 'Transferencia entre cuentas';
+		if (draft.type === 'credit_purchase') return `Compra crédito · ${expenseClassificationLabel(draft)}`;
+		return expenseClassificationLabel(draft);
+	}
+
+	function expenseClassificationLabel(draft: BulkMovementDraft) {
 		if (draft.classificationKind === 'expense') {
 			return expenses.find((expense) => expense.id === draft.classificationId)?.name ?? 'Gasto registrado';
 		}
@@ -138,6 +151,10 @@
 	}
 
 	function changeType(type: MovementType | null) {
+		if (type !== selectedType) {
+			drafts = [];
+			expandedDraftId = null;
+		}
 		selectedType = type;
 		sourceCardId = '';
 		previousSourceCardId = '';
@@ -146,12 +163,15 @@
 </script>
 
 {#if selectedType === null}
-	<MovementTypePicker onSelect={(type) => changeType(type)} />
+	<MovementTypePicker
+		allowedTypes={['expense', 'credit_purchase', 'income', 'transfer']}
+		onSelect={(type) => changeType(type)}
+	/>
 {:else}
 	<div class="grid gap-5">
 		<div class="flex flex-col gap-3 rounded-md border border-outline bg-surface-subtle px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
 			<div>
-				<p class="text-sm font-bold text-on-surface">{selectedType === 'expense' ? 'Gastos' : selectedType === 'income' ? 'Ingresos' : 'Transferencias'}</p>
+				<p class="text-sm font-bold text-on-surface">{selectedType === 'expense' ? 'Gastos' : selectedType === 'credit_purchase' ? 'Compras crédito' : selectedType === 'income' ? 'Ingresos' : 'Transferencias'}</p>
 				<p class="mt-1 text-xs text-on-surface-muted">{drafts.length} {drafts.length === 1 ? 'movimiento en el lote' : 'movimientos en el lote'}</p>
 			</div>
 			<ActionButton type="button" intent="secondary" onclick={() => changeType(null)}>Cambiar tipo</ActionButton>
@@ -166,8 +186,8 @@
 				<MovementCardField
 					id={`bulk-${selectedType}-batch-source`}
 					name="sourceCardId"
-					label="Cuenta origen del lote"
-					{cards}
+					label={selectedType === 'credit_purchase' ? 'Tarjeta de crédito del lote' : 'Cuenta origen del lote'}
+					cards={sourceCards}
 					bind:value={sourceCardId}
 				/>
 			</div>
@@ -198,10 +218,10 @@
 				<input type="hidden" name="type" value={selectedType} />
 				<MovementCommonFields idPrefix={`bulk-${selectedType}-${draftKey}`} />
 
-				{#if selectedType === 'expense'}
+				{#if selectedType === 'expense' || selectedType === 'credit_purchase'}
 					<MovementExpenseFields
-						idPrefix={`bulk-expense-${draftKey}`}
-						{cards}
+						idPrefix={`bulk-${selectedType}-${draftKey}`}
+						cards={sourceCards}
 						{expenses}
 						{categories}
 						bind:sourceCardId

@@ -15,4 +15,5 @@ export interface LoanRepository {
 	create(input: CreateLoanInput & { id: string }): Promise<Loan>;
 	update(input: UpdateLoanInput): Promise<void>;
 	cancel(id: string): Promise<void>;
+	delete(id: string): Promise<void>;
 }

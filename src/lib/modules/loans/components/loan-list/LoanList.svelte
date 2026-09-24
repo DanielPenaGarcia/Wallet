@@ -7,8 +7,14 @@
 
 	let { loans }: LoanListProps = $props();
 
-	function statusLabel(outstandingAmountCents: number) {
-		return outstandingAmountCents === 0 ? 'Liquidado' : 'Activo';
+	function statusLabel(loan: LoanListProps['loans'][number]) {
+		if (loan.status === 'cancelled') return 'Cancelado';
+		return loan.outstandingAmountCents === 0 ? 'Liquidado' : 'Activo';
+	}
+
+	function statusClass(loan: LoanListProps['loans'][number]) {
+		if (loan.status === 'cancelled') return 'bg-surface-muted text-on-surface-muted';
+		return loan.outstandingAmountCents === 0 ? 'bg-secondary/10 text-secondary' : 'bg-primary-container text-primary';
 	}
 </script>
 
@@ -27,7 +33,7 @@
 						<h3 class="mt-1 truncate text-lg font-bold text-on-surface">{loan.name}</h3>
 						<p class="mt-1 truncate text-sm text-on-surface-muted">{loan.counterpartyName}</p>
 					</div>
-					<span class="rounded-full px-2.5 py-1 text-xs font-bold {loan.outstandingAmountCents === 0 ? 'bg-secondary/10 text-secondary' : 'bg-primary-container text-primary'}">{statusLabel(loan.outstandingAmountCents)}</span>
+					<span class="rounded-full px-2.5 py-1 text-xs font-bold {statusClass(loan)}">{statusLabel(loan)}</span>
 				</div>
 				<div class="mt-5 grid grid-cols-2 gap-3">
 					<div>

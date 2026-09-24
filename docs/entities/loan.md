@@ -33,3 +33,7 @@ The pending balance is derived from active `loan_payment` and `loan_collection` 
 Loan movements are not ordinary income or expense. They do not use category, recurring income, or recurring expense classification.
 
 Payments and collections cannot exceed the outstanding contractual balance.
+
+Active loans can be edited without changing their direction or opening account. Editing the principal updates the linked opening movement so the real-money account balance remains derived from movements instead of from the loan row alone.
+
+Deleting a loan reverses its active linked movements first and then removes the loan record. If any reversal would leave an account with an invalid balance, deletion is rejected.

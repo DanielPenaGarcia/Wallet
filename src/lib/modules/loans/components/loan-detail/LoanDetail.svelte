@@ -1,13 +1,29 @@
 <script lang="ts">
 	import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
+	import PencilIcon from '@lucide/svelte/icons/pencil';
+	import Trash2Icon from '@lucide/svelte/icons/trash-2';
+	import { untrack } from 'svelte';
 	import { ActionButton } from '$lib/components/ui/action-button';
 	import { Button } from '$lib/components/ui/button';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import { formatCurrencyFromMinorUnits } from '$lib/shared/utils/format-currency';
 	import { formatIsoDate } from '$lib/shared/utils/format-iso-date';
+	import DeleteLoanForm from '../delete-loan-form/DeleteLoanForm.svelte';
+	import LoanForm from '../loan-form/LoanForm.svelte';
 	import LoanSettlementForm from '../loan-settlement-form/LoanSettlementForm.svelte';
 	import type { LoanDetailProps } from './props';
 
 	let { loan, cards, movements, feedback = null }: LoanDetailProps = $props();
+	let editOpen = $state(untrack(() =>
+		feedback?.action === 'update-loan' &&
+		feedback.targetId === loan.id &&
+		Boolean(feedback.errors || feedback.message)
+	));
+	let deleteOpen = $state(untrack(() =>
+		feedback?.action === 'delete-loan' &&
+		feedback.targetId === loan.id &&
+		Boolean(feedback.errors || feedback.message)
+	));
 
 	function money(amountCents: number) {
 		return formatCurrencyFromMinorUnits(amountCents, loan.currencyCode);
@@ -26,10 +42,14 @@
 	<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 		<Button href="/prestamos" variant="ghost" size="sm"><ArrowLeftIcon />Volver</Button>
 		{#if loan.status === 'active'}
-			<form method="POST" action="?/cancelLoan">
-				<input type="hidden" name="id" value={loan.id} />
-				<ActionButton type="submit" intent="danger">Cancelar préstamo</ActionButton>
-			</form>
+			<div class="flex flex-wrap justify-end gap-2">
+				<ActionButton type="button" intent="secondary" onclick={() => (editOpen = true)}><PencilIcon />Editar</ActionButton>
+				<ActionButton type="button" intent="danger" onclick={() => (deleteOpen = true)}><Trash2Icon />Eliminar</ActionButton>
+				<form method="POST" action="?/cancelLoan">
+					<input type="hidden" name="id" value={loan.id} />
+					<ActionButton type="submit" intent="danger">Cancelar préstamo</ActionButton>
+				</form>
+			</div>
 		{/if}
 	</div>
 
@@ -156,3 +176,23 @@
 		{/if}
 	</section>
 </div>
+
+<Dialog.Root bind:open={editOpen}>
+	<Dialog.Content class="sm:max-w-2xl">
+		<Dialog.Header>
+			<Dialog.Title>Editar préstamo</Dialog.Title>
+			<Dialog.Description>Actualiza los términos del préstamo y su calendario.</Dialog.Description>
+		</Dialog.Header>
+		<LoanForm mode="edit" {loan} {cards} {feedback} onCancel={() => (editOpen = false)} />
+	</Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root bind:open={deleteOpen}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Eliminar {loan.name}</Dialog.Title>
+			<Dialog.Description>Esta acción revierte los movimientos activos vinculados antes de borrar el préstamo.</Dialog.Description>
+		</Dialog.Header>
+		<DeleteLoanForm {loan} {feedback} onCancel={() => (deleteOpen = false)} />
+	</Dialog.Content>
+</Dialog.Root>

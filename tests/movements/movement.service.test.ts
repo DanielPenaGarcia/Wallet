@@ -198,6 +198,10 @@ class InMemoryLoanRepository implements LoanRepository {
 	async cancel() {
 		throw new Error('Not used in movement tests.');
 	}
+
+	async delete() {
+		throw new Error('Not used in movement tests.');
+	}
 }
 
 class InMemoryCategoryRepository implements CategoryRepository {

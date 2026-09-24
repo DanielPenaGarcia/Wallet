@@ -106,6 +106,10 @@ export class DrizzleLoanRepository implements LoanRepository {
 			.where(eq(loans.id, id))
 			.run();
 	}
+
+	async delete(id: string) {
+		await this.database.delete(loans).where(eq(loans.id, id)).run();
+	}
 }
 
 function toLoan(loan: typeof loans.$inferSelect): Loan {

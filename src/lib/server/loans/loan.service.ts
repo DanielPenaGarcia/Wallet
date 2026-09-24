@@ -3,6 +3,7 @@ import { summarizeLoan } from '$lib/modules/loans/utils/loan-calculations';
 import { drizzleAccountRepository } from '$lib/server/accounts/drizzle-account.repository';
 import type { AccountRepository } from '$lib/server/accounts/account.repository';
 import { movementService, type MovementService } from '$lib/server/movements/movement.service';
+import { MovementValidationError } from '$lib/server/movements/movement.errors';
 import { drizzleLoanRepository } from './drizzle-loan.repository';
 import type { CreateLoanInput } from './inputs/create-loan.input';
 import type { LoanSettlementInput } from './inputs/loan-settlement.input';
@@ -64,6 +65,8 @@ export class LoanService {
 
 		const normalizedInput = this.normalizeUpdateInput(input);
 		this.assertValidLoanTerms(normalizedInput);
+		await this.assertEditableAgainstSettlements(loan.id, normalizedInput);
+		await this.updateOpeningMovement(loan, normalizedInput);
 		await this.loanRepository.update(normalizedInput);
 	}
 
@@ -72,6 +75,32 @@ export class LoanService {
 		if (!loan) throw new LoanNotFoundError();
 		if (loan.status !== 'active') return;
 		await this.loanRepository.cancel(loan.id);
+	}
+
+	async deleteLoan(id: string): Promise<void> {
+		const loan = await this.loanRepository.findById(id.trim());
+		if (!loan) throw new LoanNotFoundError();
+
+		const movements = await this.movements.listMovements({ loanId: loan.id });
+		const orderedMovements = movements.sort((a, b) => {
+			const directionOrder = loan.direction === 'borrowed'
+				? Number(this.isLoanOpeningMovement(a.type)) - Number(this.isLoanOpeningMovement(b.type))
+				: Number(this.isLoanOpeningMovement(b.type)) - Number(this.isLoanOpeningMovement(a.type));
+			return directionOrder || b.occurredAt.localeCompare(a.occurredAt) || b.id.localeCompare(a.id);
+		});
+
+		try {
+			for (const movement of orderedMovements) await this.movements.deleteMovement(movement.id);
+		} catch (error) {
+			if (error instanceof MovementValidationError) {
+				throw new LoanValidationError({
+					id: ['No se puede eliminar el préstamo porque al revertir sus movimientos alguna cuenta quedaría con saldo inválido.']
+				});
+			}
+			throw error;
+		}
+
+		await this.loanRepository.delete(loan.id);
 	}
 
 	async registerPayment(input: LoanSettlementInput): Promise<void> {
@@ -124,6 +153,41 @@ export class LoanService {
 			recurringIncomeId: null,
 			loanId: loan.id
 		});
+	}
+
+	private async assertEditableAgainstSettlements(loanId: string, input: UpdateLoanInput) {
+		const paidAmountCents = await this.loanRepository.getPaymentTotal(loanId);
+		if (paidAmountCents > input.totalRepaymentCents) {
+			throw new LoanValidationError({
+				totalRepayment: ['El total contractual no puede ser menor que lo ya pagado o cobrado.']
+			});
+		}
+	}
+
+	private async updateOpeningMovement(loan: Loan, input: UpdateLoanInput) {
+		const openingType = loan.direction === 'borrowed' ? 'loan_received' : 'loan_disbursement';
+		const openingMovement = (await this.movements.listMovements({ loanId: loan.id, type: openingType }))[0];
+		if (!openingMovement) throw new LoanValidationError({ id: ['No se encontró el movimiento de apertura del préstamo.'] });
+
+		await this.movements.updateMovement({
+			id: openingMovement.id,
+			type: openingMovement.type,
+			title: loan.direction === 'borrowed' ? `Préstamo recibido: ${input.name}` : `Préstamo entregado: ${input.name}`,
+			description: `Contraparte: ${input.counterpartyName}`,
+			amountCents: input.principalAmountCents,
+			currencyCode: input.currencyCode,
+			occurredAt: openingMovement.occurredAt,
+			sourceAccountId: openingMovement.sourceAccountId,
+			destinationAccountId: openingMovement.destinationAccountId,
+			categoryId: null,
+			recurringExpenseId: null,
+			recurringIncomeId: null,
+			loanId: loan.id
+		});
+	}
+
+	private isLoanOpeningMovement(type: string) {
+		return type === 'loan_received' || type === 'loan_disbursement';
 	}
 
 	private normalizeCreateInput(input: CreateLoanInput): CreateLoanInput {

@@ -1,4 +1,4 @@
-import { error, fail, type Actions } from '@sveltejs/kit';
+import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 import { toCardListItem } from '$lib/modules/accounts/utils/account-card-list-item';
 import { accountService } from '$lib/server/accounts/account.service';
 import { LoanNotFoundError, LoanValidationError } from '$lib/server/loans/loan.errors';
@@ -61,7 +61,40 @@ function settlementValues(formData: FormData) {
 	};
 }
 
+function loanValues(formData: FormData) {
+	return {
+		id: formValue(formData, 'id'),
+		name: formValue(formData, 'name'),
+		counterpartyName: formValue(formData, 'counterpartyName'),
+		principalAmount: formValue(formData, 'principalAmount'),
+		totalRepayment: formValue(formData, 'totalRepayment'),
+		installmentCount: formValue(formData, 'installmentCount'),
+		firstPaymentDate: formValue(formData, 'firstPaymentDate'),
+		currencyCode: formValue(formData, 'currencyCode')
+	};
+}
+
 export const actions: Actions = {
+	updateLoan: async ({ request }) => {
+		const values = loanValues(await request.formData());
+		try {
+			await loanService.updateLoan({
+				id: values.id,
+				name: values.name,
+				counterpartyName: values.counterpartyName,
+				principalAmountCents: amountCents(values.principalAmount),
+				totalRepaymentCents: amountCents(values.totalRepayment),
+				installmentCount: Number(values.installmentCount),
+				firstPaymentDate: values.firstPaymentDate,
+				currencyCode: values.currencyCode
+			});
+			return { action: 'update-loan' as const, targetId: values.id, success: 'Préstamo actualizado.' };
+		} catch (caught) {
+			if (caught instanceof LoanValidationError) return fail(400, { action: 'update-loan' as const, targetId: values.id, errors: caught.errors, values });
+			if (caught instanceof LoanNotFoundError) return fail(404, { action: 'update-loan' as const, targetId: values.id, message: caught.message, values });
+			throw caught;
+		}
+	},
 	registerPayment: async ({ request }) => {
 		const values = settlementValues(await request.formData());
 		try {
@@ -105,5 +138,16 @@ export const actions: Actions = {
 			if (caught instanceof LoanNotFoundError) return fail(404, { action: 'cancel-loan' as const, message: caught.message, targetId: id });
 			throw caught;
 		}
+	},
+	deleteLoan: async ({ request }) => {
+		const id = formValue(await request.formData(), 'id');
+		try {
+			await loanService.deleteLoan(id);
+		} catch (caught) {
+			if (caught instanceof LoanValidationError) return fail(400, { action: 'delete-loan' as const, targetId: id, errors: caught.errors, message: caught.errors.id?.[0] });
+			if (caught instanceof LoanNotFoundError) return fail(404, { action: 'delete-loan' as const, targetId: id, message: caught.message });
+			throw caught;
+		}
+		throw redirect(303, '/prestamos');
 	}
 };

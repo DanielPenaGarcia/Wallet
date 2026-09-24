@@ -17,7 +17,7 @@ export type LoanFormValues = {
 };
 
 export type LoanFormFeedback = {
-	action: 'create-loan' | 'register-payment' | 'register-collection' | 'cancel-loan';
+	action: 'create-loan' | 'update-loan' | 'delete-loan' | 'register-payment' | 'register-collection' | 'cancel-loan';
 	success?: string;
 	message?: string;
 	errors?: Record<string, string[]>;

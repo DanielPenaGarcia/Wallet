@@ -15,6 +15,8 @@ The first implementation supports fixed monthly installments from a first paymen
 
 - `Nuevo préstamo`: creates the loan configuration and materializes the initial principal movement.
 - `Ver detalle`: opens `/prestamos/[id]` with summary, progress, and installment schedule.
+- `Editar`: updates active loan terms and synchronizes the opening movement amount, title, counterparty description, and currency so account balances stay consistent.
+- `Eliminar`: reverses active loan movements through the movement service and removes the loan record.
 - `Registrar pago`: records a real payment for a borrowed loan.
 - `Registrar cobro`: records a real collection for a lent loan.
 - `Cancelar préstamo`: marks the loan as cancelled.
@@ -31,6 +33,10 @@ Loan opening, payments, and collections change account balances only through mov
 - Lent loan collection creates `loan_collection`.
 
 Only personal and debit accounts can participate in loan movements. Credit cards are not real-money accounts for this module.
+
+Editing cannot change the loan direction or opening account. The contractual total cannot be reduced below the amount already paid or collected.
+
+Deleting a loan is only allowed when its linked active movements can be safely reversed without breaking account balance rules. Borrowed loans reverse payments before the opening movement; lent loans reverse the opening movement before collections.
 
 ## Dashboard And Projections
 
