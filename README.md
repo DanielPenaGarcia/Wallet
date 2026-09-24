@@ -31,6 +31,26 @@ pnpm db:seed:categories
 pnpm db:seed:color-palettes
 ```
 
+## Install as an app
+
+Wallet includes a web app manifest, install icons, and a service worker. To try the
+production build on your computer, run the database migrations, then:
+
+```bash
+pnpm build
+pnpm preview
+```
+
+Open the local preview URL in a compatible browser and use its **Install app**
+action. `localhost` works for local testing; installing from another device
+requires HTTPS. Do not expose a personal finance database publicly without
+access protection.
+
+The service worker caches versioned JS/CSS and public icons. It shows a simple
+offline page if a full navigation cannot reach the server. Account data and
+movements always need the server; offline changes and synchronization are not
+supported.
+
 ## Current Scope
 
 Wallet currently includes:
