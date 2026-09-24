@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { ActionButton } from '$lib/components/ui/action-button';
+	import { InfoPopover } from '$lib/components/ui/info-popover';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
@@ -25,6 +26,7 @@
 	let installmentCount = $state(untrack(() => matchingFeedback?.values?.installmentCount ?? loan?.installmentCount.toString() ?? ''));
 	let firstPaymentDate = $state(untrack(() => matchingFeedback?.values?.firstPaymentDate ?? loan?.firstPaymentDate ?? ''));
 	let currencyCode = $state(untrack(() => matchingFeedback?.values?.currencyCode ?? loan?.currencyCode ?? 'MXN'));
+	let hasSettlements = $derived(mode === 'edit' && (loan?.paidAmountCents ?? 0) > 0);
 	let preview = $derived.by(() => {
 		const principalAmountCents = amountCents(principalAmount);
 		const totalRepaymentCents = amountCents(totalRepayment);
@@ -103,28 +105,52 @@
 		{#if fieldError('counterpartyName')}<span class="text-xs text-destructive">{fieldError('counterpartyName')}</span>{/if}
 	</div>
 	<div class="grid gap-2">
-		<Label for={`${idPrefix}-currency`}>Moneda</Label>
-		<Input id={`${idPrefix}-currency`} name="currencyCode" required maxlength={3} bind:value={currencyCode} class="h-11 border-outline uppercase" />
+		<div class="flex items-center gap-1.5">
+			<Label for={`${idPrefix}-currency`}>Moneda</Label>
+			<InfoPopover title="Moneda" description="La moneda queda fija al crear el préstamo para no mezclar pagos o cobros de distintas monedas." />
+		</div>
+		{#if mode === 'edit'}
+			<input type="hidden" name="currencyCode" value={currencyCode} />
+			<Input id={`${idPrefix}-currency`} value={currencyCode} disabled class="h-11 border-outline uppercase" />
+		{:else}
+			<Input id={`${idPrefix}-currency`} name="currencyCode" required maxlength={3} bind:value={currencyCode} class="h-11 border-outline uppercase" />
+		{/if}
 		{#if fieldError('currencyCode')}<span class="text-xs text-destructive">{fieldError('currencyCode')}</span>{/if}
 	</div>
 	<div class="grid gap-2">
-		<Label for={`${idPrefix}-principal`}>Principal</Label>
-		<Input id={`${idPrefix}-principal`} name="principalAmount" required type="number" min="0.01" step="0.01" bind:value={principalAmount} class="h-11 border-outline" />
+		<div class="flex items-center gap-1.5">
+			<Label for={`${idPrefix}-principal`}>Principal</Label>
+			<InfoPopover title="Principal" description="Es el dinero que realmente recibiste o entregaste al abrir el préstamo. Cambiarlo ajusta el movimiento de apertura." />
+		</div>
+		{#if hasSettlements}<input type="hidden" name="principalAmount" value={principalAmount} />{/if}
+		<Input id={`${idPrefix}-principal`} name={hasSettlements ? undefined : 'principalAmount'} required type="number" min="0.01" step="0.01" bind:value={principalAmount} disabled={hasSettlements} class="h-11 border-outline" />
 		{#if fieldError('principalAmount')}<span class="text-xs text-destructive">{fieldError('principalAmount')}</span>{/if}
 	</div>
 	<div class="grid gap-2">
-		<Label for={`${idPrefix}-total`}>Total contractual</Label>
-		<Input id={`${idPrefix}-total`} name="totalRepayment" required type="number" min="0.01" step="0.01" bind:value={totalRepayment} class="h-11 border-outline" />
+		<div class="flex items-center gap-1.5">
+			<Label for={`${idPrefix}-total`}>Total contractual</Label>
+			<InfoPopover title="Total contractual" description="Es el total acordado a pagar o cobrar. Debe ser al menos igual al principal y no se reestructura después de pagos/cobros." />
+		</div>
+		{#if hasSettlements}<input type="hidden" name="totalRepayment" value={totalRepayment} />{/if}
+		<Input id={`${idPrefix}-total`} name={hasSettlements ? undefined : 'totalRepayment'} required type="number" min="0.01" step="0.01" bind:value={totalRepayment} disabled={hasSettlements} class="h-11 border-outline" />
 		{#if fieldError('totalRepayment')}<span class="text-xs text-destructive">{fieldError('totalRepayment')}</span>{/if}
 	</div>
 	<div class="grid gap-2">
-		<Label for={`${idPrefix}-installments`}>Cuotas</Label>
-		<Input id={`${idPrefix}-installments`} name="installmentCount" required type="number" min="1" step="1" bind:value={installmentCount} class="h-11 border-outline" />
+		<div class="flex items-center gap-1.5">
+			<Label for={`${idPrefix}-installments`}>Cuotas</Label>
+			<InfoPopover title="Número de cuotas" description="Define cómo se reparte el total contractual en pagos o cobros mensuales. Se bloquea cuando ya hay historial." />
+		</div>
+		{#if hasSettlements}<input type="hidden" name="installmentCount" value={installmentCount} />{/if}
+		<Input id={`${idPrefix}-installments`} name={hasSettlements ? undefined : 'installmentCount'} required type="number" min="1" step="1" bind:value={installmentCount} disabled={hasSettlements} class="h-11 border-outline" />
 		{#if fieldError('installmentCount')}<span class="text-xs text-destructive">{fieldError('installmentCount')}</span>{/if}
 	</div>
 	<div class="grid gap-2">
-		<Label for={`${idPrefix}-first-payment`}>Primer pago/cobro</Label>
-		<Input id={`${idPrefix}-first-payment`} name="firstPaymentDate" required type="date" bind:value={firstPaymentDate} class="h-11 border-outline" />
+		<div class="flex items-center gap-1.5">
+			<Label for={`${idPrefix}-first-payment`}>Primer pago/cobro</Label>
+			<InfoPopover title="Primer pago/cobro" description="Es la fecha desde la que se genera el calendario mensual. Cambiarla después de pagos/cobros reinterpretaría el historial." />
+		</div>
+		{#if hasSettlements}<input type="hidden" name="firstPaymentDate" value={firstPaymentDate} />{/if}
+		<Input id={`${idPrefix}-first-payment`} name={hasSettlements ? undefined : 'firstPaymentDate'} required type="date" bind:value={firstPaymentDate} disabled={hasSettlements} class="h-11 border-outline" />
 		{#if fieldError('firstPaymentDate')}<span class="text-xs text-destructive">{fieldError('firstPaymentDate')}</span>{/if}
 	</div>
 	{#if mode === 'create'}
@@ -153,6 +179,9 @@
 		</div>
 	{/if}
 	{#if matchingFeedback?.message}<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive sm:col-span-2">{matchingFeedback.message}</p>{/if}
+	{#if hasSettlements}
+		<p class="rounded-md bg-surface-subtle px-3 py-2 text-sm text-on-surface-muted sm:col-span-2">Ya existen pagos o cobros: solo puedes editar nombre y contraparte.</p>
+	{/if}
 	<div class="flex justify-end gap-2 sm:col-span-2">
 		{#if onCancel}<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>{/if}
 		<ActionButton type="submit" disabled={mode === 'create' && cards.length === 0}>{mode === 'create' ? 'Guardar préstamo' : 'Guardar cambios'}</ActionButton>

@@ -55,6 +55,10 @@ class InMemoryAccountRepository implements AccountRepository {
 		throw new Error('Not used in movement tests.');
 	}
 
+	async updateWithOpeningMovement() {
+		throw new Error('Not used in movement tests.');
+	}
+
 	async updateActive() {
 		throw new Error('Not used in movement tests.');
 	}
@@ -195,11 +199,19 @@ class InMemoryLoanRepository implements LoanRepository {
 		throw new Error('Not used in movement tests.');
 	}
 
+	async updateWithOpeningMovement() {
+		throw new Error('Not used in movement tests.');
+	}
+
 	async cancel() {
 		throw new Error('Not used in movement tests.');
 	}
 
 	async delete() {
+		throw new Error('Not used in movement tests.');
+	}
+
+	async deleteWithMovementReversals() {
 		throw new Error('Not used in movement tests.');
 	}
 }

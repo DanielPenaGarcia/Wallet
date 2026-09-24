@@ -1,7 +1,9 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { Loan, LoanDirection, LoanStatus } from '$lib/modules/loans/types/loan.types';
 import { db, type Database } from '$lib/server/db';
-import { loans, movements } from '$lib/server/db/schema';
+import { accounts, loans, movements } from '$lib/server/db/schema';
+import type { AccountBalanceChangeInput } from '$lib/server/movements/inputs/account-balance-change.input';
+import type { UpdateMovementInput } from '$lib/server/movements/inputs/update-movement.input';
 import type { CreateLoanInput } from './inputs/create-loan.input';
 import type { UpdateLoanInput } from './inputs/update-loan.input';
 import type { LoanRepository } from './loan.repository';
@@ -80,18 +82,47 @@ export class DrizzleLoanRepository implements LoanRepository {
 	async update(input: UpdateLoanInput) {
 		await this.database
 			.update(loans)
-			.set({
-				name: input.name,
-				counterpartyName: input.counterpartyName,
-				principalAmountCents: input.principalAmountCents,
-				totalRepaymentCents: input.totalRepaymentCents,
-				installmentCount: input.installmentCount,
-				firstPaymentDate: input.firstPaymentDate,
-				currencyCode: input.currencyCode,
-				updatedAt: new Date().toISOString()
-			})
+			.set(this.loanUpdateValues(input, new Date().toISOString()))
 			.where(eq(loans.id, input.id))
 			.run();
+	}
+
+	async updateWithOpeningMovement(
+		input: UpdateLoanInput,
+		openingMovement: UpdateMovementInput,
+		balanceChanges: AccountBalanceChangeInput[]
+	) {
+		const now = new Date().toISOString();
+
+		this.database.transaction((tx) => {
+			tx
+				.update(movements)
+				.set({
+					type: openingMovement.type,
+					title: openingMovement.title,
+					description: openingMovement.description,
+					amountCents: openingMovement.amountCents,
+					currencyCode: openingMovement.currencyCode,
+					occurredAt: openingMovement.occurredAt,
+					sourceAccountId: openingMovement.sourceAccountId,
+					destinationAccountId: openingMovement.destinationAccountId,
+					categoryId: openingMovement.categoryId,
+					recurringExpenseId: openingMovement.recurringExpenseId,
+					recurringIncomeId: openingMovement.recurringIncomeId,
+					loanId: openingMovement.loanId,
+					updatedAt: now
+				})
+				.where(eq(movements.id, openingMovement.id))
+				.run();
+
+			this.applyBalanceChanges(tx, balanceChanges, now);
+
+			tx
+				.update(loans)
+				.set(this.loanUpdateValues(input, now))
+				.where(eq(loans.id, input.id))
+				.run();
+		});
 	}
 
 	async cancel(id: string) {
@@ -109,6 +140,61 @@ export class DrizzleLoanRepository implements LoanRepository {
 
 	async delete(id: string) {
 		await this.database.delete(loans).where(eq(loans.id, id)).run();
+	}
+
+	async deleteWithMovementReversals(
+		id: string,
+		movementIds: string[],
+		balanceChanges: AccountBalanceChangeInput[]
+	) {
+		const now = new Date().toISOString();
+
+		this.database.transaction((tx) => {
+			for (const movementId of movementIds) {
+				tx
+					.update(movements)
+					.set({
+						active: false,
+						updatedAt: now,
+						deletedAt: now
+					})
+					.where(eq(movements.id, movementId))
+					.run();
+			}
+
+			this.applyBalanceChanges(tx, balanceChanges, now);
+			tx.delete(loans).where(eq(loans.id, id)).run();
+		});
+	}
+
+	private loanUpdateValues(input: UpdateLoanInput, updatedAt: string) {
+		return {
+			name: input.name,
+			counterpartyName: input.counterpartyName,
+			principalAmountCents: input.principalAmountCents,
+			totalRepaymentCents: input.totalRepaymentCents,
+			installmentCount: input.installmentCount,
+			firstPaymentDate: input.firstPaymentDate,
+			currencyCode: input.currencyCode,
+			updatedAt
+		};
+	}
+
+	private applyBalanceChanges(
+		tx: Parameters<Parameters<Database['transaction']>[0]>[0],
+		balanceChanges: AccountBalanceChangeInput[],
+		updatedAt: string
+	) {
+		for (const change of balanceChanges) {
+			tx
+				.update(accounts)
+				.set({
+					balanceCents: change.newBalanceCents,
+					updatedAt
+				})
+				.where(eq(accounts.id, change.accountId))
+				.run();
+		}
 	}
 }
 

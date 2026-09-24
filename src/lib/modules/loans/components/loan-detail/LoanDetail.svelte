@@ -6,6 +6,7 @@
 	import { ActionButton } from '$lib/components/ui/action-button';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
+	import { InfoPopover } from '$lib/components/ui/info-popover';
 	import { formatCurrencyFromMinorUnits } from '$lib/shared/utils/format-currency';
 	import { formatIsoDate } from '$lib/shared/utils/format-iso-date';
 	import DeleteLoanForm from '../delete-loan-form/DeleteLoanForm.svelte';
@@ -36,6 +37,10 @@
 		if (type === 'loan_collection') return 'Cobro';
 		return 'Movimiento';
 	}
+
+	function metricLabel(label: string, title: string, description: string) {
+		return { label, title, description };
+	}
 </script>
 
 <div class="grid gap-6">
@@ -43,11 +48,20 @@
 		<Button href="/prestamos" variant="ghost" size="sm"><ArrowLeftIcon />Volver</Button>
 		{#if loan.status === 'active'}
 			<div class="flex flex-wrap justify-end gap-2">
-				<ActionButton type="button" intent="secondary" onclick={() => (editOpen = true)}><PencilIcon />Editar</ActionButton>
-				<ActionButton type="button" intent="danger" onclick={() => (deleteOpen = true)}><Trash2Icon />Eliminar</ActionButton>
+				<div class="flex items-center gap-1">
+					<ActionButton type="button" intent="secondary" onclick={() => (editOpen = true)}><PencilIcon />Editar</ActionButton>
+					<InfoPopover title="Editar préstamo" description="Permite cambiar términos permitidos. Si cambia el principal, también se ajusta el movimiento de apertura y el saldo de la cuenta." />
+				</div>
+				<div class="flex items-center gap-1">
+					<ActionButton type="button" intent="danger" onclick={() => (deleteOpen = true)}><Trash2Icon />Eliminar</ActionButton>
+					<InfoPopover title="Eliminar préstamo" description="Revierte movimientos activos vinculados y elimina el registro solo si las cuentas pueden quedar en un estado válido." />
+				</div>
 				<form method="POST" action="?/cancelLoan">
 					<input type="hidden" name="id" value={loan.id} />
-					<ActionButton type="submit" intent="danger">Cancelar préstamo</ActionButton>
+					<div class="flex items-center gap-1">
+						<ActionButton type="submit" intent="danger">Cancelar préstamo</ActionButton>
+						<InfoPopover title="Cancelar préstamo" description="Detiene el préstamo y conserva su historial. No revierte movimientos ni borra el registro." />
+					</div>
 				</form>
 			</div>
 		{/if}
@@ -58,49 +72,60 @@
 	<section class="rounded-lg border border-outline bg-surface p-5 shadow-sm">
 		<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 			<div>
-				<p class="text-xs font-bold tracking-[0.12em] text-primary uppercase">{loan.direction === 'borrowed' ? 'Por pagar' : 'Por cobrar'}</p>
+				<div class="flex items-center gap-1.5">
+					<p class="text-xs font-bold tracking-[0.12em] text-primary uppercase">{loan.direction === 'borrowed' ? 'Por pagar' : 'Por cobrar'}</p>
+					<InfoPopover
+						title={loan.direction === 'borrowed' ? 'Préstamo por pagar' : 'Préstamo por cobrar'}
+						description={loan.direction === 'borrowed' ? 'Dinero que recibiste y debes devolver.' : 'Dinero que entregaste y esperas cobrar.'}
+					/>
+				</div>
 				<h1 class="mt-1 text-2xl font-bold text-on-surface">{loan.name}</h1>
 				<p class="mt-1 text-sm text-on-surface-muted">{loan.counterpartyName}</p>
 			</div>
 			<span class="w-fit rounded-full px-2.5 py-1 text-xs font-bold {loan.status === 'active' ? 'bg-primary-container text-primary' : 'bg-surface-muted text-on-surface-muted'}">{loan.status === 'active' ? 'Activo' : 'Cancelado'}</span>
 		</div>
 		<div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+			{#each [
+				metricLabel('Principal', 'Principal', 'Dinero realmente recibido o entregado al abrir el préstamo.'),
+				metricLabel('Total contractual', 'Total contractual', 'Monto total acordado a pagar o cobrar durante toda la vida del préstamo.'),
+				metricLabel('Costo financiero', 'Costo financiero', 'Diferencia entre el total contractual y el principal.'),
+				metricLabel('Pendiente', 'Saldo pendiente', 'Parte del total contractual que aún falta por pagar o cobrar.'),
+				metricLabel('Pagado/cobrado', 'Total pagado/cobrado', 'Suma de pagos o cobros activos vinculados al préstamo.'),
+				metricLabel('Cuotas', 'Número de cuotas', 'Cantidad de pagos o cobros mensuales usados para generar el calendario.'),
+				metricLabel('Primer pago/cobro', 'Primer pago/cobro', 'Fecha inicial desde la que se construye el calendario mensual.'),
+				metricLabel('Próximo pago/cobro', 'Próxima cuota', 'Siguiente cuota con saldo pendiente según el calendario actual.')
+			] as item, index}
 			<div>
-				<p class="text-xs font-bold text-on-surface-muted">Principal</p>
+				<div class="flex items-center gap-1.5">
+					<p class="text-xs font-bold text-on-surface-muted">{item.label}</p>
+					<InfoPopover title={item.title} description={item.description} />
+				</div>
+				{#if index === 0}
 				<p class="mt-1 text-lg font-bold text-on-surface">{money(loan.principalAmountCents)}</p>
-			</div>
-			<div>
-				<p class="text-xs font-bold text-on-surface-muted">Total contractual</p>
+				{:else if index === 1}
 				<p class="mt-1 text-lg font-bold text-on-surface">{money(loan.totalRepaymentCents)}</p>
-			</div>
-			<div>
-				<p class="text-xs font-bold text-on-surface-muted">Costo financiero</p>
+				{:else if index === 2}
 				<p class="mt-1 text-lg font-bold text-on-surface">{money(loan.financingCostCents)}</p>
-			</div>
-			<div>
-				<p class="text-xs font-bold text-on-surface-muted">Pendiente</p>
+				{:else if index === 3}
 				<p class="mt-1 text-lg font-bold text-primary">{money(loan.outstandingAmountCents)}</p>
-			</div>
-			<div>
-				<p class="text-xs font-bold text-on-surface-muted">Pagado/cobrado</p>
+				{:else if index === 4}
 				<p class="mt-1 text-lg font-bold text-on-surface">{money(loan.paidAmountCents)}</p>
-			</div>
-			<div>
-				<p class="text-xs font-bold text-on-surface-muted">Cuotas</p>
+				{:else if index === 5}
 				<p class="mt-1 text-lg font-bold text-on-surface">{loan.installmentCount}</p>
-			</div>
-			<div>
-				<p class="text-xs font-bold text-on-surface-muted">Primer pago/cobro</p>
+				{:else if index === 6}
 				<p class="mt-1 text-lg font-bold text-on-surface">{formatIsoDate(loan.firstPaymentDate)}</p>
-			</div>
-			<div>
-				<p class="text-xs font-bold text-on-surface-muted">Próximo pago/cobro</p>
+				{:else}
 				<p class="mt-1 text-lg font-bold text-on-surface">{formatIsoDate(loan.nextInstallment?.dueDate ?? null)}</p>
+				{/if}
 			</div>
+			{/each}
 		</div>
 		<div class="mt-6">
 			<div class="flex items-center justify-between gap-3">
-				<p class="text-xs font-bold text-on-surface-muted">Progreso</p>
+				<div class="flex items-center gap-1.5">
+					<p class="text-xs font-bold text-on-surface-muted">Progreso</p>
+					<InfoPopover title="Progreso" description="Porcentaje del total contractual cubierto por pagos o cobros activos." />
+				</div>
 				<p class="text-xs font-bold text-on-surface-variant">{loan.progressPercentage}%</p>
 			</div>
 			<div class="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">

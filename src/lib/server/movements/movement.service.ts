@@ -19,6 +19,16 @@ import { MovementNotFoundError, MovementValidationError } from './movement.error
 import type { MovementRepository } from './movement.repository';
 import type { MovementOutput } from './outputs/movement.output';
 
+export type PreparedMovementUpdate = {
+	input: UpdateMovementInput;
+	balanceChanges: AccountBalanceChangeInput[];
+};
+
+export type PreparedMovementDeletion = {
+	ids: string[];
+	balanceChanges: AccountBalanceChangeInput[];
+};
+
 export class MovementService {
 	constructor(
 		private readonly movementRepository: MovementRepository,
@@ -56,6 +66,11 @@ export class MovementService {
 	}
 
 	async updateMovement(input: UpdateMovementInput) {
+		const prepared = await this.prepareMovementUpdate(input);
+		return this.movementRepository.updateWithBalanceChanges(prepared.input, prepared.balanceChanges);
+	}
+
+	async prepareMovementUpdate(input: UpdateMovementInput): Promise<PreparedMovementUpdate> {
 		const original = await this.getActiveMovement(input.id);
 		const normalizedInput = {
 			...this.normalizeMovementInput(input),
@@ -78,19 +93,51 @@ export class MovementService {
 		);
 		this.validateBalanceChanges(finalBalanceChanges, accountsById);
 
-		return this.movementRepository.updateWithBalanceChanges(normalizedInput, finalBalanceChanges);
+		return { input: normalizedInput, balanceChanges: finalBalanceChanges };
 	}
 
 	async deleteMovement(id: string) {
-		const movement = await this.getActiveMovement(id);
-		const accountsById = await this.getMovementAccounts(this.movementToInput(movement));
-		const balanceChanges = this.balanceChangesFromDeltas(
-			accountsById,
-			this.reverseDeltas(this.calculateImpactDeltas(this.movementToInput(movement)))
-		);
-		this.validateBalanceChanges(balanceChanges, accountsById);
+		const prepared = await this.prepareMovementDeletionBatch([id]);
+		await this.movementRepository.softDeleteWithBalanceChanges(id, prepared.balanceChanges);
+	}
 
-		await this.movementRepository.softDeleteWithBalanceChanges(movement.id, balanceChanges);
+	async prepareMovementDeletionBatch(ids: string[]): Promise<PreparedMovementDeletion> {
+		const movements = [];
+		for (const id of ids) movements.push(await this.getActiveMovement(id));
+
+		const accountIds = new Set<string>();
+		for (const movement of movements) {
+			for (const accountId of this.accountIdsForMovement(this.movementToInput(movement))) accountIds.add(accountId);
+		}
+
+		const accountsById = new Map<string, Account>();
+		for (const accountId of accountIds) {
+			const account = await this.accountRepository.findById(accountId);
+			if (account) accountsById.set(account.id, account);
+		}
+
+		const workingAccounts = new Map(accountsById);
+		for (const movement of movements) {
+			const balanceChanges = this.balanceChangesFromDeltas(
+				workingAccounts,
+				this.reverseDeltas(this.calculateImpactDeltas(this.movementToInput(movement)))
+			);
+			this.validateBalanceChanges(balanceChanges, workingAccounts);
+			for (const change of balanceChanges) {
+				const account = workingAccounts.get(change.accountId);
+				if (account) workingAccounts.set(account.id, { ...account, balanceCents: change.newBalanceCents });
+			}
+		}
+
+		const balanceChanges = Array.from(workingAccounts.values())
+			.map((account) => {
+				const original = accountsById.get(account.id);
+				if (!original || original.balanceCents === account.balanceCents) return null;
+				return { accountId: account.id, newBalanceCents: account.balanceCents };
+			})
+			.filter((change): change is AccountBalanceChangeInput => change !== null);
+
+		return { ids: movements.map((movement) => movement.id), balanceChanges };
 	}
 
 	private normalizeMovementInput<T extends CreateMovementInput>(input: T): T {

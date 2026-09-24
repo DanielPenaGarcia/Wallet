@@ -65,9 +65,8 @@ export class LoanService {
 
 		const normalizedInput = this.normalizeUpdateInput(input);
 		this.assertValidLoanTerms(normalizedInput);
-		await this.assertEditableAgainstSettlements(loan.id, normalizedInput);
-		await this.updateOpeningMovement(loan, normalizedInput);
-		await this.loanRepository.update(normalizedInput);
+		await this.assertEditableAgainstSettlements(loan, normalizedInput);
+		await this.updateOpeningMovementAtomically(loan, normalizedInput);
 	}
 
 	async cancelLoan(id: string): Promise<void> {
@@ -81,8 +80,7 @@ export class LoanService {
 		const loan = await this.loanRepository.findById(id.trim());
 		if (!loan) throw new LoanNotFoundError();
 
-		const movements = await this.movements.listMovements({ loanId: loan.id });
-		const orderedMovements = movements.sort((a, b) => {
+		const orderedMovements = (await this.movements.listMovements({ loanId: loan.id })).sort((a, b) => {
 			const directionOrder = loan.direction === 'borrowed'
 				? Number(this.isLoanOpeningMovement(a.type)) - Number(this.isLoanOpeningMovement(b.type))
 				: Number(this.isLoanOpeningMovement(b.type)) - Number(this.isLoanOpeningMovement(a.type));
@@ -90,7 +88,14 @@ export class LoanService {
 		});
 
 		try {
-			for (const movement of orderedMovements) await this.movements.deleteMovement(movement.id);
+			const preparedDeletion = await this.movements.prepareMovementDeletionBatch(
+				orderedMovements.map((movement) => movement.id)
+			);
+			await this.loanRepository.deleteWithMovementReversals(
+				loan.id,
+				preparedDeletion.ids,
+				preparedDeletion.balanceChanges
+			);
 		} catch (error) {
 			if (error instanceof MovementValidationError) {
 				throw new LoanValidationError({
@@ -99,8 +104,6 @@ export class LoanService {
 			}
 			throw error;
 		}
-
-		await this.loanRepository.delete(loan.id);
 	}
 
 	async registerPayment(input: LoanSettlementInput): Promise<void> {
@@ -155,34 +158,78 @@ export class LoanService {
 		});
 	}
 
-	private async assertEditableAgainstSettlements(loanId: string, input: UpdateLoanInput) {
-		const paidAmountCents = await this.loanRepository.getPaymentTotal(loanId);
-		if (paidAmountCents > input.totalRepaymentCents) {
-			throw new LoanValidationError({
-				totalRepayment: ['El total contractual no puede ser menor que lo ya pagado o cobrado.']
-			});
+	private async assertEditableAgainstSettlements(loan: Loan, input: UpdateLoanInput) {
+		const errors: Record<string, string[]> = {};
+		const paidAmountCents = await this.loanRepository.getPaymentTotal(loan.id);
+
+		if (input.currencyCode !== loan.currencyCode) {
+			errors.currencyCode = ['La moneda del préstamo no se puede cambiar después de crearlo.'];
 		}
+		if (paidAmountCents > input.totalRepaymentCents) {
+			errors.totalRepayment = ['El total contractual no puede ser menor que lo ya pagado o cobrado.'];
+		}
+
+		if (paidAmountCents > 0) {
+			if (input.principalAmountCents !== loan.principalAmountCents) {
+				errors.principalAmount = ['No puedes cambiar el principal cuando ya existen pagos o cobros.'];
+			}
+			if (input.totalRepaymentCents !== loan.totalRepaymentCents) {
+				errors.totalRepayment = ['No puedes cambiar el total contractual cuando ya existen pagos o cobros.'];
+			}
+			if (input.installmentCount !== loan.installmentCount) {
+				errors.installmentCount = ['No puedes cambiar las cuotas cuando ya existen pagos o cobros.'];
+			}
+			if (input.firstPaymentDate !== loan.firstPaymentDate) {
+				errors.firstPaymentDate = ['No puedes cambiar el calendario cuando ya existen pagos o cobros.'];
+			}
+		}
+
+		if (Object.keys(errors).length > 0) throw new LoanValidationError(errors);
 	}
 
-	private async updateOpeningMovement(loan: Loan, input: UpdateLoanInput) {
+	private async updateOpeningMovementAtomically(loan: Loan, input: UpdateLoanInput) {
 		const openingType = loan.direction === 'borrowed' ? 'loan_received' : 'loan_disbursement';
 		const openingMovement = (await this.movements.listMovements({ loanId: loan.id, type: openingType }))[0];
 		if (!openingMovement) throw new LoanValidationError({ id: ['No se encontró el movimiento de apertura del préstamo.'] });
 
-		await this.movements.updateMovement({
-			id: openingMovement.id,
-			type: openingMovement.type,
-			title: loan.direction === 'borrowed' ? `Préstamo recibido: ${input.name}` : `Préstamo entregado: ${input.name}`,
-			description: `Contraparte: ${input.counterpartyName}`,
-			amountCents: input.principalAmountCents,
-			currencyCode: input.currencyCode,
-			occurredAt: openingMovement.occurredAt,
-			sourceAccountId: openingMovement.sourceAccountId,
-			destinationAccountId: openingMovement.destinationAccountId,
-			categoryId: null,
-			recurringExpenseId: null,
-			recurringIncomeId: null,
-			loanId: loan.id
+		try {
+			const preparedUpdate = await this.movements.prepareMovementUpdate({
+				id: openingMovement.id,
+				type: openingMovement.type,
+				title: loan.direction === 'borrowed' ? `Préstamo recibido: ${input.name}` : `Préstamo entregado: ${input.name}`,
+				description: `Contraparte: ${input.counterpartyName}`,
+				amountCents: input.principalAmountCents,
+				currencyCode: loan.currencyCode,
+				occurredAt: openingMovement.occurredAt,
+				sourceAccountId: openingMovement.sourceAccountId,
+				destinationAccountId: openingMovement.destinationAccountId,
+				categoryId: null,
+				recurringExpenseId: null,
+				recurringIncomeId: null,
+				loanId: loan.id
+			});
+
+			await this.loanRepository.updateWithOpeningMovement(
+				input,
+				preparedUpdate.input,
+				preparedUpdate.balanceChanges
+			);
+		} catch (error) {
+			if (error instanceof MovementValidationError) {
+				throw this.loanErrorFromMovementError(error);
+			}
+			throw error;
+		}
+	}
+
+	private loanErrorFromMovementError(error: MovementValidationError) {
+		const balanceError = error.errors.balance?.[0];
+		return new LoanValidationError({
+			principalAmount: [
+				balanceError
+					? `No puedes ajustar el principal porque ${balanceError.toLowerCase()}`
+					: 'No puedes ajustar el principal porque el movimiento de apertura no puede revertirse de forma segura.'
+			]
 		});
 	}
 

@@ -34,6 +34,12 @@ Loan movements are not ordinary income or expense. They do not use category, rec
 
 Payments and collections cannot exceed the outstanding contractual balance.
 
-Active loans can be edited without changing their direction or opening account. Editing the principal updates the linked opening movement so the real-money account balance remains derived from movements instead of from the loan row alone.
+Active loans can be edited without changing their direction, opening account, or currency. The currency is fixed at creation because movement totals are stored in minor units without conversion.
 
-Deleting a loan reverses its active linked movements first and then removes the loan record. If any reversal would leave an account with an invalid balance, deletion is rejected.
+Before payments or collections exist, editing the principal updates the linked opening movement so the real-money account balance remains derived from movements instead of from the loan row alone. The loan update, opening movement update, and account balance update are persisted atomically.
+
+After payments or collections exist, only descriptive fields can change: name and counterparty. Principal, total repayment, installment count, first payment date, and currency remain locked because changing them would reinterpret the existing schedule. A future restructuring flow should be explicit instead of overloading ordinary edit.
+
+Deleting a loan reverses its active linked movements first and then removes the loan record. Borrowed loans reverse payments before opening; lent loans reverse opening before collections. If any reversal would leave an account with an invalid balance, deletion is rejected. Reversals, balance updates, and loan deletion are atomic.
+
+Cancelling a loan keeps the row and movement history intact, but prevents future loan edits and settlements.
