@@ -18,12 +18,12 @@
 </script>
 
 <section class="overflow-hidden rounded-lg border border-outline bg-surface shadow-sm">
-	<div class="flex items-center justify-between gap-4 border-b border-outline px-5 py-4">
-		<div>
+	<div class="flex flex-col gap-3 border-b border-outline px-4 py-4 sm:px-5 md:flex-row md:items-center md:justify-between">
+		<div class="min-w-0">
 			<h2 class="text-lg font-bold text-on-surface">Gastos recurrentes</h2>
-			<p class="mt-1 text-sm text-on-surface-muted">Obligaciones periódicas configuradas para seguimiento.</p>
+			<p class="mt-1 break-words text-sm text-on-surface-muted">Obligaciones periódicas configuradas para seguimiento.</p>
 		</div>
-		<ActionButton type="button" onclick={onCreate}><PlusIcon />Registrar</ActionButton>
+		<ActionButton type="button" class="w-full md:w-auto" onclick={onCreate}><PlusIcon />Registrar</ActionButton>
 	</div>
 	{#if expenses.length === 0}
 		<div class="px-6 py-12 text-center">
@@ -32,7 +32,66 @@
 			<p class="mt-1 text-sm text-on-surface-muted">Registra servicios, suscripciones u obligaciones frecuentes.</p>
 		</div>
 	{:else}
-		<div class="overflow-x-auto">
+		<div class="grid gap-3 p-4 lg:hidden">
+			{#each expenses as expense (expense.id)}
+				<article class="rounded-md bg-surface-subtle p-4">
+					<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+						<div class="min-w-0">
+							<p class="break-words font-bold text-on-surface">{expense.name}</p>
+							<div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-on-surface-variant">
+								{#if expense.category?.color}<span class="size-3 rounded-full" style={`background-color: ${expense.category.color}`}></span>{/if}
+								<span class="break-words">{expense.category?.name ?? 'Sin categoría'}</span>
+								{#if expense.category?.isEssential}
+									<span class="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">Esencial</span>
+								{/if}
+							</div>
+						</div>
+						<span class="w-fit rounded-full px-2.5 py-1 text-xs font-bold {expense.isActive ? 'bg-secondary text-on-secondary' : 'bg-surface-muted text-on-surface-muted'}">
+							{expense.isActive ? 'Activo' : 'Inactivo'}
+						</span>
+					</div>
+					<div class="mt-4 grid gap-3 sm:grid-cols-2">
+						<div>
+							<p class="text-xs font-bold text-on-surface-muted">Cuenta</p>
+							{#if expense.paymentAccount}
+								<p class="mt-1 break-words font-semibold text-on-surface">{expense.paymentAccount.name}</p>
+								<p class="text-xs text-on-surface-muted">
+									{getAccountTypeLabel(expense.paymentAccount.type)}
+									{#if expense.paymentAccount.cardLastFourDigits}
+										· •••• {expense.paymentAccount.cardLastFourDigits}
+									{/if}
+								</p>
+							{:else}
+								<span class="mt-1 inline-flex rounded-full bg-surface-muted px-2.5 py-1 text-xs font-bold text-on-surface-muted">Sin asignar</span>
+							{/if}
+						</div>
+						<div>
+							<p class="text-xs font-bold text-on-surface-muted">Monto</p>
+							<p class="mt-1 break-words font-semibold text-on-surface">{formatRecurringExpenseAmount(expense.amountCents)}</p>
+							<p class="text-xs text-on-surface-muted">{getRecurringExpenseAmountKindLabel(expense.amountKind)}</p>
+						</div>
+						<div>
+							<p class="text-xs font-bold text-on-surface-muted">Frecuencia</p>
+							<p class="mt-1 break-words text-sm text-on-surface-variant">{getRecurringExpenseFrequencyLabel(expense)}</p>
+							<p class="break-words text-xs text-on-surface-muted">{formatPaymentSchedule(expense.paymentSchedule)}</p>
+						</div>
+						<div>
+							<p class="text-xs font-bold text-on-surface-muted">Próximo</p>
+							<p class="mt-1 font-semibold text-on-surface">{formatIsoDate(expense.nextOccurrenceAt)}</p>
+							<p class="text-xs text-on-surface-muted">Último pago: {formatIsoDate(expense.lastPaidAt)}</p>
+						</div>
+					</div>
+					{#if expense.statementDay}
+						<p class="mt-3 text-xs text-on-surface-muted">Corte: día {expense.statementDay}</p>
+					{/if}
+					<div class="mt-4 grid grid-cols-2 gap-2">
+						<ActionButton type="button" variant="ghost" class="w-full" onclick={() => onEdit(expense)} aria-label={`Editar gasto ${expense.name}`} title="Editar gasto"><PencilIcon /></ActionButton>
+						<ActionButton type="button" intent="danger" class="w-full" onclick={() => onDelete(expense)} aria-label={`Eliminar gasto ${expense.name}`} title="Eliminar gasto"><Trash2Icon /></ActionButton>
+					</div>
+				</article>
+			{/each}
+		</div>
+		<div class="hidden overflow-x-auto lg:block">
 			<table class="w-full min-w-[1240px] text-left text-sm">
 				<thead class="bg-surface-subtle text-xs font-bold tracking-wide text-on-surface-muted uppercase">
 					<tr>

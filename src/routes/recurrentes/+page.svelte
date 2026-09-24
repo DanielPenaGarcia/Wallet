@@ -2,6 +2,7 @@
 	import ReceiptTextIcon from '@lucide/svelte/icons/receipt-text';
 	import TrendingUpIcon from '@lucide/svelte/icons/trending-up';
 	import * as Tabs from '$lib/components/ui/tabs';
+	import SectionHeading from '$lib/modules/navigation/components/section-heading/SectionHeading.svelte';
 	import RecurringExpenseSection from '$lib/modules/recurring-expenses/components/recurring-expense-section/RecurringExpenseSection.svelte';
 	import type { RecurringExpenseFormFeedback } from '$lib/modules/recurring-expenses/types/recurring-expense-form-feedback.types';
 	import RecurringIncomeSection from '$lib/modules/recurring-incomes/components/recurring-income-section/RecurringIncomeSection.svelte';
@@ -19,21 +20,22 @@
 </script>
 
 <section class="grid gap-6">
-	<div>
-		<p class="text-sm font-semibold text-primary">Recurrentes</p>
-		<h2 class="mt-1 text-2xl font-bold text-on-background">Recurrentes</h2>
-		<p class="mt-2 text-sm text-on-surface-muted">Organiza movimientos periódicos de gastos e ingresos.</p>
-	</div>
+	<SectionHeading
+		eyebrow="Recurrentes"
+		title="Recurrentes"
+		description="Organiza movimientos periódicos de gastos e ingresos."
+		accent="primary"
+	/>
 
 	<Tabs.Root value={defaultTab} class="gap-5">
 		<Tabs.List
-			class="grid w-full grid-cols-2 gap-2 rounded-lg border border-outline bg-surface p-1.5 shadow-sm group-data-horizontal/tabs:h-14 sm:w-fit sm:min-w-80"
+			class="grid h-auto w-full grid-cols-2 gap-2 rounded-lg border border-outline bg-surface p-1.5 shadow-sm sm:w-fit sm:min-w-80"
 		>
-			<Tabs.Trigger value="expenses" class="h-8 px-4 py-3 font-bold">
+			<Tabs.Trigger value="expenses" class="h-10 px-3 py-2 font-bold">
 				<ReceiptTextIcon class="size-4" />
 				Gastos
 			</Tabs.Trigger>
-			<Tabs.Trigger value="income" class="h-8 px-4 py-3 font-bold">
+			<Tabs.Trigger value="income" class="h-10 px-3 py-2 font-bold">
 				<TrendingUpIcon class="size-4" />
 				Ingresos
 			</Tabs.Trigger>

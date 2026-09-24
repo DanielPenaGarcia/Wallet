@@ -19,38 +19,38 @@
 </script>
 
 {#if loans.length === 0}
-	<div class="rounded-lg border border-outline bg-surface px-6 py-10 text-center shadow-sm">
+	<div class="rounded-lg border border-outline bg-surface px-4 py-10 text-center shadow-sm sm:px-6">
 		<p class="font-bold text-on-surface-variant">Sin préstamos registrados</p>
 		<p class="mt-1 text-sm text-on-surface-muted">Registra un préstamo para ver su calendario y movimientos asociados.</p>
 	</div>
 {:else}
 	<div class="grid gap-4 lg:grid-cols-2">
 		{#each loans as loan (loan.id)}
-			<article class="rounded-lg border border-outline bg-surface p-5 shadow-sm">
-				<div class="flex items-start justify-between gap-4">
+			<article class="rounded-lg border border-outline bg-surface p-4 shadow-sm sm:p-5">
+				<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
 					<div class="min-w-0">
 						<p class="text-xs font-bold tracking-[0.12em] text-primary uppercase">{loan.direction === 'borrowed' ? 'Por pagar' : 'Por cobrar'}</p>
-						<h3 class="mt-1 truncate text-lg font-bold text-on-surface">{loan.name}</h3>
-						<p class="mt-1 truncate text-sm text-on-surface-muted">{loan.counterpartyName}</p>
+						<h3 class="mt-1 break-words text-lg font-bold text-on-surface">{loan.name}</h3>
+						<p class="mt-1 break-words text-sm text-on-surface-muted">{loan.counterpartyName}</p>
 					</div>
-					<span class="rounded-full px-2.5 py-1 text-xs font-bold {statusClass(loan)}">{statusLabel(loan)}</span>
+					<span class="w-fit rounded-full px-2.5 py-1 text-xs font-bold {statusClass(loan)}">{statusLabel(loan)}</span>
 				</div>
-				<div class="mt-5 grid grid-cols-2 gap-3">
-					<div>
+				<div class="mt-5 grid gap-3 sm:grid-cols-2">
+					<div class="rounded-md bg-surface-subtle p-3">
 						<p class="text-xs font-bold text-on-surface-muted">Principal</p>
-						<p class="mt-1 font-bold text-on-surface">{formatCurrencyFromMinorUnits(loan.principalAmountCents, loan.currencyCode)}</p>
+						<p class="mt-1 break-words font-bold text-on-surface">{formatCurrencyFromMinorUnits(loan.principalAmountCents, loan.currencyCode)}</p>
 					</div>
-					<div>
+					<div class="rounded-md bg-surface-subtle p-3">
 						<p class="text-xs font-bold text-on-surface-muted">Total contractual</p>
-						<p class="mt-1 font-bold text-on-surface">{formatCurrencyFromMinorUnits(loan.totalRepaymentCents, loan.currencyCode)}</p>
+						<p class="mt-1 break-words font-bold text-on-surface">{formatCurrencyFromMinorUnits(loan.totalRepaymentCents, loan.currencyCode)}</p>
 					</div>
-					<div>
+					<div class="rounded-md bg-surface-subtle p-3">
 						<p class="text-xs font-bold text-on-surface-muted">Pendiente</p>
-						<p class="mt-1 font-bold text-on-surface">{formatCurrencyFromMinorUnits(loan.outstandingAmountCents, loan.currencyCode)}</p>
+						<p class="mt-1 break-words font-bold text-on-surface">{formatCurrencyFromMinorUnits(loan.outstandingAmountCents, loan.currencyCode)}</p>
 					</div>
-					<div>
+					<div class="rounded-md bg-surface-subtle p-3">
 						<p class="text-xs font-bold text-on-surface-muted">Próxima fecha</p>
-						<p class="mt-1 font-bold text-on-surface">{formatIsoDate(loan.nextInstallment?.dueDate ?? null)}</p>
+						<p class="mt-1 break-words font-bold text-on-surface">{formatIsoDate(loan.nextInstallment?.dueDate ?? null)}</p>
 					</div>
 				</div>
 				<div class="mt-5">
@@ -62,8 +62,8 @@
 						<div class="h-full rounded-full bg-primary" style:width={`${loan.progressPercentage}%`}></div>
 					</div>
 				</div>
-				<div class="mt-5 flex justify-end">
-					<Button href={`/prestamos/${loan.id}`} variant="outline" size="sm">
+				<div class="mt-5 grid sm:flex sm:justify-end">
+					<Button href={`/prestamos/${loan.id}`} variant="outline" size="sm" class="w-full sm:w-auto">
 						Ver detalle
 						<ArrowRightIcon />
 					</Button>

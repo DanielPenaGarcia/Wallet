@@ -44,7 +44,7 @@
 			{#each planning.alerts as alert}
 				<div class="flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">
 					<AlertTriangleIcon class="mt-0.5 size-4 shrink-0" />
-					<p>{alert}</p>
+					<p class="min-w-0 break-words">{alert}</p>
 				</div>
 			{/each}
 		</section>
@@ -59,32 +59,32 @@
 			{#snippet icon()}<CalendarCheckIcon class="size-5 text-primary" />{/snippet}
 		</PlanningMetricCard>
 		<PlanningMetricCard
+			label="Dinero existente"
+			value={money(planning.existingRealMoneyCents)}
+			description={`${money(planning.existingMoneyUsedForObligationsCents)} ya cubre obligaciones del periodo`}
+		>
+			{#snippet icon()}<WalletIcon class="size-5 text-primary" />{/snippet}
+		</PlanningMetricCard>
+		<PlanningMetricCard
 			label="Debes apartar"
 			value={money(planning.nextIncomeReservedForObligationsCents)}
-			description={`${money(planning.existingMoneyUsedForObligationsCents)} ya cubierto con dinero existente`}
+			description={`${money(planning.uncoveredCashObligationsCents)} de obligaciones sin cubrir`}
 		>
 			{#snippet icon()}<LandmarkIcon class="size-5 text-primary" />{/snippet}
 		</PlanningMetricCard>
 		<PlanningMetricCard
-			label="Recomendado para metas"
-			value={money(planning.recommendedGoalAllocationCents)}
-			description={`${money(planning.nextIncomeAvailableForGoalsCents)} disponible después de apartar`}
-		>
-			{#snippet icon()}<TargetIcon class="size-5 text-primary" />{/snippet}
-		</PlanningMetricCard>
-		<PlanningMetricCard
 			label="Te quedará libre"
 			value={money(planning.remainingNextIncomeCents)}
-			description={`${money(planning.uncoveredCashObligationsCents)} de obligaciones sin cubrir`}
+			description={`${money(planning.recommendedGoalAllocationCents)} recomendado para metas`}
 		>
 			{#snippet icon()}<PiggyBankIcon class="size-5 text-primary" />{/snippet}
 		</PlanningMetricCard>
 	</section>
 
 	<section class="rounded-lg border border-outline bg-surface shadow-sm">
-		<div class="border-b border-outline px-5 py-4">
+		<div class="border-b border-outline px-4 py-4 sm:px-5">
 			<h2 class="font-bold text-on-surface">Periodo planificado</h2>
-			<p class="mt-1 text-sm text-on-surface-muted">
+			<p class="mt-1 break-words text-sm text-on-surface-muted">
 				{#if planning.period.startDate}
 					{formatIsoDate(planning.period.startDate)} - {planning.period.endDate ? formatIsoDate(planning.period.endDate) : 'horizonte provisional'}
 				{:else}
@@ -92,7 +92,7 @@
 				{/if}
 			</p>
 		</div>
-		<div class="grid gap-5 p-5 xl:grid-cols-[1.2fr_0.8fr]">
+		<div class="grid gap-5 p-4 sm:p-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
 			<div class="grid gap-3">
 				<div class="rounded-md bg-surface-subtle p-4 text-sm text-on-surface-muted">
 					Dinero real existente: <span class="font-bold text-on-surface">{money(planning.existingRealMoneyCents)}</span>
@@ -132,11 +132,11 @@
 
 	{#if planning.unassignedRecurringExpenses.length > 0}
 		<section class="rounded-lg border border-outline bg-surface shadow-sm">
-			<div class="flex items-center gap-2 border-b border-outline px-5 py-4">
-				<WalletIcon class="size-5 text-primary" />
-				<h2 class="font-bold text-on-surface">Requieren cuenta de pago</h2>
+			<div class="flex items-center gap-2 border-b border-outline px-4 py-4 sm:px-5">
+				<WalletIcon class="size-5 shrink-0 text-primary" />
+				<h2 class="min-w-0 break-words font-bold text-on-surface">Requieren cuenta de pago</h2>
 			</div>
-			<div class="grid gap-3 p-5">
+			<div class="grid gap-3 p-4 sm:p-5">
 				{#each planning.unassignedRecurringExpenses as expense (expense.id)}
 					<PlanningAmountRow
 						title={expense.title}
@@ -151,11 +151,11 @@
 
 	<section class="grid gap-6 xl:grid-cols-2">
 		<div class="rounded-lg border border-outline bg-surface shadow-sm">
-			<div class="flex items-center gap-2 border-b border-outline px-5 py-4">
-				<CreditCardIcon class="size-5 text-primary" />
-				<h2 class="font-bold text-on-surface">Consumo esperado con crédito</h2>
+			<div class="flex items-center gap-2 border-b border-outline px-4 py-4 sm:px-5">
+				<CreditCardIcon class="size-5 shrink-0 text-primary" />
+				<h2 class="min-w-0 break-words font-bold text-on-surface">Consumo esperado con crédito</h2>
 			</div>
-			<div class="grid gap-3 p-5">
+			<div class="grid gap-3 p-4 sm:p-5">
 				{#if planning.creditConsumptions.length > 0}
 					{#each planning.creditConsumptions as consumption (consumption.id)}
 						<PlanningAmountRow
@@ -171,20 +171,20 @@
 		</div>
 
 		<div class="rounded-lg border border-outline bg-surface shadow-sm">
-			<div class="flex items-center gap-2 border-b border-outline px-5 py-4">
-				<TargetIcon class="size-5 text-primary" />
-				<h2 class="font-bold text-on-surface">Distribución hacia metas</h2>
+			<div class="flex items-center gap-2 border-b border-outline px-4 py-4 sm:px-5">
+				<TargetIcon class="size-5 shrink-0 text-primary" />
+				<h2 class="min-w-0 break-words font-bold text-on-surface">Distribución hacia metas</h2>
 			</div>
-			<div class="grid gap-3 p-5">
+			<div class="grid gap-3 p-4 sm:p-5">
 				{#if planning.goalAllocations.length > 0}
 					{#each planning.goalAllocations as goal (goal.goalId)}
 						<div class="rounded-md bg-surface-subtle p-4">
-							<div class="flex items-center justify-between gap-3">
-								<p class="font-bold text-on-surface">{goal.name}</p>
-								<p class="text-sm font-bold text-primary">{goal.distributionPercentage}%</p>
+							<div class="grid gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+								<p class="min-w-0 break-words font-bold text-on-surface">{goal.name}</p>
+								<p class="text-sm font-bold text-primary sm:text-right">{goal.distributionPercentage}%</p>
 							</div>
-							<p class="mt-2 text-lg font-bold text-on-surface">{money(goal.allocatedAmountCents)}</p>
-							<p class="mt-1 text-xs text-on-surface-muted">Restante de meta: {money(goal.remainingAmountCents)}</p>
+							<p class="mt-2 break-words text-lg font-bold text-on-surface">{money(goal.allocatedAmountCents)}</p>
+							<p class="mt-1 break-words text-xs text-on-surface-muted">Restante de meta: {money(goal.remainingAmountCents)}</p>
 						</div>
 					{/each}
 				{:else}

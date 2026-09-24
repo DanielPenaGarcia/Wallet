@@ -129,77 +129,80 @@
 </script>
 
 <section class="overflow-hidden rounded-lg border border-outline bg-surface shadow-sm">
-	<div class="flex flex-col gap-4 border-b border-outline px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-		<div>
+	<div class="flex flex-col gap-4 border-b border-outline px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+		<div class="min-w-0">
 			<h2 class="text-lg font-bold text-on-surface">Lista de movimientos</h2>
 			<p class="mt-1 text-sm text-on-surface-muted">Movimientos ordenados por fecha financiera.</p>
 		</div>
-		<div class="flex flex-wrap gap-2">
-			<ActionButton type="button" intent="secondary" onclick={onExport}><DownloadIcon />Exportar</ActionButton>
-			<ActionButton type="button" intent="secondary" onclick={onBulkCreate}><ListPlusIcon />Registro masivo</ActionButton>
-			<ActionButton type="button" intent="secondary" onclick={toggleSelectionMode}><ListChecksIcon />{selectingMovements ? 'Cancelar selección' : 'Seleccionar movimientos'}</ActionButton>
-			<ActionButton type="button" onclick={onCreate}><PlusIcon />Nuevo movimiento</ActionButton>
+		<div class="grid gap-2 sm:grid-cols-2 lg:flex lg:flex-wrap lg:justify-end">
+			<ActionButton type="button" intent="secondary" class="w-full lg:w-auto" onclick={onExport}><DownloadIcon />Exportar</ActionButton>
+			<ActionButton type="button" intent="secondary" class="w-full lg:w-auto" onclick={onBulkCreate}><ListPlusIcon />Registro masivo</ActionButton>
+			<ActionButton type="button" intent="secondary" class="w-full lg:w-auto" onclick={toggleSelectionMode}><ListChecksIcon />{selectingMovements ? 'Cancelar selección' : 'Seleccionar movimientos'}</ActionButton>
+			<ActionButton type="button" class="w-full lg:w-auto" onclick={onCreate}><PlusIcon />Nuevo movimiento</ActionButton>
 		</div>
 	</div>
-	<form method="GET" class="grid gap-4 border-b border-outline bg-surface-subtle px-5 py-4">
-		<div>
-			<p class="text-sm font-bold text-on-surface">Filtros</p>
-			<p class="mt-1 text-xs text-on-surface-muted">Consulta por periodo, cuenta o categoría.</p>
-		</div>
-		<div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-			<div class="grid gap-2">
-				<Label for="movement-period-start">Fecha inicio</Label>
-				<Input id="movement-period-start" name="startDate" type="date" value={filters.startDate} class="h-11 border-outline bg-surface" />
+	<details class="border-b border-outline bg-surface-subtle" open={hasActiveFilters}>
+		<summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-bold text-on-surface sm:px-5 [&::-webkit-details-marker]:hidden">
+			<span>Filtros</span>
+			<span class="text-xs font-semibold text-on-surface-muted">{hasActiveFilters ? 'Activos' : 'Mostrar'}</span>
+		</summary>
+		<form method="GET" class="grid gap-4 px-4 pb-4 sm:px-5">
+			<p class="text-xs text-on-surface-muted">Consulta por periodo, cuenta o categoría.</p>
+			<div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+				<div class="grid gap-2">
+					<Label for="movement-period-start">Fecha inicio</Label>
+					<Input id="movement-period-start" name="startDate" type="date" value={filters.startDate} class="h-11 border-outline bg-surface" />
+				</div>
+				<div class="grid gap-2">
+					<Label for="movement-period-end">Fecha fin</Label>
+					<Input id="movement-period-end" name="endDate" type="date" value={filters.endDate} class="h-11 border-outline bg-surface" />
+				</div>
+				<div class="grid gap-2">
+					<Label for="movement-card-filter">Cuenta</Label>
+					<Select.Root type="single" name="cardId" value={filters.cardId || allFilterValue} items={[{ value: allFilterValue, label: 'Todas las cuentas' }, ...cards.map((card) => ({ value: card.id, label: formatCardListItemLabel(card) }))]}>
+						<Select.Trigger id="movement-card-filter" class="h-11 w-full border-outline bg-surface px-3">
+							<span class="truncate">{selectedCardLabel}</span>
+						</Select.Trigger>
+						<Select.Content>
+							<Select.Item value={allFilterValue} label="Todas las cuentas">Todas las cuentas</Select.Item>
+							{#each cards as card (card.id)}
+								<Select.Item value={card.id} label={formatCardListItemLabel(card)}>{formatCardListItemLabel(card)}</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
+				</div>
+				<CategorySelectField
+					id="movement-category-filter"
+					name="categoryId"
+					label="Categoría"
+					{categories}
+					allowAll
+					allValue={allFilterValue}
+					allLabel="Todas las categorías"
+					bind:value={categoryFilterValue}
+				/>
+				<div class="grid gap-2">
+					<Label for="movement-type-filter">Tipo</Label>
+					<Select.Root type="single" name="type" bind:value={movementTypeFilterValue} items={typeItems}>
+						<Select.Trigger id="movement-type-filter" class="h-11 w-full border-outline bg-surface px-3">
+							<span class="truncate">{selectedTypeLabel}</span>
+						</Select.Trigger>
+						<Select.Content>
+							{#each typeItems as item}
+								<Select.Item value={item.value} label={item.label}>{item.label}</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
+				</div>
 			</div>
-			<div class="grid gap-2">
-				<Label for="movement-period-end">Fecha fin</Label>
-				<Input id="movement-period-end" name="endDate" type="date" value={filters.endDate} class="h-11 border-outline bg-surface" />
+			<div class="grid gap-2 sm:flex sm:flex-wrap">
+				<ActionButton type="submit" intent="secondary" class="w-full sm:w-auto"><SearchIcon />Consultar</ActionButton>
+				{#if hasActiveFilters}
+					<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={() => (window.location.href = '/movimientos')}><XIcon />Limpiar</ActionButton>
+				{/if}
 			</div>
-			<div class="grid gap-2">
-				<Label for="movement-card-filter">Cuenta</Label>
-				<Select.Root type="single" name="cardId" value={filters.cardId || allFilterValue} items={[{ value: allFilterValue, label: 'Todas las cuentas' }, ...cards.map((card) => ({ value: card.id, label: formatCardListItemLabel(card) }))]}>
-					<Select.Trigger id="movement-card-filter" class="h-11 w-full border-outline bg-surface px-3">
-						<span class="truncate">{selectedCardLabel}</span>
-					</Select.Trigger>
-					<Select.Content>
-						<Select.Item value={allFilterValue} label="Todas las cuentas">Todas las cuentas</Select.Item>
-						{#each cards as card (card.id)}
-							<Select.Item value={card.id} label={formatCardListItemLabel(card)}>{formatCardListItemLabel(card)}</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
-			</div>
-			<CategorySelectField
-				id="movement-category-filter"
-				name="categoryId"
-				label="Categoría"
-				{categories}
-				allowAll
-				allValue={allFilterValue}
-				allLabel="Todas las categorías"
-				bind:value={categoryFilterValue}
-			/>
-			<div class="grid gap-2">
-				<Label for="movement-type-filter">Tipo</Label>
-				<Select.Root type="single" name="type" bind:value={movementTypeFilterValue} items={typeItems}>
-					<Select.Trigger id="movement-type-filter" class="h-11 w-full border-outline bg-surface px-3">
-						<span class="truncate">{selectedTypeLabel}</span>
-					</Select.Trigger>
-					<Select.Content>
-						{#each typeItems as item}
-							<Select.Item value={item.value} label={item.label}>{item.label}</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
-			</div>
-		</div>
-		<div class="flex flex-wrap gap-2">
-			<ActionButton type="submit" intent="secondary"><SearchIcon />Consultar</ActionButton>
-			{#if hasActiveFilters}
-				<ActionButton type="button" intent="secondary" onclick={() => (window.location.href = '/movimientos')}><XIcon />Limpiar</ActionButton>
-			{/if}
-		</div>
-	</form>
+		</form>
+	</details>
 	{#if movements.length === 0}
 		<div class="px-6 py-12 text-center">
 			<p class="font-bold text-on-surface-variant">Aún no hay movimientos</p>
@@ -208,23 +211,23 @@
 	{:else}
 		<form method="POST" action="?/bulkDeleteMovements">
 			{#if selectingMovements}
-				<div class="flex flex-col gap-3 border-b border-outline bg-surface px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+				<div class="flex flex-col gap-3 border-b border-outline bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
 					<label class="flex items-center gap-2 text-sm font-semibold text-on-surface-variant">
 						<input
 							type="checkbox"
-							class="size-4 rounded border-outline"
+							class="size-5 rounded border-outline"
 							checked={selectedCount === movements.length}
 							indeterminate={selectedCount > 0 && selectedCount < movements.length}
 							onchange={(event) => toggleAllMovements(event.currentTarget.checked)}
 						/>
 						Seleccionar todos
 					</label>
-					<ActionButton type="submit" intent="danger" disabled={selectedCount === 0}><Trash2Icon />Eliminar {selectedCount > 0 ? selectedCount : ''}</ActionButton>
+					<ActionButton type="submit" intent="danger" class="w-full sm:w-auto" disabled={selectedCount === 0}><Trash2Icon />Eliminar {selectedCount > 0 ? selectedCount : ''}</ActionButton>
 				</div>
 			{/if}
 			<ul class="divide-y divide-outline">
 				{#each movements as movement (movement.id)}
-					<li class="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center">
+					<li class="grid gap-3 px-4 py-4 sm:px-5 md:items-center {selectingMovements ? 'md:grid-cols-[auto_auto_1fr_auto_auto]' : 'md:grid-cols-[auto_1fr_auto_auto]'}">
 						{#if selectingMovements}
 							<input
 								type="checkbox"
@@ -233,28 +236,28 @@
 								checked={selectedMovementIds.includes(movement.id)}
 								onchange={(event) => toggleMovement(movement.id, event.currentTarget.checked)}
 								aria-label={`Seleccionar movimiento ${movement.title}`}
-								class="size-4 rounded border-outline"
+								class="size-5 rounded border-outline md:self-center"
 							/>
 						{/if}
 						<span class="grid size-9 shrink-0 place-items-center rounded-full {movementTone(movement.type) === 'expense' ? 'bg-destructive/10 text-destructive' : movementTone(movement.type) === 'income' ? 'bg-secondary/10 text-secondary' : 'bg-primary/10 text-primary'}">
 							{#if movement.type === 'expense'}<ArrowUpRightIcon class="size-5" />{:else if movement.type === 'income'}<ArrowDownLeftIcon class="size-5" />{:else if movement.type === 'credit_purchase' || movement.type === 'credit_card_payment'}<CreditCardIcon class="size-5" />{:else if movement.type === 'adjustment'}<SlidersHorizontalIcon class="size-5" />{:else if movement.type.startsWith('loan_')}<HandCoinsIcon class="size-5" />{:else}<ArrowLeftRightIcon class="size-5" />{/if}
 						</span>
 						<div class="min-w-0 flex-1">
-							<p class="font-bold text-on-surface">{movement.title}</p>
-							<p class="mt-1 truncate text-sm text-on-surface-muted">{detail(movement)}</p>
+							<p class="break-words font-bold text-on-surface">{movement.title}</p>
+							<p class="mt-1 break-words text-sm text-on-surface-muted">{detail(movement)}</p>
 							{#if (movement.type === 'expense' || movement.type === 'credit_purchase') && movement.paymentMode === 'installments'}
 								<p class="mt-1 text-xs font-semibold text-on-surface-muted">{movement.installmentCount} meses{movement.interestFree ? ' sin intereses' : ''}</p>
 							{/if}
 						</div>
-						<div class="sm:text-right">
+						<div class="md:text-right">
 							<p class="text-lg font-bold {movementTone(movement.type) === 'expense' ? 'text-destructive' : movementTone(movement.type) === 'income' ? 'text-secondary' : 'text-primary'}">
 								{amountPrefix(movement)}{formatCurrencyFromMinorUnits(movement.amount, movement.currencyCode)}
 							</p>
 							<p class="text-xs text-on-surface-muted">{formatDateTime(movement.occurredAt)}</p>
 						</div>
-						<div class="flex items-center gap-1 sm:ml-2">
-							<ActionButton type="button" variant="ghost" size="icon-sm" onclick={() => onEdit(movement)} aria-label={`Editar movimiento ${movement.title}`} title="Editar movimiento"><PencilIcon /></ActionButton>
-							<ActionButton type="button" intent="danger" size="icon-sm" onclick={() => onDelete(movement)} aria-label={`Eliminar movimiento ${movement.title}`} title="Eliminar movimiento"><Trash2Icon /></ActionButton>
+						<div class="grid grid-cols-2 gap-2 md:flex md:items-center md:justify-end">
+							<ActionButton type="button" variant="ghost" class="w-full md:size-8 md:p-0" onclick={() => onEdit(movement)} aria-label={`Editar movimiento ${movement.title}`} title="Editar movimiento"><PencilIcon /></ActionButton>
+							<ActionButton type="button" intent="danger" class="w-full md:size-8 md:p-0" onclick={() => onDelete(movement)} aria-label={`Eliminar movimiento ${movement.title}`} title="Eliminar movimiento"><Trash2Icon /></ActionButton>
 						</div>
 					</li>
 				{/each}

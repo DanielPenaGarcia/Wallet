@@ -67,7 +67,7 @@
 
 	<div class="grid gap-2">
 		<span class="text-sm font-medium text-on-surface">Días laborales</span>
-		<div class="grid grid-cols-4 gap-2 sm:grid-cols-7">
+		<div class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-7">
 			{#each workDayOptions as day}
 				<label
 					class="flex h-12 cursor-pointer items-center justify-center rounded-md border text-sm font-bold transition {selectedDays.includes(day.value) ? 'border-primary bg-primary/10 text-primary' : 'border-outline bg-surface text-on-surface-variant hover:border-outline'}"
@@ -87,9 +87,9 @@
 	</div>
 
 	<div class="grid gap-2 rounded-md border border-outline bg-surface-subtle p-3">
-		<div class="flex items-center justify-between gap-3">
+		<div class="grid gap-2 sm:flex sm:items-center sm:justify-between">
 			<span class="text-sm font-bold text-on-surface">Tramos</span>
-			<ActionButton type="button" intent="secondary" onclick={addTimeBlock}>
+			<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={addTimeBlock}>
 				<PlusIcon />
 				Agregar tramo
 			</ActionButton>
@@ -97,7 +97,7 @@
 
 		<div class="grid gap-2">
 			{#each timeBlocks as block, index (block.id)}
-				<div class="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
+				<div class="grid gap-2 rounded-md border border-outline bg-surface p-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
 					<div class="grid gap-1">
 						<Label for={`${idPrefix}-work-schedule-${block.id}-start`}>Entrada {index + 1}</Label>
 						<input
@@ -121,7 +121,7 @@
 					<ActionButton
 						type="button"
 						intent="danger"
-						size="icon-sm"
+						class="w-full sm:size-8 sm:p-0"
 						onclick={() => removeTimeBlock(block.id)}
 						disabled={timeBlocks.length === 1}
 						aria-label={`Eliminar tramo ${index + 1}`}

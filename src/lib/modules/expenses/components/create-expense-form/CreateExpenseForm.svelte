@@ -99,8 +99,8 @@
 		{#if fieldError('paymentDueDay')}<span class="text-xs text-destructive">{fieldError('paymentDueDay')}</span>{/if}
 	</div>
 
-	{#if createFeedback?.message}<p class="text-sm font-semibold text-destructive sm:col-span-2">{createFeedback.message}</p>{/if}
-	<div class="flex justify-end sm:col-span-2">
-		<ActionButton type="submit" disabled={categories.length === 0}>Guardar gasto</ActionButton>
+	{#if createFeedback?.message}<p class="break-words text-sm font-semibold text-destructive sm:col-span-2">{createFeedback.message}</p>{/if}
+	<div class="grid sm:col-span-2 sm:flex sm:justify-end">
+		<ActionButton type="submit" class="w-full sm:w-auto" disabled={categories.length === 0}>Guardar gasto</ActionButton>
 	</div>
 </form>

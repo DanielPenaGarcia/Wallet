@@ -16,7 +16,7 @@
 <form method="POST" action="?/createCategory" class="grid gap-4">
 	<input type="hidden" name="parentId" value={parent?.id ?? ''} />
 
-	<div class="rounded-md border border-primary/20 bg-primary/10 px-3 py-2 text-sm text-primary">
+	<div class="break-words rounded-md border border-primary/20 bg-primary/10 px-3 py-2 text-sm text-primary">
 		{#if parent}
 			Se creará como hija de <strong>{parent.name}</strong>.
 		{:else}
@@ -53,10 +53,10 @@
 		</span>
 	</label>
 
-	{#if createFeedback?.message}<p class="text-sm font-semibold text-destructive">{createFeedback.message}</p>{/if}
+	{#if createFeedback?.message}<p class="break-words text-sm font-semibold text-destructive">{createFeedback.message}</p>{/if}
 
-	<div class="flex justify-end gap-2">
-		<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>
-		<ActionButton type="submit">Guardar categoría</ActionButton>
+	<div class="grid gap-2 sm:flex sm:justify-end">
+		<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={onCancel}>Cancelar</ActionButton>
+		<ActionButton type="submit" class="w-full sm:w-auto">Guardar categoría</ActionButton>
 	</div>
 </form>

@@ -122,11 +122,11 @@
 	{/if}
 
 	<div class="sm:col-span-2">
-		{#if matchingFeedback?.message}<p class="mb-3 rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{matchingFeedback.message}</p>{/if}
-		{#if mode === 'create' && matchingFeedback?.success}<p class="mb-3 text-sm font-semibold text-secondary">{matchingFeedback.success}</p>{/if}
-		<div class="flex justify-end gap-2">
-			{#if onCancel}<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>{/if}
-			<ActionButton type="submit" disabled={banks.length === 0 || isDefaultAccount}>{mode === 'create' ? 'Guardar cuenta' : 'Guardar cambios'}</ActionButton>
+		{#if matchingFeedback?.message}<p class="mb-3 break-words rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{matchingFeedback.message}</p>{/if}
+		{#if mode === 'create' && matchingFeedback?.success}<p class="mb-3 break-words text-sm font-semibold text-secondary">{matchingFeedback.success}</p>{/if}
+		<div class="grid gap-2 sm:flex sm:justify-end">
+			{#if onCancel}<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={onCancel}>Cancelar</ActionButton>{/if}
+			<ActionButton type="submit" class="w-full sm:w-auto" disabled={banks.length === 0 || isDefaultAccount}>{mode === 'create' ? 'Guardar cuenta' : 'Guardar cambios'}</ActionButton>
 		</div>
 	</div>
 </form>

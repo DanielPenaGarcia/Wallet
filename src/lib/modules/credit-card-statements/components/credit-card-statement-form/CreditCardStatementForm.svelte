@@ -126,8 +126,8 @@
 		<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{matchingFeedback.message}</p>
 	{/if}
 
-	<div class="flex justify-end gap-2">
-		{#if onCancel}<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>{/if}
-		<ActionButton type="submit">{mode === 'create' ? 'Guardar corte' : 'Guardar cambios'}</ActionButton>
+	<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+		{#if onCancel}<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={onCancel}>Cancelar</ActionButton>{/if}
+		<ActionButton type="submit" class="w-full sm:w-auto">{mode === 'create' ? 'Guardar corte' : 'Guardar cambios'}</ActionButton>
 	</div>
 </form>

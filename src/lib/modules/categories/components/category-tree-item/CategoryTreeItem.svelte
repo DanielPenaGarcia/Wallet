@@ -25,7 +25,7 @@
 
 <li>
   <div
-    class="flex min-h-12 items-center gap-3 border-b border-outline px-3 py-2 last:border-b-0"
+    class="grid min-h-12 gap-3 border-b border-outline px-3 py-3 last:border-b-0 sm:grid-cols-[auto_auto_minmax(0,1fr)_auto_auto] sm:items-center sm:py-2"
     style:padding-left={`${depth * 1.25 + 0.75}rem`}
   >
     {#if hasChildren}
@@ -51,9 +51,9 @@
         class="size-3 shrink-0 rounded-full ring-2 ring-surface shadow-sm"
         style:background-color={category.color ?? "#64748b"}
       ></span>{/if}
-    <div class="min-w-0 flex-1">
+    <div class="min-w-0">
       <div class="flex flex-wrap items-center gap-2">
-        <p class="truncate font-semibold text-on-surface">{category.name}</p>
+        <p class="break-words font-semibold text-on-surface">{category.name}</p>
         {#if category.isEssential}<span
             class="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary"
             >Esencial</span
@@ -65,35 +65,37 @@
         </p>{/if}
     </div>
     {#if !isChild && category.color}<span
-        class="font-mono text-xs text-on-surface-muted"
+        class="break-all font-mono text-xs text-on-surface-muted sm:text-right"
         >{category.color.toUpperCase()}</span
       >{/if}
-    {#if !isChild}
+    <div class="grid gap-2 sm:flex sm:justify-end {!isChild ? 'grid-cols-3' : 'grid-cols-2'}">
+      {#if !isChild}
+        <ActionButton
+          type="button"
+          intent="primary"
+          class="w-full sm:size-8 sm:p-0"
+          onclick={() => onAddChild(category)}
+          aria-label={`Crear subcategoría dentro de ${category.name}`}
+          title="Agregar subcategoría"><PlusIcon /></ActionButton
+        >
+      {/if}
       <ActionButton
         type="button"
-        intent="primary"
-        size="icon-sm"
-        onclick={() => onAddChild(category)}
-        aria-label={`Crear subcategoría dentro de ${category.name}`}
-        title="Agregar subcategoría"><PlusIcon /></ActionButton
+        variant="ghost"
+        class="w-full sm:size-8 sm:p-0"
+        onclick={() => onEdit(category)}
+        aria-label={`Editar ${category.name}`}
+        title="Editar categoría"><PencilIcon /></ActionButton
       >
-    {/if}
-    <ActionButton
-      type="button"
-      variant="ghost"
-      size="icon-sm"
-      onclick={() => onEdit(category)}
-      aria-label={`Editar ${category.name}`}
-      title="Editar categoría"><PencilIcon /></ActionButton
-    >
-    <ActionButton
-      type="button"
-      intent="danger"
-      size="icon-sm"
-      onclick={() => onDelete(category)}
-      aria-label={`Eliminar ${category.name}`}
-      title="Eliminar categoría"><Trash2Icon /></ActionButton
-    >
+      <ActionButton
+        type="button"
+        intent="danger"
+        class="w-full sm:size-8 sm:p-0"
+        onclick={() => onDelete(category)}
+        aria-label={`Eliminar ${category.name}`}
+        title="Eliminar categoría"><Trash2Icon /></ActionButton
+      >
+    </div>
   </div>
   {#if hasChildren && isExpanded}
     <ul>

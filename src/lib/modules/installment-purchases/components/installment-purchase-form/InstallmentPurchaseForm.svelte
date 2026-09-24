@@ -192,15 +192,15 @@
 			<div class="mt-3 grid gap-3 sm:grid-cols-3">
 				<div>
 					<p class="text-xs font-semibold text-on-surface-muted">Pendiente</p>
-					<p class="mt-1 text-sm font-bold text-on-surface">{formatCurrencyFromMinorUnits(previewAmounts.outstandingAmountCents, 'MXN')}</p>
+					<p class="mt-1 break-words text-sm font-bold text-on-surface">{formatCurrencyFromMinorUnits(previewAmounts.outstandingAmountCents, 'MXN')}</p>
 				</div>
 				<div>
 					<p class="text-xs font-semibold text-on-surface-muted">Cortado sin pagar</p>
-					<p class="mt-1 text-sm font-bold text-on-surface">{formatCurrencyFromMinorUnits(previewAmounts.unpaidBilledAmountCents, 'MXN')}</p>
+					<p class="mt-1 break-words text-sm font-bold text-on-surface">{formatCurrencyFromMinorUnits(previewAmounts.unpaidBilledAmountCents, 'MXN')}</p>
 				</div>
 				<div>
 					<p class="text-xs font-semibold text-on-surface-muted">Siguiente mensualidad</p>
-					<p class="mt-1 text-sm font-bold text-on-surface">{formatCurrencyFromMinorUnits(previewAmounts.nextInstallmentAmountCents, 'MXN')}</p>
+					<p class="mt-1 break-words text-sm font-bold text-on-surface">{formatCurrencyFromMinorUnits(previewAmounts.nextInstallmentAmountCents, 'MXN')}</p>
 				</div>
 			</div>
 			<p class="mt-3 text-xs text-on-surface-muted">
@@ -213,8 +213,8 @@
 
 	{#if matchingFeedback?.message}<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{matchingFeedback.message}</p>{/if}
 
-	<div class="flex justify-end gap-2">
-		{#if onCancel}<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>{/if}
-		<ActionButton type="submit">{mode === 'create' ? 'Registrar compra' : 'Guardar cambios'}</ActionButton>
+	<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+		{#if onCancel}<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={onCancel}>Cancelar</ActionButton>{/if}
+		<ActionButton type="submit" class="w-full sm:w-auto">{mode === 'create' ? 'Registrar compra' : 'Guardar cambios'}</ActionButton>
 	</div>
 </form>

@@ -226,20 +226,20 @@
 	</div>
 
 	<section class="grid gap-3 rounded-lg border border-outline bg-background p-4 sm:grid-cols-3">
-		<div>
+		<div class="grid gap-1 sm:block">
 			<p class="text-xs font-bold tracking-wide text-on-surface-muted uppercase">Aportación próxima</p>
-			<p class="mt-1 font-bold text-on-surface">{formatGoalAmount(previewProjection.estimatedNextContributionCents, currencyCode)}</p>
+			<p class="break-words font-bold text-on-surface">{formatGoalAmount(previewProjection.estimatedNextContributionCents, currencyCode)}</p>
 		</div>
-		<div>
+		<div class="grid gap-1 border-t border-outline pt-2 sm:block sm:border-t-0 sm:pt-0">
 			<p class="text-xs font-bold tracking-wide text-on-surface-muted uppercase">Tiempo estimado</p>
-			<p class="mt-1 font-bold text-on-surface">{formatEstimatedPeriods(previewProjection.estimatedRemainingPeriods)}</p>
+			<p class="break-words font-bold text-on-surface">{formatEstimatedPeriods(previewProjection.estimatedRemainingPeriods)}</p>
 		</div>
-		<div>
+		<div class="grid gap-1 border-t border-outline pt-2 sm:block sm:border-t-0 sm:pt-0">
 			<p class="text-xs font-bold tracking-wide text-on-surface-muted uppercase">Finalización estimada</p>
-			<p class="mt-1 font-bold text-on-surface">{formatEstimatedCompletionDate(previewProjection.estimatedCompletionDate)}</p>
+			<p class="break-words font-bold text-on-surface">{formatEstimatedCompletionDate(previewProjection.estimatedCompletionDate)}</p>
 		</div>
 		{#if previewProjection.unavailableReason}
-			<p class="text-xs text-on-surface-muted sm:col-span-3">{previewProjection.unavailableReason}</p>
+			<p class="break-words text-xs text-on-surface-muted sm:col-span-3">{previewProjection.unavailableReason}</p>
 		{/if}
 	</section>
 
@@ -247,8 +247,8 @@
 		<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{matchingFeedback.message}</p>
 	{/if}
 
-	<div class="flex justify-end gap-2">
-		{#if onCancel}<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>{/if}
-		<ActionButton type="submit">{mode === 'create' ? 'Guardar meta' : 'Guardar cambios'}</ActionButton>
+	<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+		{#if onCancel}<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={onCancel}>Cancelar</ActionButton>{/if}
+		<ActionButton type="submit" class="w-full sm:w-auto">{mode === 'create' ? 'Guardar meta' : 'Guardar cambios'}</ActionButton>
 	</div>
 </form>

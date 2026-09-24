@@ -34,7 +34,7 @@
 </script>
 
 <div class={`grid gap-2 ${className}`}>
-	<div class="flex gap-2">
+	<div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_3.5rem]">
 		<Input
 			{id}
 			{name}
@@ -48,7 +48,7 @@
 			type="color"
 			value={swatchValue}
 			oninput={pickColor}
-			class="h-11 w-14 shrink-0 cursor-pointer rounded-md border border-outline bg-transparent p-1 shadow-xs outline-none focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/50"
+			class="h-11 w-full cursor-pointer rounded-md border border-outline bg-transparent p-1 shadow-xs outline-none focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/50"
 			aria-label="Seleccionar color"
 		/>
 	</div>

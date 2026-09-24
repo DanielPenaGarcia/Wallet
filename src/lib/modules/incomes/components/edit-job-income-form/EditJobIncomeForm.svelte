@@ -74,9 +74,9 @@
 			/>
 		</div>
 	{/if}
-	{#if editFeedback?.message}<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{editFeedback.message}</p>{/if}
-	<div class="flex justify-end gap-2">
-		<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>
-		<ActionButton type="submit">Guardar cambios</ActionButton>
+	{#if editFeedback?.message}<p class="break-words rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{editFeedback.message}</p>{/if}
+	<div class="grid gap-2 sm:flex sm:justify-end">
+		<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={onCancel}>Cancelar</ActionButton>
+		<ActionButton type="submit" class="w-full sm:w-auto">Guardar cambios</ActionButton>
 	</div>
 </form>

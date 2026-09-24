@@ -83,8 +83,8 @@
 			</div>
 		{/if}
 
-		{#if createFeedback?.message}<p class="text-sm font-semibold text-destructive">{createFeedback.message}</p>{/if}
-	<div class="flex justify-end gap-2">
-		<ActionButton type="submit">Guardar ingreso</ActionButton>
+		{#if createFeedback?.message}<p class="break-words text-sm font-semibold text-destructive">{createFeedback.message}</p>{/if}
+	<div class="grid gap-2 sm:flex sm:justify-end">
+		<ActionButton type="submit" class="w-full sm:w-auto">Guardar ingreso</ActionButton>
 	</div>
 </form>

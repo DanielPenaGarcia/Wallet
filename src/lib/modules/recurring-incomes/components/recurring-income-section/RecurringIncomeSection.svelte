@@ -24,7 +24,7 @@
 </script>
 
 {#if feedback?.success}
-	<p class="mb-5 rounded-md border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary">{feedback.success}</p>
+	<p class="mb-5 break-words rounded-md border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary">{feedback.success}</p>
 {/if}
 
 <RecurringIncomeList
@@ -61,7 +61,7 @@
 </Dialog.Root>
 
 <Dialog.Root bind:open={deleteOpen}>
-	<Dialog.Content>
+	<Dialog.Content class="max-h-[min(90vh,640px)] overflow-y-auto">
 		<Dialog.Header>
 			<Dialog.Title>Eliminar {deletingIncome?.title ?? 'ingreso'}</Dialog.Title>
 			<Dialog.Description>Esta acción elimina la configuración del ingreso recurrente.</Dialog.Description>

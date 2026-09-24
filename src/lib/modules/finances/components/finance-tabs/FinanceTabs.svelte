@@ -19,18 +19,18 @@
 </script>
 
 <Tabs.Root value={initialTab} class="gap-5">
-	<Tabs.List class="grid w-full grid-cols-3 gap-2 rounded-lg border border-outline bg-surface p-1.5 shadow-sm group-data-horizontal/tabs:h-14 sm:w-fit sm:min-w-lg">
+	<Tabs.List class="grid h-auto w-full grid-cols-3 gap-2 rounded-lg border border-outline bg-surface p-1.5 shadow-sm sm:w-fit sm:min-w-lg">
 		<Tabs.Trigger
 			value="income"
-			class="h-8 px-4 py-3 font-bold"
+			class="h-10 px-2 py-2 font-bold sm:px-4"
 		>Ingresos</Tabs.Trigger>
 		<Tabs.Trigger
 			value="expenses"
-			class="h-8 px-4 py-3 font-bold"
+			class="h-10 px-2 py-2 font-bold sm:px-4"
 		>Gastos</Tabs.Trigger>
 		<Tabs.Trigger
 			value="goals"
-			class="h-8 px-4 py-3 font-bold"
+			class="h-10 px-2 py-2 font-bold sm:px-4"
 		>Objetivos</Tabs.Trigger>
 	</Tabs.List>
 

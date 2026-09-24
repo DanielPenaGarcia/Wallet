@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SectionHeading from '$lib/modules/navigation/components/section-heading/SectionHeading.svelte';
 	import SettingsTabs from '$lib/modules/settings/components/settings-tabs/SettingsTabs.svelte';
 	import type { ActionData, PageData } from './$types';
 
@@ -6,11 +7,12 @@
 </script>
 
 <section class="grid gap-6">
-	<div>
-		<p class="text-sm font-semibold text-primary">Settings</p>
-		<h2 class="mt-1 text-2xl font-bold text-on-background">Configuración</h2>
-		<p class="mt-2 text-sm text-on-surface-muted">Administra los catálogos base de la aplicación.</p>
-	</div>
+	<SectionHeading
+		eyebrow="Settings"
+		title="Configuración"
+		description="Administra los catálogos base de la aplicación."
+		accent="primary"
+	/>
 
 	<SettingsTabs
 		banks={data.banks}

@@ -111,32 +111,37 @@
 </script>
 
 {#if feedback?.success}
-	<p class="rounded-md border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary">{feedback.success}</p>
+	<p class="break-words rounded-md border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary">{feedback.success}</p>
 {/if}
 
 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-	<div>
+	<div class="min-w-0">
 		<Button href="/cuentas" variant="ghost" size="sm" class="mb-3 w-fit pl-1"><ArrowLeftIcon />Cuentas</Button>
 		<p class="text-sm font-semibold text-primary">Tarjeta de crédito</p>
-		<h2 class="mt-1 text-2xl font-bold text-on-background">{account.name}</h2>
-		<p class="mt-2 text-sm text-on-surface-muted">{account.bank?.name ?? 'Banco sin asignar'} · {account.isActive ? 'Activa' : 'Inactiva'}</p>
+		<h2 class="mt-1 break-words text-2xl font-bold text-on-background">{account.name}</h2>
+		<p class="mt-2 break-words text-sm text-on-surface-muted">{account.bank?.name ?? 'Banco sin asignar'} · {account.isActive ? 'Activa' : 'Inactiva'}</p>
 	</div>
 	<div class="flex flex-wrap gap-2">
-		<ActionButton type="button" onclick={() => (createOpen = true)}><PlusIcon />Registrar MSI</ActionButton>
+		<ActionButton type="button" class="w-full sm:w-auto" onclick={() => (createOpen = true)}><PlusIcon />Registrar MSI</ActionButton>
 	</div>
 </div>
 
 <Tabs.Root value="summary" class="gap-5">
-	<Tabs.List variant="line" class="w-full justify-start overflow-x-auto">
-		<Tabs.Trigger value="summary" class="h-8 px-4 py-3 font-bold">Resumen</Tabs.Trigger>
-		<Tabs.Trigger value="installments" class="h-8 px-4 py-3 font-bold">Compras a MSI</Tabs.Trigger>
+	<Tabs.List variant="line" class="grid h-auto w-full grid-cols-2 gap-2">
+		<Tabs.Trigger value="summary" class="h-10 min-w-0 px-2 py-2 text-xs font-bold sm:text-sm">
+			Resumen
+		</Tabs.Trigger>
+		<Tabs.Trigger value="installments" class="h-10 min-w-0 px-2 py-2 text-xs font-bold sm:text-sm">
+			<span class="sm:hidden">MSI</span>
+			<span class="hidden sm:inline">Compras a MSI</span>
+		</Tabs.Trigger>
 	</Tabs.List>
 
 	<Tabs.Content value="summary" class="grid gap-5">
 		<section class="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(300px,0.75fr)]">
-			<div class="rounded-lg border border-primary/25 bg-surface p-5 shadow-sm">
-				<div class="flex items-start justify-between gap-3">
-					<div>
+			<div class="rounded-lg border border-primary/25 bg-surface p-4 shadow-sm sm:p-5">
+				<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+					<div class="min-w-0">
 						<div class="flex items-center gap-1.5">
 							<p class="text-xs font-bold tracking-wide text-primary uppercase">Pago actual</p>
 							<InfoPopover
@@ -157,37 +162,38 @@
 							type="button"
 							intent="secondary"
 							size="sm"
+							class="w-full sm:w-auto"
 							onclick={() => {
 								editingStatement = latestStatement;
 								editStatementOpen = true;
 							}}
 						><PencilIcon />Editar</ActionButton>
 					{:else}
-						<ActionButton type="button" intent="secondary" size="sm" onclick={() => (statementOpen = true)}>Registrar corte</ActionButton>
+						<ActionButton type="button" intent="secondary" size="sm" class="w-full sm:w-auto" onclick={() => (statementOpen = true)}>Registrar corte</ActionButton>
 					{/if}
 				</div>
 
 				{#if latestStatement}
 					<div class="mt-5 grid gap-5 md:grid-cols-[minmax(0,1fr)_220px] md:items-end">
-						<div>
+						<div class="min-w-0">
 							<p class="text-sm font-bold text-on-surface-muted">Pendiente del último corte</p>
-							<p class="mt-2 text-4xl font-bold text-on-surface">{formatAccountBalance(projection.outstandingPreviousStatementCents)}</p>
+							<p class="mt-2 break-words text-3xl font-bold text-on-surface sm:text-4xl">{formatAccountBalance(projection.outstandingPreviousStatementCents)}</p>
 							<p class="mt-3 text-sm text-on-surface-muted">
 								Vence el <span class="font-bold text-on-surface">{formatIsoDate(latestStatement.paymentDueDate)}</span>
 							</p>
 						</div>
 						<div class="rounded-md bg-surface-subtle p-4">
 							<p class="text-xs font-bold text-on-surface-muted">Pagado</p>
-							<p class="mt-1 text-xl font-bold text-on-surface">{formatAccountBalance(latestStatement.paidAmountCents)}</p>
+							<p class="mt-1 break-words text-xl font-bold text-on-surface">{formatAccountBalance(latestStatement.paidAmountCents)}</p>
 							<p class="mt-3 text-xs font-bold text-on-surface-muted">Estado: <span class="text-on-surface">{statementStatusLabel}</span></p>
 						</div>
 					</div>
 
 					{#if latestStatement.statementBalanceCents > 0}
 						<div class="mt-5">
-							<div class="flex items-center justify-between gap-3">
+							<div class="grid gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 								<p class="text-xs font-bold text-on-surface-muted">Progreso de pago</p>
-								<p class="text-xs font-bold text-on-surface-variant">{statementPaymentProgress}%</p>
+								<p class="text-xs font-bold text-on-surface-variant sm:text-right">{statementPaymentProgress}%</p>
 							</div>
 							<div class="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
 								<div class="h-full rounded-full bg-primary" style={`width: ${statementPaymentProgress}%`}></div>
@@ -201,11 +207,11 @@
 				{/if}
 			</div>
 
-			<div class="rounded-lg border border-outline bg-surface p-5 shadow-sm">
+			<div class="rounded-lg border border-outline bg-surface p-4 shadow-sm sm:p-5">
 				<div class="flex items-start justify-between gap-3">
 					<div class="min-w-0">
-						<p class="truncate text-xs font-bold text-on-surface-muted">{account.bank?.alias ?? 'Crédito'}</p>
-						<h3 class="mt-1 truncate text-lg font-bold text-on-surface">{account.name}</h3>
+						<p class="break-words text-xs font-bold text-on-surface-muted sm:truncate">{account.bank?.alias ?? 'Crédito'}</p>
+						<h3 class="mt-1 break-words text-lg font-bold text-on-surface sm:truncate">{account.name}</h3>
 						<p class="mt-1 font-mono text-sm font-bold tracking-[0.08em] text-on-surface-muted">•••• {account.cardLastFourDigits ?? '••••'}</p>
 					</div>
 					<span class="grid size-9 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
@@ -222,7 +228,7 @@
 								description="Es la deuda total registrada en la tarjeta en este momento. Puede incluir corte pendiente, MSI y consumo del periodo actual."
 							/>
 						</div>
-						<p class="mt-1 text-lg font-bold text-on-surface">{formatAccountBalance(account.balanceCents)}</p>
+						<p class="mt-1 break-words text-lg font-bold text-on-surface">{formatAccountBalance(account.balanceCents)}</p>
 					</div>
 					<div>
 						<div class="flex items-center gap-1.5">
@@ -232,14 +238,14 @@
 								description="Es el crédito que aún queda libre: límite de crédito menos saldo consumido registrado."
 							/>
 						</div>
-						<p class="mt-1 text-lg font-bold text-primary">{formatAccountBalance(availableCreditCents)}</p>
+						<p class="mt-1 break-words text-lg font-bold text-primary">{formatAccountBalance(availableCreditCents)}</p>
 					</div>
 				</div>
 
 				<div class="mt-5 grid gap-4 sm:grid-cols-2">
 					<div>
 						<p class="text-xs font-bold text-on-surface-muted">Límite</p>
-						<p class="mt-1 text-sm font-bold text-on-surface">{formatAccountBalance(creditLimitCents)}</p>
+						<p class="mt-1 break-words text-sm font-bold text-on-surface">{formatAccountBalance(creditLimitCents)}</p>
 					</div>
 					<div>
 						<div class="flex items-center gap-1.5">
@@ -265,16 +271,16 @@
 		</section>
 
 		<section class="grid gap-5 lg:grid-cols-2">
-			<div class="rounded-lg border border-outline bg-surface p-5 shadow-sm">
+			<div class="rounded-lg border border-outline bg-surface p-4 shadow-sm sm:p-5">
 				<p class="text-xs font-bold tracking-wide text-on-surface-muted uppercase">Próximo corte</p>
 				<p class="mt-1 text-sm text-on-surface-muted">{shortDate(projection.cycle.currentPeriodStart)} — {shortDate(projection.cycle.currentPeriodEnd)}</p>
 
 				<div class="mt-4 grid gap-3">
-					<div class="flex items-center justify-between gap-3">
+					<div class="grid gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 						<span class="text-sm text-on-surface-muted">Periodo actual</span>
-						<span class="font-bold text-on-surface">{shortDate(projection.cycle.currentPeriodStart)} — {shortDate(projection.cycle.currentPeriodEnd)}</span>
+						<span class="font-bold text-on-surface sm:text-right">{shortDate(projection.cycle.currentPeriodStart)} — {shortDate(projection.cycle.currentPeriodEnd)}</span>
 					</div>
-					<div class="flex items-center justify-between gap-3">
+					<div class="grid gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 						<span class="flex items-center gap-1.5 text-sm text-on-surface-muted">
 							Nuevo consumo estimado
 							<InfoPopover
@@ -282,9 +288,9 @@
 								description="Estimación del consumo del periodo abierto sin contar la siguiente mensualidad MSI. No representa un monto oficial del banco."
 							/>
 						</span>
-						<span class="font-bold text-on-surface">{formatAccountBalance(projection.presentationUnbilledNonInstallmentCents)}</span>
+						<span class="break-words font-bold text-on-surface sm:text-right">{formatAccountBalance(projection.presentationUnbilledNonInstallmentCents)}</span>
 					</div>
-					<div class="flex items-center justify-between gap-3">
+					<div class="grid gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 						<span class="flex items-center gap-1.5 text-sm text-on-surface-muted">
 							Próximos MSI
 							<InfoPopover
@@ -292,24 +298,24 @@
 								description="Suma de las mensualidades MSI que entrarían en el próximo corte."
 							/>
 						</span>
-						<span class="font-bold text-on-surface">{formatAccountBalance(projection.nextInstallmentsCents)}</span>
+						<span class="break-words font-bold text-on-surface sm:text-right">{formatAccountBalance(projection.nextInstallmentsCents)}</span>
 					</div>
-					<div class="flex items-center justify-between gap-3 border-t border-outline pt-3">
+					<div class="grid gap-1 border-t border-outline pt-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 						<span class="text-sm text-on-surface-muted">Total generado para el siguiente corte</span>
-						<span class="font-bold text-on-surface">{formatAccountBalance(projection.estimatedNewStatementChargesCents)}</span>
+						<span class="break-words font-bold text-on-surface sm:text-right">{formatAccountBalance(projection.estimatedNewStatementChargesCents)}</span>
 					</div>
-					<div class="flex items-center justify-between gap-3">
+					<div class="grid gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 						<span class="text-sm text-on-surface-muted">Fecha estimada del próximo corte</span>
-						<span class="font-bold text-on-surface">{formatIsoDate(projection.cycle.nextStatementDate)}</span>
+						<span class="font-bold text-on-surface sm:text-right">{formatIsoDate(projection.cycle.nextStatementDate)}</span>
 					</div>
 				</div>
 
 				<div class="mt-4 rounded-md bg-surface-subtle p-3">
-					<div class="flex items-center justify-between gap-3">
+					<div class="grid gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 						<span class="text-sm text-on-surface-muted">Si el corte anterior sigue pendiente</span>
-						<span class="font-bold text-on-surface">{formatAccountBalance(projection.outstandingPreviousStatementCents)}</span>
+						<span class="break-words font-bold text-on-surface sm:text-right">{formatAccountBalance(projection.outstandingPreviousStatementCents)}</span>
 					</div>
-					<div class="mt-3 flex items-center justify-between gap-3 border-t border-outline pt-3">
+					<div class="mt-3 grid gap-1 border-t border-outline pt-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 						<span class="flex items-center gap-1.5 text-sm text-on-surface-muted">
 							Deuda acumulada estimada
 							<InfoPopover
@@ -317,7 +323,7 @@
 								description="Suma aproximada del corte anterior pendiente más lo generado para el siguiente corte. Puede cambiar por cargos, ajustes o movimientos no registrados."
 							/>
 						</span>
-						<span class="font-bold text-on-surface">{formatAccountBalance(projection.estimatedNextStatementBaseCents)}</span>
+						<span class="break-words font-bold text-on-surface sm:text-right">{formatAccountBalance(projection.estimatedNextStatementBaseCents)}</span>
 					</div>
 				</div>
 
@@ -331,10 +337,10 @@
 				{/if}
 			</div>
 
-			<div class="rounded-lg border border-outline bg-surface p-5 shadow-sm">
+			<div class="rounded-lg border border-outline bg-surface p-4 shadow-sm sm:p-5">
 				<p class="text-sm font-bold text-on-surface">Composición de deuda MSI</p>
 				<div class="mt-4 grid gap-3">
-					<div class="flex items-center justify-between gap-3">
+					<div class="grid gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 						<span class="flex items-center gap-1.5 text-sm text-on-surface-muted">
 							MSI pendientes
 							<InfoPopover
@@ -342,9 +348,9 @@
 								description="Suma de mensualidades MSI ya incluidas en cortes sin pagar y mensualidades futuras."
 							/>
 						</span>
-						<span class="font-bold text-on-surface">{formatAccountBalance(purchaseSummary.outstandingAmountCents)}</span>
+						<span class="break-words font-bold text-on-surface sm:text-right">{formatAccountBalance(purchaseSummary.outstandingAmountCents)}</span>
 					</div>
-					<div class="flex items-center justify-between gap-3">
+					<div class="grid gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 						<span class="flex items-center gap-1.5 text-sm text-on-surface-muted">
 							Otros conceptos
 							<InfoPopover
@@ -352,17 +358,17 @@
 								description="Diferencia entre el saldo consumido y los MSI pendientes. No necesariamente corresponde solo a compras de contado."
 							/>
 						</span>
-						<span class="font-bold {nonInstallmentBalanceCents < 0 ? 'text-destructive' : 'text-on-surface'}">{formatAccountBalance(nonInstallmentBalanceCents)}</span>
+						<span class="break-words font-bold sm:text-right {nonInstallmentBalanceCents < 0 ? 'text-destructive' : 'text-on-surface'}">{formatAccountBalance(nonInstallmentBalanceCents)}</span>
 					</div>
 
 					<details class="rounded-md bg-surface-subtle p-3">
 						<summary class="cursor-pointer text-sm font-bold text-on-surface">Detalle MSI</summary>
 						<div class="mt-3 grid gap-3">
-							<div class="flex items-center justify-between gap-3">
+							<div class="grid gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 								<span class="text-sm text-on-surface-muted">Ya incluido en cortes</span>
-								<span class="font-bold text-on-surface">{formatAccountBalance(purchaseSummary.unpaidBilledAmountCents)}</span>
+								<span class="break-words font-bold text-on-surface sm:text-right">{formatAccountBalance(purchaseSummary.unpaidBilledAmountCents)}</span>
 							</div>
-							<div class="flex items-center justify-between gap-3">
+							<div class="grid gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 								<span class="flex items-center gap-1.5 text-sm text-on-surface-muted">
 									Mensualidades futuras
 									<InfoPopover
@@ -370,7 +376,7 @@
 										description="Parte de los MSI que todavía no entra a un corte registrado."
 									/>
 								</span>
-								<span class="font-bold text-on-surface">{formatAccountBalance(purchaseSummary.futureAmountCents)}</span>
+								<span class="break-words font-bold text-on-surface sm:text-right">{formatAccountBalance(purchaseSummary.futureAmountCents)}</span>
 							</div>
 						</div>
 					</details>
@@ -384,12 +390,12 @@
 		</section>
 
 		<section class="rounded-lg border border-outline bg-surface shadow-sm">
-			<div class="flex flex-col gap-3 border-b border-outline px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-				<div>
+			<div class="flex flex-col gap-3 border-b border-outline px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+				<div class="min-w-0">
 					<h3 class="text-lg font-bold text-on-surface">Historial de cortes</h3>
 					<p class="mt-1 text-sm text-on-surface-muted">{statementHistory.length} registros guardados</p>
 				</div>
-				<ActionButton type="button" intent="secondary" onclick={() => (statementOpen = true)}>Registrar corte</ActionButton>
+				<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={() => (statementOpen = true)}>Registrar corte</ActionButton>
 			</div>
 
 			{#if statementHistory.length === 0}
@@ -399,9 +405,9 @@
 					{#each statementHistory as statement (statement.id)}
 						<article class="rounded-lg border border-outline bg-background p-4">
 							<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-								<div>
+								<div class="min-w-0">
 									<h4 class="text-base font-bold text-on-surface">{formatIsoDate(statement.statementDate)}</h4>
-									<p class="mt-1 text-xs font-semibold text-on-surface-muted">
+									<p class="mt-1 break-words text-xs font-semibold text-on-surface-muted">
 										{shortDate(statement.periodStartDate)} — {shortDate(statement.periodEndDate)} · límite {shortDate(statement.paymentDueDate)}
 									</p>
 								</div>
@@ -421,11 +427,11 @@
 							<div class="mt-4 grid gap-3 sm:grid-cols-2">
 								<div>
 									<p class="text-xs font-bold text-on-surface-muted">Saldo al corte</p>
-									<p class="mt-1 text-sm font-bold text-on-surface">{formatAccountBalance(statement.statementBalanceCents)}</p>
+									<p class="mt-1 break-words text-sm font-bold text-on-surface">{formatAccountBalance(statement.statementBalanceCents)}</p>
 								</div>
 								<div>
 									<p class="text-xs font-bold text-on-surface-muted">Pagado</p>
-									<p class="mt-1 text-sm font-bold text-on-surface">{formatAccountBalance(statement.paidAmountCents)}</p>
+									<p class="mt-1 break-words text-sm font-bold text-on-surface">{formatAccountBalance(statement.paidAmountCents)}</p>
 								</div>
 							</div>
 						</article>
@@ -437,34 +443,35 @@
 
 	<Tabs.Content value="installments" class="grid gap-4">
 		<section class="rounded-lg border border-outline bg-surface shadow-sm">
-			<div class="flex flex-col gap-3 border-b border-outline px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-				<div>
+			<div class="flex flex-col gap-3 border-b border-outline px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+				<div class="min-w-0">
 					<h3 class="text-lg font-bold text-on-surface">Compras a MSI</h3>
 					<p class="mt-1 text-sm text-on-surface-muted">{purchaseSummary.activePurchases} activas · {purchaseSummary.completedPurchases} completadas</p>
 				</div>
-				<ActionButton type="button" onclick={() => (createOpen = true)}><PlusIcon />Registrar compra</ActionButton>
+				<ActionButton type="button" class="w-full sm:w-auto" onclick={() => (createOpen = true)}><PlusIcon />Registrar compra</ActionButton>
 			</div>
 
 			{#if purchases.length === 0}
 				<div class="p-5 text-sm text-on-surface-muted">No hay compras MSI registradas para esta tarjeta.</div>
 			{:else}
-				<div class="grid gap-3 p-4">
+				<div class="grid gap-3 p-3 sm:p-4">
 					{#each purchases as purchase (purchase.id)}
 						{@const amounts = getInstallmentAmounts(purchase)}
 						{@const counts = getInstallmentCounts(purchase)}
-						<article class="rounded-lg border border-outline bg-background p-4">
-							<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+						<article class="rounded-lg border border-outline bg-background p-3 sm:p-4">
+							<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
 								<div class="min-w-0">
-									<h4 class="truncate text-base font-bold text-on-surface">{purchase.description}</h4>
-									<p class="mt-1 flex items-center gap-1 text-xs font-semibold text-on-surface-muted">
+									<h4 class="break-words text-base font-bold text-on-surface sm:truncate">{purchase.description}</h4>
+									<p class="mt-1 flex items-center gap-1 break-words text-xs font-semibold text-on-surface-muted">
 										<CalendarDaysIcon class="size-3.5" />{displayDate(purchase.purchaseDate)}
 									</p>
 								</div>
-								<div class="flex shrink-0 gap-1">
+								<div class="grid grid-cols-2 gap-2 sm:flex sm:shrink-0 sm:justify-end">
 									<ActionButton
 										type="button"
-										variant="ghost"
-										size="icon-sm"
+										intent="secondary"
+										size="sm"
+										class="w-full sm:w-auto"
 										onclick={() => {
 											editingPurchase = purchase;
 											editOpen = true;
@@ -475,7 +482,8 @@
 									<ActionButton
 										type="button"
 										intent="danger"
-										size="icon-sm"
+										size="sm"
+										class="w-full sm:w-auto"
 										onclick={() => {
 											deletingPurchase = purchase;
 											deleteOpen = true;
@@ -486,29 +494,29 @@
 								</div>
 							</div>
 
-							<div class="mt-4 grid gap-3 sm:grid-cols-4">
-								<div>
+							<div class="mt-4 grid gap-2 rounded-md bg-surface-subtle p-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
+								<div class="grid gap-1 sm:block">
 									<p class="text-xs font-bold text-on-surface-muted">Original</p>
-									<p class="mt-1 text-sm font-bold text-on-surface">{formatAccountBalance(purchase.originalAmountCents)}</p>
+									<p class="break-words font-bold text-on-surface">{formatAccountBalance(purchase.originalAmountCents)}</p>
 								</div>
-								<div>
+								<div class="grid gap-1 border-t border-outline pt-2 sm:block sm:border-t-0 sm:pt-0">
 									<p class="text-xs font-bold text-on-surface-muted">Pendiente</p>
-									<p class="mt-1 text-sm font-bold text-on-surface">{formatAccountBalance(amounts.outstandingAmountCents)}</p>
+									<p class="break-words font-bold text-on-surface">{formatAccountBalance(amounts.outstandingAmountCents)}</p>
 								</div>
-								<div>
+								<div class="grid gap-1 border-t border-outline pt-2 sm:block sm:border-t-0 sm:pt-0">
 									<p class="text-xs font-bold text-on-surface-muted">Cortado sin pagar</p>
-									<p class="mt-1 text-sm font-bold text-on-surface">{formatAccountBalance(amounts.unpaidBilledAmountCents)}</p>
+									<p class="break-words font-bold text-on-surface">{formatAccountBalance(amounts.unpaidBilledAmountCents)}</p>
 								</div>
-								<div>
+								<div class="grid gap-1 border-t border-outline pt-2 sm:block sm:border-t-0 sm:pt-0">
 									<p class="text-xs font-bold text-on-surface-muted">Siguiente</p>
-									<p class="mt-1 text-sm font-bold text-on-surface">{formatAccountBalance(amounts.nextInstallmentAmountCents)}</p>
+									<p class="break-words font-bold text-on-surface">{formatAccountBalance(amounts.nextInstallmentAmountCents)}</p>
 								</div>
 							</div>
 
 							<div class="mt-4">
-								<div class="flex items-center justify-between gap-3">
+								<div class="grid gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 									<p class="text-xs font-bold text-on-surface-muted">{purchase.paidInstallments}/{purchase.totalInstallments} pagadas</p>
-									<p class="text-xs font-bold text-on-surface-variant">{counts.remainingInstallments} restantes</p>
+									<p class="text-xs font-bold text-on-surface-variant sm:text-right">{counts.remainingInstallments} restantes</p>
 								</div>
 								<div class="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
 									<div class="h-full rounded-full bg-primary" style={`width: ${progressPercent(purchase)}%`}></div>

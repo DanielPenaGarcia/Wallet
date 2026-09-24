@@ -174,7 +174,7 @@
 				<p class="text-sm font-bold text-on-surface">{selectedType === 'expense' ? 'Gastos' : selectedType === 'credit_purchase' ? 'Compras crédito' : selectedType === 'income' ? 'Ingresos' : 'Transferencias'}</p>
 				<p class="mt-1 text-xs text-on-surface-muted">{drafts.length} {drafts.length === 1 ? 'movimiento en el lote' : 'movimientos en el lote'}</p>
 			</div>
-			<ActionButton type="button" intent="secondary" onclick={() => changeType(null)}>Cambiar tipo</ActionButton>
+			<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={() => changeType(null)}>Cambiar tipo</ActionButton>
 		</div>
 
 		{#if feedback?.action === 'bulk-create-movements' && feedback.message}
@@ -197,16 +197,16 @@
 			<ol class="space-y-2">
 				{#each drafts as draft (draft.id)}
 					<li class="rounded-md border border-outline">
-						<div class="flex items-center gap-2 px-3 py-2">
+						<div class="grid gap-2 px-3 py-3 sm:grid-cols-[auto_1fr_auto_auto] sm:items-center sm:py-2">
 							<button type="button" class="grid size-8 place-items-center rounded-md text-on-surface-muted hover:bg-surface-hover" onclick={() => (expandedDraftId = expandedDraftId === draft.id ? null : draft.id)} aria-label="Alternar detalle">
 								{#if expandedDraftId === draft.id}<ChevronDownIcon class="size-4" />{:else}<ChevronRightIcon class="size-4" />{/if}
 							</button>
 							<div class="min-w-0 flex-1">
-								<p class="truncate text-sm font-bold text-on-surface">{draft.title}</p>
-								{#if expandedDraftId === draft.id}<p class="mt-1 text-xs text-on-surface-muted">{draftDetail(draft)} · {draft.occurredAt}</p>{/if}
+								<p class="break-words text-sm font-bold text-on-surface">{draft.title}</p>
+								{#if expandedDraftId === draft.id}<p class="mt-1 break-words text-xs text-on-surface-muted">{draftDetail(draft)} · {draft.occurredAt}</p>{/if}
 							</div>
-							<p class="text-sm font-bold text-on-surface">{draftAmountLabel(draft)}</p>
-							<ActionButton type="button" intent="danger" size="icon-sm" onclick={() => removeDraft(draft.id)} aria-label={`Quitar ${draft.title}`} title="Quitar"><Trash2Icon /></ActionButton>
+							<p class="text-sm font-bold text-on-surface sm:text-right">{draftAmountLabel(draft)}</p>
+							<ActionButton type="button" intent="danger" class="w-full sm:size-8 sm:p-0" onclick={() => removeDraft(draft.id)} aria-label={`Quitar ${draft.title}`} title="Quitar"><Trash2Icon /></ActionButton>
 						</div>
 					</li>
 				{/each}
@@ -242,15 +242,15 @@
 				{/if}
 
 				{#if currentMessage}<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive sm:col-span-2">{currentMessage}</p>{/if}
-				<div class="flex justify-end sm:col-span-2">
-					<ActionButton type="submit">Agregar al lote</ActionButton>
+				<div class="grid sm:col-span-2 sm:flex sm:justify-end">
+					<ActionButton type="submit" class="w-full sm:w-auto">Agregar al lote</ActionButton>
 				</div>
 			</form>
 		{/key}
 
-		<form method="POST" action="?/bulkCreateMovements" class="flex justify-end gap-2 border-t border-outline pt-4">
+		<form method="POST" action="?/bulkCreateMovements" class="grid gap-2 border-t border-outline pt-4 sm:flex sm:justify-end">
 			<input type="hidden" name="movements" value={serializedDrafts} />
-			<ActionButton type="submit" disabled={drafts.length === 0}>Registrar lote</ActionButton>
+			<ActionButton type="submit" class="w-full sm:w-auto" disabled={drafts.length === 0}>Registrar lote</ActionButton>
 		</form>
 	</div>
 {/if}

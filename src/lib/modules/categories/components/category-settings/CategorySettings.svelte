@@ -50,7 +50,7 @@
 </script>
 
 {#if feedback?.success}
-	<p class="rounded-md border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary">{feedback.success}</p>
+	<p class="break-words rounded-md border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary">{feedback.success}</p>
 {/if}
 
 <CategoryList
@@ -62,7 +62,7 @@
 />
 
 <Dialog.Root bind:open={createOpen}>
-	<Dialog.Content>
+	<Dialog.Content class="max-h-[min(90vh,640px)] overflow-y-auto">
 		<Dialog.Header>
 			<Dialog.Title>{selectedParent ? 'Nueva subcategoría' : 'Nueva categoría'}</Dialog.Title>
 			<Dialog.Description>{selectedParent ? `Agrega una categoría dentro de ${selectedParent.name}.` : 'Agrega una categoría al nivel principal.'}</Dialog.Description>
@@ -72,7 +72,7 @@
 </Dialog.Root>
 
 <Dialog.Root bind:open={editOpen}>
-	<Dialog.Content>
+	<Dialog.Content class="max-h-[min(90vh,640px)] overflow-y-auto">
 		<Dialog.Header>
 			<Dialog.Title>Editar categoría</Dialog.Title>
 			<Dialog.Description>Modifica su nombre o color sin alterar su posición en la jerarquía.</Dialog.Description>
@@ -82,7 +82,7 @@
 </Dialog.Root>
 
 <Dialog.Root bind:open={deleteOpen}>
-	<Dialog.Content>
+	<Dialog.Content class="max-h-[min(90vh,640px)] overflow-y-auto">
 		<Dialog.Header>
 			<Dialog.Title>Eliminar {deletingCategory?.name ?? 'categoría'}</Dialog.Title>
 			<Dialog.Description>Esta acción elimina la categoría del catálogo.</Dialog.Description>

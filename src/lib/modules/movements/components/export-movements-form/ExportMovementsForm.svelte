@@ -80,7 +80,7 @@
 		<p class="rounded-md px-3 py-2 text-sm font-semibold {messageKind === 'success' ? 'bg-secondary/10 text-secondary' : 'bg-destructive/10 text-destructive'} sm:col-span-2">{message}</p>
 	{/if}
 
-	<div class="flex justify-end sm:col-span-2">
-		<ActionButton type="submit" disabled={isCopying || movements.length === 0}>{isCopying ? 'Copiando...' : 'Copiar JSON'}</ActionButton>
+	<div class="grid sm:col-span-2 sm:flex sm:justify-end">
+		<ActionButton type="submit" class="w-full sm:w-auto" disabled={isCopying || movements.length === 0}>{isCopying ? 'Copiando...' : 'Copiar JSON'}</ActionButton>
 	</div>
 </form>

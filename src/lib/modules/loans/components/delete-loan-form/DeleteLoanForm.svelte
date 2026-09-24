@@ -8,10 +8,10 @@
 
 <form method="POST" action="?/deleteLoan" class="grid gap-4">
 	<input type="hidden" name="id" value={loan.id} />
-	<p class="text-on-surface-variant">Se revertirán los movimientos activos vinculados al préstamo y después se eliminará el registro.</p>
-	{#if deleteFeedback?.message}<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{deleteFeedback.message}</p>{/if}
-	<div class="flex justify-end gap-2">
-		<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>
-		<ActionButton type="submit" intent="danger">Eliminar préstamo</ActionButton>
+	<p class="break-words text-on-surface-variant">Se revertirán los movimientos activos vinculados al préstamo y después se eliminará el registro.</p>
+	{#if deleteFeedback?.message}<p class="break-words rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{deleteFeedback.message}</p>{/if}
+	<div class="grid gap-2 sm:flex sm:justify-end">
+		<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={onCancel}>Cancelar</ActionButton>
+		<ActionButton type="submit" intent="danger" class="w-full sm:w-auto">Eliminar préstamo</ActionButton>
 	</div>
 </form>

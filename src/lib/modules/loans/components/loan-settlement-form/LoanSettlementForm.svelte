@@ -41,9 +41,9 @@
 		<Label for="loan-settlement-description">Nota</Label>
 		<Input id="loan-settlement-description" name="description" maxlength={500} value={matchingFeedback?.values?.description ?? ''} class="h-11 border-outline" />
 	</div>
-	{#if matchingFeedback?.message}<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive sm:col-span-2">{matchingFeedback.message}</p>{/if}
-	<div class="flex justify-end sm:col-span-2">
-		<ActionButton type="submit" disabled={cards.length === 0 || loan.outstandingAmountCents === 0}>
+	{#if matchingFeedback?.message}<p class="break-words rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive sm:col-span-2">{matchingFeedback.message}</p>{/if}
+	<div class="grid sm:col-span-2 sm:flex sm:justify-end">
+		<ActionButton type="submit" class="w-full sm:w-auto" disabled={cards.length === 0 || loan.outstandingAmountCents === 0}>
 			{loan.direction === 'borrowed' ? 'Registrar pago' : 'Registrar cobro'}
 		</ActionButton>
 	</div>

@@ -4,11 +4,11 @@
 	import SearchIcon from '@lucide/svelte/icons/search';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import CategoryTreeItem from '../category-tree-item/CategoryTreeItem.svelte';
+	import { ActionButton } from '$lib/components/ui/action-button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import type { CategoryNode } from '../../types/category.types';
 	import type { CategoryListProps } from './props';
-    import Button from '$lib/components/ui/button/button.svelte';
 
 	const searchStorageKey = 'wallet:category-settings:search';
 	const essentialFilterStorageKey = 'wallet:category-settings:essential-only';
@@ -63,7 +63,7 @@
 </script>
 
 <div class="grid gap-4">
-	<section class="rounded-lg border border-outline bg-surface px-5 py-4 shadow-sm">
+	<section class="rounded-lg border border-outline bg-surface px-4 py-4 shadow-sm sm:px-5">
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-end">
 			<div class="grid gap-2 sm:w-80">
 				<Label for="category-search">Buscar</Label>
@@ -72,11 +72,11 @@
 					<Input id="category-search" bind:value={search} placeholder="Nombre de categoría" class="h-11 border-outline bg-surface pl-9" />
 				</div>
 			</div>
-			<label class="flex h-11 items-center gap-2 text-sm font-semibold text-on-surface-variant">
+			<label class="flex h-11 w-full items-center gap-2 rounded-md border border-outline bg-surface px-3 text-sm font-semibold text-on-surface-variant sm:w-fit">
 				<input
 					type="checkbox"
 					bind:checked={essentialOnly}
-					class="size-4 rounded border-outline accent-primary"
+					class="size-5 rounded border-outline accent-primary"
 				/>
 				<span>Es esencial</span>
 			</label>
@@ -84,12 +84,12 @@
 	</section>
 
 	<section class="overflow-hidden rounded-lg border border-outline bg-surface shadow-sm">
-		<div class="flex flex-col gap-4 border-b border-outline px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-			<div>
+		<div class="flex flex-col gap-3 border-b border-outline px-4 py-4 sm:px-5 md:flex-row md:items-center md:justify-between">
+			<div class="min-w-0">
 				<h2 class="text-lg font-bold text-on-surface">Categorías existentes</h2>
-				<p class="mt-1 text-sm text-on-surface-muted">Usa el botón de cada categoría para agregarle un hijo.</p>
+				<p class="mt-1 break-words text-sm text-on-surface-muted">Usa el botón de cada categoría para agregarle un hijo.</p>
 			</div>
-			<Button type="button" onclick={onCreateRoot} aria-label="Crear categoría principal" title="Agregar categoría principal"><PlusIcon /><span>Registrar</span></Button>
+			<ActionButton type="button" class="w-full md:w-auto" onclick={onCreateRoot} aria-label="Crear categoría principal" title="Agregar categoría principal"><PlusIcon /><span>Registrar</span></ActionButton>
 		</div>
 		{#if categories.length === 0}
 			<div class="px-6 py-12 text-center">

@@ -11,12 +11,12 @@
 	}: MovementFormActionsProps = $props();
 </script>
 
-<div class="flex justify-end gap-2 sm:col-span-2">
+<div class="grid gap-2 sm:col-span-2 sm:flex sm:justify-end">
 	{#if mode === 'create' && onBack}
-		<ActionButton type="button" intent="secondary" onclick={onBack}>Cambiar tipo</ActionButton>
+		<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={onBack}>Cambiar tipo</ActionButton>
 	{/if}
 	{#if mode === 'edit' && onCancel}
-		<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>
+		<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={onCancel}>Cancelar</ActionButton>
 	{/if}
-	<ActionButton type="submit" {disabled}>{submitLabel}</ActionButton>
+	<ActionButton type="submit" class="w-full sm:w-auto" {disabled}>{submitLabel}</ActionButton>
 </div>

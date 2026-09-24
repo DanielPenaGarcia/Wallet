@@ -18,8 +18,8 @@
 			{deleteFeedback.message}
 		</p>
 	{/if}
-	<div class="flex justify-end gap-2">
-		<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>
-		<ActionButton type="submit" intent="danger">Eliminar gasto</ActionButton>
+	<div class="grid gap-2 sm:flex sm:justify-end">
+		<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={onCancel}>Cancelar</ActionButton>
+		<ActionButton type="submit" intent="danger" class="w-full sm:w-auto">Eliminar gasto</ActionButton>
 	</div>
 </form>

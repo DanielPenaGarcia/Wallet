@@ -124,7 +124,7 @@
 			{/if}
 		</div>
 		{#if card.kind === 'credit'}
-			<div class="flex justify-end gap-2 border-t border-outline pt-3">
+			<div class="grid gap-2 border-t border-outline pt-3 sm:flex sm:justify-end">
 				<ActionButton type="button" intent="secondary" onclick={() => (balanceAdjustmentOpen = true)}>
 					Ajuste
 				</ActionButton>
@@ -134,7 +134,7 @@
 			</div>
 		{/if}
 		{#if card.kind === 'debit'}
-			<div class="flex justify-end border-t border-outline pt-3">
+			<div class="grid border-t border-outline pt-3 sm:flex sm:justify-end">
 				<ActionButton type="button" intent="secondary" onclick={() => (balanceAdjustmentOpen = true)}>
 					Ajuste
 				</ActionButton>

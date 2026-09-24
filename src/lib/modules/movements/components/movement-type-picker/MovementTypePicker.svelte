@@ -16,32 +16,32 @@
 
 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 	{#if canSelect('expense')}
-		<ActionButton type="button" intent="secondary" onclick={() => onSelect('expense')}>
+		<ActionButton type="button" intent="secondary" class="w-full justify-start" onclick={() => onSelect('expense')}>
 			<ArrowUpRightIcon /> Gasto
 		</ActionButton>
 	{/if}
 	{#if canSelect('income')}
-		<ActionButton type="button" intent="secondary" onclick={() => onSelect('income')}>
+		<ActionButton type="button" intent="secondary" class="w-full justify-start" onclick={() => onSelect('income')}>
 			<ArrowDownLeftIcon /> Ingreso
 		</ActionButton>
 	{/if}
 	{#if canSelect('transfer')}
-		<ActionButton type="button" intent="secondary" onclick={() => onSelect('transfer')}>
+		<ActionButton type="button" intent="secondary" class="w-full justify-start" onclick={() => onSelect('transfer')}>
 			<ArrowLeftRightIcon /> Transferencia
 		</ActionButton>
 	{/if}
 	{#if canSelect('credit_purchase')}
-		<ActionButton type="button" intent="secondary" onclick={() => onSelect('credit_purchase')}>
+		<ActionButton type="button" intent="secondary" class="w-full justify-start" onclick={() => onSelect('credit_purchase')}>
 			<CreditCardIcon /> Compra crédito
 		</ActionButton>
 	{/if}
 	{#if canSelect('credit_card_payment')}
-		<ActionButton type="button" intent="secondary" onclick={() => onSelect('credit_card_payment')}>
+		<ActionButton type="button" intent="secondary" class="w-full justify-start" onclick={() => onSelect('credit_card_payment')}>
 			<CreditCardIcon /> Pago tarjeta
 		</ActionButton>
 	{/if}
 	{#if canSelect('adjustment')}
-		<ActionButton type="button" intent="secondary" onclick={() => onSelect('adjustment')}>
+		<ActionButton type="button" intent="secondary" class="w-full justify-start" onclick={() => onSelect('adjustment')}>
 			<SlidersHorizontalIcon /> Ajuste
 		</ActionButton>
 	{/if}

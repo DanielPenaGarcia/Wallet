@@ -81,9 +81,9 @@
 		<Input id="edit-expense-payment-due-day" name="paymentDueDay" type="number" min="1" max="31" step="1" value={editFeedback?.values?.paymentDueDay ?? expense.paymentDueDay ?? ''} placeholder="Ej. 3" class="h-11 border-outline" aria-invalid={fieldError('paymentDueDay') ? 'true' : undefined} />
 		{#if fieldError('paymentDueDay')}<span class="text-xs text-destructive">{fieldError('paymentDueDay')}</span>{/if}
 	</div>
-	{#if editFeedback?.message}<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive sm:col-span-2">{editFeedback.message}</p>{/if}
-	<div class="flex justify-end gap-2 sm:col-span-2">
-		<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>
-		<ActionButton type="submit">Guardar cambios</ActionButton>
+	{#if editFeedback?.message}<p class="break-words rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive sm:col-span-2">{editFeedback.message}</p>{/if}
+	<div class="grid gap-2 sm:col-span-2 sm:flex sm:justify-end">
+		<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={onCancel}>Cancelar</ActionButton>
+		<ActionButton type="submit" class="w-full sm:w-auto">Guardar cambios</ActionButton>
 	</div>
 </form>

@@ -29,7 +29,7 @@
 	let deleteOpen = $state(untrack(() => feedback?.action === 'delete-bank' && deletingBank !== null));
 </script>
 
-{#if feedback?.success}<p class="mb-5 rounded-md border border-secondary/20 bg-secondary/10 px-4 py-3 text-sm font-semibold text-secondary">{feedback.success}</p>{/if}
+{#if feedback?.success}<p class="mb-5 break-words rounded-md border border-secondary/20 bg-secondary/10 px-4 py-3 text-sm font-semibold text-secondary">{feedback.success}</p>{/if}
 
 <BankList
 	{banks}
@@ -45,7 +45,7 @@
 />
 
 <Dialog.Root bind:open={createOpen}>
-	<Dialog.Content>
+	<Dialog.Content class="max-h-[min(90vh,640px)] overflow-y-auto">
 		<Dialog.Header>
 			<Dialog.Title>Registrar banco</Dialog.Title>
 			<Dialog.Description>Captura el nombre, alias y color del banco.</Dialog.Description>
@@ -55,7 +55,7 @@
 </Dialog.Root>
 
 <Dialog.Root bind:open={editOpen}>
-	<Dialog.Content>
+	<Dialog.Content class="max-h-[min(90vh,640px)] overflow-y-auto">
 		<Dialog.Header>
 			<Dialog.Title>Editar banco</Dialog.Title>
 			<Dialog.Description>Actualiza el nombre, alias o color del banco.</Dialog.Description>
@@ -65,7 +65,7 @@
 </Dialog.Root>
 
 <Dialog.Root bind:open={deleteOpen}>
-	<Dialog.Content>
+	<Dialog.Content class="max-h-[min(90vh,640px)] overflow-y-auto">
 		<Dialog.Header>
 			<Dialog.Title>Eliminar {deletingBank?.name ?? 'banco'}</Dialog.Title>
 			<Dialog.Description>Esta acción eliminará el banco del catálogo.</Dialog.Description>

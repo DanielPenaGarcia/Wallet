@@ -37,9 +37,9 @@
 			<span class="block text-xs leading-5 text-on-surface-muted">Marca esta opción si el gasto asociado vale la pena o es necesario.</span>
 		</span>
 	</label>
-	{#if editFeedback?.message}<p class="text-sm font-semibold text-destructive">{editFeedback.message}</p>{/if}
-	<div class="flex justify-end gap-2">
-		<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>
-		<ActionButton type="submit">Guardar cambios</ActionButton>
+	{#if editFeedback?.message}<p class="break-words text-sm font-semibold text-destructive">{editFeedback.message}</p>{/if}
+	<div class="grid gap-2 sm:flex sm:justify-end">
+		<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={onCancel}>Cancelar</ActionButton>
+		<ActionButton type="submit" class="w-full sm:w-auto">Guardar cambios</ActionButton>
 	</div>
 </form>

@@ -112,8 +112,8 @@
 		<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{payFeedback.message}</p>
 	{/if}
 
-	<div class="flex justify-end gap-2">
-		<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>
-		<ActionButton type="submit">{mode === 'card' ? 'Pagar y registrar' : 'Marcar pagado'}</ActionButton>
+	<div class="grid gap-2 sm:flex sm:justify-end">
+		<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={onCancel}>Cancelar</ActionButton>
+		<ActionButton type="submit" class="w-full sm:w-auto">{mode === 'card' ? 'Pagar y registrar' : 'Marcar pagado'}</ActionButton>
 	</div>
 </form>

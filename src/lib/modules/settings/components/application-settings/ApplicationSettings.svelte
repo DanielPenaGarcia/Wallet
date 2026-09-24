@@ -87,10 +87,10 @@
 	}
 </script>
 
-<section class="grid gap-5 rounded-lg border border-outline bg-surface px-5 py-4 shadow-sm">
-	<div>
+<section class="grid gap-5 rounded-lg border border-outline bg-surface px-4 py-4 shadow-sm sm:px-5">
+	<div class="min-w-0">
 		<h2 class="text-lg font-bold text-on-surface">Aplicación</h2>
-		<p class="mt-1 text-sm text-on-surface-muted">Configuración general de la aplicación.</p>
+		<p class="mt-1 break-words text-sm text-on-surface-muted">Configuración general de la aplicación.</p>
 	</div>
 
 	<div class="grid gap-2 sm:max-w-sm">
@@ -102,7 +102,7 @@
 			disabled={colorPalettes.length === 0}
 		>
 			<Select.Trigger id="application-color-palette" class="h-11 w-full border-outline bg-surface px-3">
-				<span>{selectedPalette?.name ?? 'Sin paletas disponibles'}</span>
+				<span class="truncate">{selectedPalette?.name ?? 'Sin paletas disponibles'}</span>
 			</Select.Trigger>
 			<Select.Content>
 				{#each colorPalettes as palette (palette.id)}
@@ -146,11 +146,11 @@
 	{#if selectedPalette && selectedTokens}
 		<div class="grid gap-3 rounded-md border border-outline bg-surface-subtle p-4">
 			<p class="text-sm font-bold text-on-surface">Vista previa</p>
-			<div class="grid gap-2 sm:grid-cols-5">
+			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
 				{#each paletteRoles as role}
 					{@const preview = previewColors(role)}
 					<div class="overflow-hidden rounded-md border border-outline bg-surface">
-						<div class="grid h-16 place-items-center text-xs font-bold" style={`background-color: ${preview?.base}; color: ${preview?.foreground}`}>
+						<div class="grid h-16 place-items-center px-2 text-center text-xs font-bold" style={`background-color: ${preview?.base}; color: ${preview?.foreground}`}>
 							{role}
 						</div>
 						<div class="grid grid-cols-2">

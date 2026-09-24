@@ -171,19 +171,28 @@
 	{#if preview}
 		<div class="rounded-md border border-outline bg-surface-subtle p-3 text-sm sm:col-span-2">
 			<p class="font-bold text-on-surface">Preview</p>
-			<div class="mt-2 grid gap-2 sm:grid-cols-3">
-				<p class="text-on-surface-muted">Costo financiero <span class="font-bold text-on-surface">{money(preview.financingCostCents)}</span></p>
-				<p class="text-on-surface-muted">Total contractual <span class="font-bold text-on-surface">{money(preview.totalRepaymentCents)}</span></p>
-				<p class="text-on-surface-muted">Cuota <span class="font-bold text-on-surface">{money(preview.firstInstallmentCents)}{preview.firstInstallmentCents !== preview.lastInstallmentCents ? ` / ${money(preview.lastInstallmentCents)}` : ''}</span></p>
+			<div class="mt-2 grid gap-2 md:grid-cols-3">
+				<div class="rounded-md bg-surface p-3">
+					<p class="text-xs font-bold text-on-surface-muted">Costo financiero</p>
+					<p class="mt-1 break-words font-bold text-on-surface">{money(preview.financingCostCents)}</p>
+				</div>
+				<div class="rounded-md bg-surface p-3">
+					<p class="text-xs font-bold text-on-surface-muted">Total contractual</p>
+					<p class="mt-1 break-words font-bold text-on-surface">{money(preview.totalRepaymentCents)}</p>
+				</div>
+				<div class="rounded-md bg-surface p-3">
+					<p class="text-xs font-bold text-on-surface-muted">Cuota</p>
+					<p class="mt-1 break-words font-bold text-on-surface">{money(preview.firstInstallmentCents)}{preview.firstInstallmentCents !== preview.lastInstallmentCents ? ` / ${money(preview.lastInstallmentCents)}` : ''}</p>
+				</div>
 			</div>
 		</div>
 	{/if}
-	{#if matchingFeedback?.message}<p class="rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive sm:col-span-2">{matchingFeedback.message}</p>{/if}
+	{#if matchingFeedback?.message}<p class="break-words rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive sm:col-span-2">{matchingFeedback.message}</p>{/if}
 	{#if hasSettlements}
-		<p class="rounded-md bg-surface-subtle px-3 py-2 text-sm text-on-surface-muted sm:col-span-2">Ya existen pagos o cobros: solo puedes editar nombre y contraparte.</p>
+		<p class="break-words rounded-md bg-surface-subtle px-3 py-2 text-sm text-on-surface-muted sm:col-span-2">Ya existen pagos o cobros: solo puedes editar nombre y contraparte.</p>
 	{/if}
-	<div class="flex justify-end gap-2 sm:col-span-2">
-		{#if onCancel}<ActionButton type="button" intent="secondary" onclick={onCancel}>Cancelar</ActionButton>{/if}
-		<ActionButton type="submit" disabled={mode === 'create' && cards.length === 0}>{mode === 'create' ? 'Guardar préstamo' : 'Guardar cambios'}</ActionButton>
+	<div class="grid gap-2 sm:col-span-2 sm:flex sm:justify-end">
+		{#if onCancel}<ActionButton type="button" intent="secondary" class="w-full sm:w-auto" onclick={onCancel}>Cancelar</ActionButton>{/if}
+		<ActionButton type="submit" class="w-full sm:w-auto" disabled={mode === 'create' && cards.length === 0}>{mode === 'create' ? 'Guardar préstamo' : 'Guardar cambios'}</ActionButton>
 	</div>
 </form>
