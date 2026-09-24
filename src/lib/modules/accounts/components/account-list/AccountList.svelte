@@ -35,17 +35,17 @@
 </script>
 
 <section class="overflow-hidden rounded-lg border border-outline bg-surface shadow-sm">
-	<div class="flex flex-col gap-4 border-b border-outline px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-		<div>
+	<div class="flex flex-col gap-4 border-b border-outline px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+		<div class="min-w-0">
 			<h2 class="text-lg font-bold text-on-surface">Cuentas</h2>
 			<p class="mt-1 text-sm text-on-surface-muted">Lugares donde existe dinero real disponible.</p>
 		</div>
-		<ActionButton type="button" onclick={onCreate}><PlusIcon />Nueva cuenta</ActionButton>
+		<ActionButton type="button" class="w-full sm:w-auto" onclick={onCreate}><PlusIcon />Nueva cuenta</ActionButton>
 	</div>
 
-	<div class="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3">
+	<div class="grid gap-4 p-3 sm:p-4 md:grid-cols-2 xl:grid-cols-3">
 		{#each accounts as account (account.id)}
-			<article class="rounded-lg border border-outline bg-background p-3 shadow-xs">
+			<article class="rounded-lg border border-outline bg-background p-3 shadow-xs sm:p-4">
 				{#if account.type === 'debit'}
 					<div
 						class="rounded-md border border-outline bg-surface p-4 shadow-xs"
@@ -53,30 +53,30 @@
 					>
 						<div class="flex items-start justify-between gap-3">
 							<div class="min-w-0">
-								<p class="truncate text-xs font-bold text-on-surface-muted">{account.bank?.alias ?? 'Débito'}</p>
-								<h3 class="mt-1 truncate text-base font-bold text-on-surface">{getAccountDisplayName(account)}</h3>
+								<p class="break-words text-xs font-bold text-on-surface-muted sm:truncate">{account.bank?.alias ?? 'Débito'}</p>
+								<h3 class="mt-1 break-words text-base font-bold text-on-surface sm:truncate">{getAccountDisplayName(account)}</h3>
 							</div>
 							<span class="grid size-8 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
 								<LandmarkIcon class="size-4" />
 							</span>
 						</div>
 
-						<div class="mt-4 grid grid-cols-3 gap-3">
+						<div class="mt-4 grid gap-3 sm:grid-cols-3">
 							<div>
 								<p class="text-xs font-bold text-on-surface-muted">Saldo</p>
-								<p class="mt-1 truncate text-sm font-bold text-on-surface">{formatAccountBalance(account.balanceCents)}</p>
+								<p class="mt-1 break-words text-sm font-bold text-on-surface">{formatAccountBalance(account.balanceCents)}</p>
 							</div>
 							<div>
 								<p class="text-xs font-bold text-on-surface-muted">Tarjeta</p>
-								<p class="mt-1 truncate font-mono text-sm font-bold tracking-[0.08em] text-on-surface">•••• {cardDigits(account)}</p>
+								<p class="mt-1 break-words font-mono text-sm font-bold tracking-[0.08em] text-on-surface">•••• {cardDigits(account)}</p>
 							</div>
 							<div>
 								<p class="text-xs font-bold text-on-surface-muted">Tipo</p>
-								<p class="mt-1 truncate text-sm font-bold text-on-surface">Débito</p>
+								<p class="mt-1 break-words text-sm font-bold text-on-surface">Débito</p>
 							</div>
 						</div>
 
-						<div class="mt-4 rounded-md bg-surface-subtle px-2 py-1.5 text-xs font-semibold text-on-surface-variant">
+						<div class="mt-4 break-words rounded-md bg-surface-subtle px-2 py-1.5 text-xs font-semibold text-on-surface-variant">
 							{account.bank?.name ?? 'Banco sin asignar'}
 						</div>
 					</div>
@@ -87,26 +87,26 @@
 					>
 						<div class="flex items-start justify-between gap-3">
 							<div class="min-w-0">
-								<p class="truncate text-xs font-bold text-on-surface-muted">{account.bank?.alias ?? 'Crédito'}</p>
-								<h3 class="mt-1 truncate text-base font-bold text-on-surface">{getAccountDisplayName(account)}</h3>
+								<p class="break-words text-xs font-bold text-on-surface-muted sm:truncate">{account.bank?.alias ?? 'Crédito'}</p>
+								<h3 class="mt-1 break-words text-base font-bold text-on-surface sm:truncate">{getAccountDisplayName(account)}</h3>
 							</div>
 							<span class="grid size-8 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
 								<CreditCardIcon class="size-4" />
 							</span>
 						</div>
 
-						<div class="mt-4 grid grid-cols-3 gap-3">
+						<div class="mt-4 grid gap-3 sm:grid-cols-3">
 							<div>
 								<p class="text-xs font-bold text-on-surface-muted">Saldo</p>
-								<p class="mt-1 truncate text-sm font-bold text-on-surface">{formatAccountBalance(account.balanceCents)}</p>
+								<p class="mt-1 break-words text-sm font-bold text-on-surface">{formatAccountBalance(account.balanceCents)}</p>
 							</div>
 							<div>
 								<p class="text-xs font-bold text-on-surface-muted">Disponible</p>
-								<p class="mt-1 truncate text-sm font-bold text-primary">{formatAccountBalance(getCreditAvailableCents(account))}</p>
+								<p class="mt-1 break-words text-sm font-bold text-primary">{formatAccountBalance(getCreditAvailableCents(account))}</p>
 							</div>
 							<div>
 								<p class="text-xs font-bold text-on-surface-muted">Límite</p>
-								<p class="mt-1 truncate text-sm font-bold text-on-surface">{formatAccountBalance(account.creditLimitCents ?? 0)}</p>
+								<p class="mt-1 break-words text-sm font-bold text-on-surface">{formatAccountBalance(account.creditLimitCents ?? 0)}</p>
 							</div>
 						</div>
 
@@ -120,7 +120,7 @@
 							</div>
 						</div>
 
-						<div class="mt-4 grid grid-cols-3 gap-2 text-xs">
+						<div class="mt-4 grid gap-2 text-xs sm:grid-cols-3">
 							<p class="rounded-md bg-surface-subtle px-2 py-1.5 font-semibold text-on-surface-variant">Corte · Día {account.statementDay ?? '-'}</p>
 							<p class="rounded-md bg-surface-subtle px-2 py-1.5 font-semibold text-on-surface-variant">Pago · Día {account.paymentDueDay ?? '-'}</p>
 							<p class="rounded-md px-2 py-1.5 text-center font-bold {account.isActive ? 'bg-secondary text-on-secondary' : 'bg-surface-muted text-on-surface-muted'}">
@@ -133,7 +133,7 @@
 						<div class="flex items-start justify-between gap-3">
 							<div class="min-w-0">
 								<p class="text-xs font-bold tracking-wide text-on-surface-muted uppercase">Efectivo</p>
-								<h3 class="mt-1 truncate text-base font-bold text-on-surface">{getAccountDisplayName(account)}</h3>
+								<h3 class="mt-1 break-words text-base font-bold text-on-surface sm:truncate">{getAccountDisplayName(account)}</h3>
 							</div>
 							<span class="grid size-9 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
 								<WalletIcon class="size-5" />
@@ -141,14 +141,14 @@
 						</div>
 						<div class="mt-5">
 							<p class="text-xs font-bold text-on-surface-muted">Saldo disponible</p>
-							<p class="mt-1 truncate text-xl font-bold text-on-surface">{formatAccountBalance(account.balanceCents)}</p>
+							<p class="mt-1 break-words text-xl font-bold text-on-surface">{formatAccountBalance(account.balanceCents)}</p>
 						</div>
 					</div>
 				{/if}
 
-				<div class="mt-3 flex items-center justify-between gap-3 px-1">
+				<div class="mt-3 grid gap-3 px-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 					<div class="min-w-0">
-						<p class="truncate text-sm font-semibold text-on-surface">
+						<p class="break-words text-sm font-semibold text-on-surface sm:truncate">
 							{getAccountTypeLabel(account.type)}{#if account.bank} · {account.bank.name}{/if}
 						</p>
 						{#if account.type === 'debit'}
@@ -157,7 +157,7 @@
 							<p class="mt-0.5 text-xs text-on-surface-muted">Disponible {formatAccountBalance(getCreditAvailableCents(account))}</p>
 						{/if}
 					</div>
-					<div class="flex shrink-0 gap-1">
+					<div class="flex flex-wrap gap-1 sm:justify-end">
 						{#if account.type === 'credit'}
 							<Button href={`/cuentas/${account.id}`} variant="ghost" size="icon-sm" aria-label={`Ver detalle de ${account.name}`} title="Ver detalle"><EyeIcon /></Button>
 						{/if}
@@ -185,7 +185,7 @@
 							{#each account.adjustments.slice(0, 3) as adjustment (adjustment.id)}
 								<li class="text-sm text-on-surface-variant">
 									<span class="font-semibold {adjustment.differenceCents < 0 ? 'text-destructive' : 'text-primary'}">{formatAccountBalance(adjustment.differenceCents)}</span>
-									<span> · {adjustment.reason}</span>
+									<span class="break-words"> · {adjustment.reason}</span>
 								</li>
 							{/each}
 						</ul>

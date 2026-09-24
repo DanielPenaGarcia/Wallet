@@ -4,6 +4,7 @@
   import { page } from "$app/state";
 
   import AppHeader from "$lib/modules/navigation/components/app-header/AppHeader.svelte";
+  import AppMobileTabs from "$lib/modules/navigation/components/app-mobile-tabs/AppMobileTabs.svelte";
   import AppSidebar from "$lib/modules/navigation/components/app-sidebar/AppSidebar.svelte";
 
   import type { LayoutData } from "./$types";
@@ -21,8 +22,6 @@
     data: LayoutData;
     children: import("svelte").Snippet;
   } = $props();
-
-  let sidebarOpen = $state(false);
 
   let currentPath = $derived(page.url.pathname);
 
@@ -67,17 +66,15 @@
 </svelte:head>
 
 <div class="min-h-screen bg-background text-on-background lg:flex">
-  <AppSidebar
-    {currentPath}
-    isOpen={sidebarOpen}
-    onClose={() => (sidebarOpen = false)}
-  />
+  <AppSidebar {currentPath} />
 
   <div class="min-w-0 flex-1">
-    <AppHeader {currentPath} onOpenSidebar={() => (sidebarOpen = true)} />
+    <AppHeader {currentPath} />
 
-    <main class="px-4 py-6 sm:px-6 lg:px-8">
+    <main class="px-4 pt-6 pb-28 sm:px-6 lg:px-8 lg:pb-6">
       {@render children()}
     </main>
   </div>
+
+  <AppMobileTabs {currentPath} />
 </div>
