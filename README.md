@@ -31,6 +31,31 @@ pnpm db:seed:categories
 pnpm db:seed:color-palettes
 ```
 
+## Install as an app
+
+Wallet includes a web app manifest, install icons, and a service worker. To try the
+production build on your computer, run the database migrations, then:
+
+```bash
+pnpm build
+pnpm preview
+```
+
+Open the local preview URL in a compatible browser and use its **Install app**
+action. On iPhone, Safari can use **Add to Home Screen** → **Open as Web App**
+even when Wallet is served over HTTP from a computer on the same local network.
+The icon and standalone presentation work in that case, but an HTTP LAN address
+such as `http://192.168.x.x` is not a secure context, so the service worker and
+offline fallback require HTTPS. `http://localhost` is a secure context only on
+the device where the browser is running. Keep the server reachable from the
+iPhone while using Wallet; do not expose a personal finance database publicly
+without access protection.
+
+The service worker caches versioned JS/CSS and public icons. It shows a simple
+offline page if a full navigation cannot reach the server. Account data and
+movements always need the server; offline changes and synchronization are not
+supported.
+
 ## Current Scope
 
 Wallet currently includes:

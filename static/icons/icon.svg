@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Wallet</title>
+  <rect width="512" height="512" rx="112" fill="#0f172a"/>
+  <rect x="112" y="166" width="288" height="214" rx="40" fill="#f8fafc"/>
+  <path d="M136 166v-16c0-22 18-40 40-40h174v56" fill="none" stroke="#38bdf8" stroke-width="24" stroke-linejoin="round"/>
+  <path d="M294 245h118v72H294c-20 0-36-16-36-36s16-36 36-36Z" fill="#38bdf8"/>
+  <circle cx="306" cy="281" r="10" fill="#0f172a"/>
+</svg>
