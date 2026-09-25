@@ -7,9 +7,9 @@ import { build, version } from '$service-worker';
 
 const worker = globalThis as unknown as ServiceWorkerGlobalScope;
 const cacheName = `wallet-assets-${version}`;
+const appShell = '/index.html';
 const staticAssets = [
-	'/',
-	'/index.html',
+	appShell,
 	'/manifest.webmanifest',
 	'/offline.html',
 	'/icons/icon.svg',
@@ -20,20 +20,14 @@ const staticAssets = [
 ];
 const assets = new Set([...build, ...staticAssets]);
 
-async function cacheAsset(cache: Cache, asset: string) {
-	try {
-		await cache.add(asset);
-	} catch {
-		// A single missing optional asset must not abort service worker installation.
-	}
-}
-
 worker.addEventListener('install', (event) => {
 	event.waitUntil(
-		caches.open(cacheName).then(async (cache) => {
-			await Promise.all([...assets].map((asset) => cacheAsset(cache, asset)));
+		(async () => {
+			const cache = await caches.open(cacheName);
+			// Keep the previous worker active if any part of the offline app is unavailable.
+			await cache.addAll([...assets]);
 			await worker.skipWaiting();
-		})
+		})()
 	);
 });
 
@@ -56,12 +50,20 @@ worker.addEventListener('fetch', (event) => {
 
 	if (event.request.mode === 'navigate') {
 		event.respondWith(
-			fetch(event.request).catch(async () => {
-				const fallback = await caches.match('/index.html') ?? await caches.match('/');
-				if (fallback) return fallback;
-				const offline = await caches.match('/offline.html');
-				return offline ?? Response.error();
-			})
+			(async () => {
+				// Financial data is local. Prefer the cached client shell even when an
+				// unavailable origin responds with an HTTP error instead of rejecting.
+				const shell = await caches.match(appShell);
+				if (shell) return shell;
+
+				try {
+					const response = await fetch(event.request);
+					if (response.ok) return response;
+					return (await caches.match('/offline.html')) ?? response;
+				} catch {
+					return (await caches.match('/offline.html')) ?? Response.error();
+				}
+			})()
 		);
 		return;
 	}

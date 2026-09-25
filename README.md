@@ -1,6 +1,6 @@
 # Wallet
 
-Wallet is a personal finance manager built with SvelteKit, TypeScript, Tailwind CSS, Drizzle ORM, and SQLite.
+Wallet is a local-first personal finance manager built with SvelteKit, TypeScript, Tailwind CSS, and IndexedDB in each installed browser. The former SQLite/Drizzle code remains for one-time data export and reference.
 
 The application helps answer one practical question:
 
@@ -12,12 +12,10 @@ Wallet is not only an expense log. Its purpose is to keep financial context expl
 
 ```bash
 pnpm install
-cp .env.example .env
-pnpm db:migrate
 pnpm dev
 ```
 
-The app uses SQLite through `DATABASE_URL`. For local development, `.env.example` points to `local.db`.
+`pnpm dev` is for development. Service workers are registered by the production build, not by the development server. Legacy SQLite export tooling still uses `DATABASE_URL` from `.env`.
 
 Useful commands:
 
@@ -34,27 +32,33 @@ pnpm db:seed:color-palettes
 ## Install as an app
 
 Wallet includes a web app manifest, install icons, and a service worker. To try the
-production build on your computer, run the database migrations, then:
+production build on your computer:
 
 ```bash
 pnpm build
 pnpm preview
 ```
 
-Open the local preview URL in a compatible browser and use its **Install app**
-action. On iPhone, Safari can use **Add to Home Screen** → **Open as Web App**
-even when Wallet is served over HTTP from a computer on the same local network.
-The icon and standalone presentation work in that case, but an HTTP LAN address
-such as `http://192.168.x.x` is not a secure context, so the service worker and
-offline fallback require HTTPS. `http://localhost` is a secure context only on
-the device where the browser is running. Keep the server reachable from the
-iPhone while using Wallet; do not expose a personal finance database publicly
-without access protection.
+For installation on an iPhone, serve the contents of `build/` at an HTTPS origin
+trusted by the phone. Open the site in Safari, choose **Add to Home Screen** →
+**Open as Web App**, then launch it from the Home Screen while online. Wait for
+the service worker to finish installing before disconnecting. Its cache must
+contain `/index.html`, the manifest, and every versioned build asset; test by
+turning off connectivity, closing the app, and launching it again.
 
-The service worker caches versioned JS/CSS and public icons. It shows a simple
-offline page if a full navigation cannot reach the server. Account data and
-movements always need the server; offline changes and synchronization are not
-supported.
+An `http://192.168.x.x` address can be added to the Home Screen, but cannot
+register a service worker on the iPhone. `http://localhost` is only a secure
+context on the device itself. If Wallet was previously installed from an HTTP
+address, first export its data from **Settings → Aplicación → Descargar respaldo**.
+Install the HTTPS origin separately and restore the file there: each origin and
+Home Screen installation has its own local storage. Do not delete the old
+installation until the backup has been restored and verified.
+
+The service worker keeps a complete static app shell and build assets on the
+device. Once installed from HTTPS, Wallet reads and writes financial data in
+local IndexedDB, without a permanent server. Later app updates require serving
+the new build again from the same HTTPS origin. Export backups outside the app:
+deleting the installation or clearing its browser storage can erase local data.
 
 ## Current Scope
 
@@ -81,14 +85,15 @@ Still planned or conceptual:
 
 ## Architecture
 
-Wallet is a modular monolith. Route files adapt SvelteKit requests and forms; business rules live in services; repositories own database access; client-safe UI code, types, and pure helpers live under `src/lib/modules`.
+Wallet is a local-first SvelteKit app. Client routes read the local IndexedDB database, and a layout handler applies form submissions locally. Legacy server services and SQLite repositories are kept as reference and for one-time export tooling; they are not needed to run the installed app.
 
 ```text
-src/lib/server/<module>          private server services, repositories, inputs, errors
-src/lib/server/db                Drizzle schema, database client, migrations
+src/lib/local/finance-db.ts      IndexedDB persistence, local read models and writes
 src/lib/modules/<module>         Svelte components, UI/shared types, pure helpers
 src/lib/shared                   cross-module client-safe utilities and types
-src/routes                       SvelteKit route adapters
+src/routes                       client route adapters
+src/service-worker.ts            offline app shell and versioned asset cache
+src/lib/server                   legacy SQLite services, repositories and schema
 docs/entities                    entity fields, invariants, derived values
 docs/modules                     user-facing module scope and workflows
 ```
@@ -151,4 +156,6 @@ Run this before considering changes complete:
 
 ```bash
 pnpm check
+pnpm build
+DATABASE_URL=:memory: pnpm test
 ```
