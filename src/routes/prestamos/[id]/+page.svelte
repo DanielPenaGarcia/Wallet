@@ -1,8 +1,9 @@
 <script lang="ts">
 	import LoanDetail from '$lib/modules/loans/components/loan-detail/LoanDetail.svelte';
-	import type { ActionData, PageData } from './$types';
+	import { localFormFeedback } from '$lib/local/finance-db';
+	import type { PageData } from './$types';
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let { data }: { data: PageData } = $props();
 </script>
 
-<LoanDetail loan={data.loan} cards={data.cards} movements={data.movements} feedback={form ?? null} />
+<LoanDetail loan={data.loan} cards={data.cards} movements={data.movements} feedback={$localFormFeedback as never} />

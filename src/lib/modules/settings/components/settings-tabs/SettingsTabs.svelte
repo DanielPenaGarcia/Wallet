@@ -38,7 +38,7 @@
     >
   </Tabs.List>
   <Tabs.Content value="application">
-    <ApplicationSettings {colorPalettes} {selectedColorPaletteId} />
+    <ApplicationSettings {colorPalettes} {selectedColorPaletteId} {feedback} />
   </Tabs.Content>
   <Tabs.Content value="banks">
     <BankSettings

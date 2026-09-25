@@ -30,6 +30,8 @@ Monthly activity is calculated from active movements in the current calendar mon
 
 The dashboard reads the recent activity list with a bounded movement query instead of loading the full history.
 
+In the installed app, this read model is calculated from IndexedDB on the device. It must not show server-rendered or cached HTML data as financial truth.
+
 ## Upcoming Recurring Events
 
 The next income and upcoming expenses come from active recurring income and recurring expense configuration.

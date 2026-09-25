@@ -8,11 +8,22 @@ The page uses the shared tabs component. It includes `Aplicación` for applicati
 
 ## Application
 
-The application section is the home for global application settings. Color palettes are stored in the database and expose base colors for `primary`, `secondary`, `tertiary`, `background`, and `surface`. Interaction and foreground tokens are calculated from those base hexadecimal values.
+The application section is the home for global application settings. Color palettes are stored in the local database and expose base colors for `primary`, `secondary`, `tertiary`, `background`, and `surface`. Interaction and foreground tokens are calculated from those base hexadecimal values.
+
+Wallet always ensures the bundled default palettes exist locally. Restoring a backup does not remove those defaults permanently; missing default palettes are created again the next time the local database opens.
 
 The section displays a color palette selector sourced from the database and a preview of the selected palette's base, hover, pressed, and foreground tokens. The selected palette id is persisted in browser storage under `wallet:color-palette-id`; the root layout applies the cached palette before the page paints so a reload keeps the selected theme without briefly flashing the default palette.
 
 The application section also stores a local profile under `wallet:application-profile`. The profile has `Nombres` and `Apellidos`; the sidebar displays the first written name and first written surname, and uses their first letters for the account badge.
+
+## Local Data
+
+The application tab includes local backup controls:
+
+- `Descargar respaldo`: exports a versioned JSON snapshot of the IndexedDB finance database.
+- `Restaurar archivo`: imports a compatible JSON backup and replaces the local database on this device.
+
+Backups must be stored outside Safari/PWA site storage, such as Files or cloud storage chosen by the user. Restoring does not contact a server and does not merge with other devices.
 
 ## Banks
 

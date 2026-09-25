@@ -57,3 +57,11 @@ Shared recurrence date calculation lives in `src/lib/shared/utils/recurring-paym
 Movement is the conceptual base for financial operations that actually happened. Movement-backed creation, edition, and deletion update persisted account balances transactionally, and future ordinary balance mutations should flow through explicit financial events instead of unrelated modules changing balances independently.
 
 Loan operations are movement-backed but not ordinary income or expense: receiving a borrowed principal is not income, lending principal is not expense, paying a borrowed loan is not an expense category, and collecting a lent loan is not ordinary income.
+
+## Local Data Ownership
+
+Wallet's installed runtime treats each device's IndexedDB database as the source of truth. There is no server confirmation, cross-device sync, or remote reconciliation.
+
+Backup files are versioned JSON snapshots. Restoring a backup replaces the local database for that installation. Importing the same file on multiple devices creates independent copies from that point forward.
+
+Deleting the PWA, clearing Safari/site data, or losing browser storage can remove the only local copy unless the user has exported a backup outside browser storage.

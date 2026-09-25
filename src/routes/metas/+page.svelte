@@ -1,9 +1,10 @@
 <script lang="ts">
 	import FinancialGoalSection from '$lib/modules/goals/components/financial-goal-section/FinancialGoalSection.svelte';
+	import { localFormFeedback } from '$lib/local/finance-db';
 	import SectionHeading from '$lib/modules/navigation/components/section-heading/SectionHeading.svelte';
-	import type { ActionData, PageData } from './$types';
+	import type { PageData } from './$types';
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let { data }: { data: PageData } = $props();
 </script>
 
 <section class="grid gap-6">
@@ -14,5 +15,5 @@
 		accent="primary"
 	/>
 
-	<FinancialGoalSection goals={data.goals} planningPeriods={data.planningPeriods} feedback={form ?? null} />
+	<FinancialGoalSection goals={data.goals} planningPeriods={data.planningPeriods} feedback={$localFormFeedback as never} />
 </section>

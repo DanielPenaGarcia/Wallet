@@ -2,6 +2,7 @@
 	import { browser } from '$app/environment';
 	import { untrack } from 'svelte';
 	import { Input } from '$lib/components/ui/input';
+	import { ActionButton } from '$lib/components/ui/action-button';
 	import * as Select from '$lib/components/ui/select';
 	import { Label } from '$lib/components/ui/label';
 	import {
@@ -23,7 +24,7 @@
 
 	const paletteRoles: ColorPaletteRole[] = ['primary', 'secondary', 'tertiary', 'background', 'surface'];
 
-	let { colorPalettes, selectedColorPaletteId }: ApplicationSettingsProps = $props();
+	let { colorPalettes, selectedColorPaletteId, feedback = null }: ApplicationSettingsProps = $props();
 	let applicationProfile = $state(untrack(() => browser ? readApplicationProfile(localStorage) : defaultApplicationProfile));
 	let restoredApplicationProfile = $state(false);
 	let selectedPaletteId = $state(untrack(() => {
@@ -162,4 +163,34 @@
 			</div>
 		</div>
 	{/if}
+</section>
+
+<section class="grid gap-5 rounded-lg border border-outline bg-surface px-4 py-4 shadow-sm sm:px-5">
+	<div class="min-w-0">
+		<h2 class="text-lg font-bold text-on-surface">Datos locales</h2>
+		<p class="mt-1 break-words text-sm text-on-surface-muted">Respaldo y restauración de la información guardada en este dispositivo.</p>
+	</div>
+
+	{#if feedback?.action === 'exportLocalBackup' || feedback?.action === 'restoreLocalBackup'}
+		{#if feedback.success}
+			<p class="rounded-md border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary">{feedback.success}</p>
+		{:else if feedback.message}
+			<p class="rounded-md border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">{feedback.message}</p>
+		{/if}
+	{/if}
+
+	<div class="grid gap-3 md:grid-cols-2">
+		<form method="POST" action="?/exportLocalBackup" class="grid gap-3 rounded-md border border-outline bg-surface-subtle p-4">
+			<p class="text-sm font-bold text-on-surface">Exportar respaldo</p>
+			<p class="text-sm text-on-surface-muted">Descarga un archivo JSON versionado con cuentas, movimientos, recurrentes, metas, préstamos y catálogos.</p>
+			<ActionButton type="submit" class="w-full sm:w-fit">Descargar respaldo</ActionButton>
+		</form>
+
+		<form method="POST" action="?/restoreLocalBackup" enctype="multipart/form-data" class="grid gap-3 rounded-md border border-outline bg-surface-subtle p-4">
+			<p class="text-sm font-bold text-on-surface">Restaurar respaldo</p>
+			<p class="text-sm text-on-surface-muted">Reemplaza la base local de este dispositivo con el contenido del archivo seleccionado.</p>
+			<Input name="backup" type="file" accept="application/json,.json" class="border-outline bg-surface" />
+			<ActionButton type="submit" intent="secondary" class="w-full sm:w-fit">Restaurar archivo</ActionButton>
+		</form>
+	</div>
 </section>

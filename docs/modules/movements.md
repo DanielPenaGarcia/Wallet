@@ -10,7 +10,7 @@ The current client module contains UI pieces for:
 - Bulk movement drafting.
 - Listing, filtering, selecting, deleting, and exporting movements.
 
-The server-side movement module has an initial persistence layer:
+The installed app persists movements in IndexedDB through the local finance database. The legacy server-side movement module remains as reference for the SQLite-era implementation:
 
 - `movements` table with effective financial date, technical timestamps, source/destination account references, optional category, and optional recurring configuration references.
 - Repository contract and Drizzle adapter for creating and reading movements.
@@ -24,6 +24,8 @@ The server-side movement module has an initial persistence layer:
 - Loan-specific movement types for received principal, disbursed principal, payments, and collections. These movements update real-money accounts without being classified as ordinary income or expense.
 
 Reading movements does not modify account balances and account reads still use the persisted `accounts.balanceCents` value directly.
+
+In local mode, creating or editing a movement applies the movement's balance impact to the stored account records before the IndexedDB snapshot is committed. Editing reverses the previous active movement and applies the replacement. Deleting marks the movement inactive and reverses its original balance impact.
 
 ## Intended Workflow
 

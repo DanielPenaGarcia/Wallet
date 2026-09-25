@@ -1,8 +1,9 @@
 <script lang="ts">
 	import CreditAccountDetail from '$lib/modules/accounts/components/credit-account-detail/CreditAccountDetail.svelte';
-	import type { ActionData, PageData } from './$types';
+	import { localFormFeedback } from '$lib/local/finance-db';
+	import type { PageData } from './$types';
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let { data }: { data: PageData } = $props();
 </script>
 
 <section class="grid gap-6">
@@ -11,8 +12,8 @@
 		purchases={data.purchases}
 		latestStatement={data.latestStatement}
 		statementHistory={data.statementHistory}
-		projection={data.projection}
-		statementDraft={data.statementDraft}
-		feedback={form ?? null}
-	/>
+	projection={data.projection}
+	statementDraft={data.statementDraft}
+	feedback={$localFormFeedback as never}
+/>
 </section>

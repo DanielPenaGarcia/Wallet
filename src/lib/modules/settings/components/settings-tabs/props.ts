@@ -3,6 +3,7 @@ import type { BankFormFeedback } from '$lib/modules/banks/types/bank-form-feedba
 import type { Category, CategoryNode } from '$lib/modules/categories/types/category.types';
 import type { CategoryFormFeedback } from '$lib/modules/categories/types/category-form-feedback.types';
 import type { ColorPalette } from '$lib/modules/color-palettes/types/color-palette.types';
+import type { LocalFormFeedback } from '$lib/local/finance-db';
 
 export type SettingsTabsProps = {
 	banks: Bank[];
@@ -10,5 +11,5 @@ export type SettingsTabsProps = {
 	categoryTree: CategoryNode[];
 	colorPalettes: ColorPalette[];
 	selectedColorPaletteId: string | null;
-	feedback?: BankFormFeedback | CategoryFormFeedback | null;
+	feedback?: BankFormFeedback | CategoryFormFeedback | LocalFormFeedback | null;
 };

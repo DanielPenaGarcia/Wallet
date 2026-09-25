@@ -1,7 +1,9 @@
 <script lang="ts">
   import "../app.css";
 
+  import { onMount } from "svelte";
   import { page } from "$app/state";
+  import { installLocalFormHandler, localFormFeedback } from "$lib/local/finance-db";
 
   import AppHeader from "$lib/modules/navigation/components/app-header/AppHeader.svelte";
   import AppMobileTabs from "$lib/modules/navigation/components/app-mobile-tabs/AppMobileTabs.svelte";
@@ -58,6 +60,8 @@
 })();
 `;
   }
+
+  onMount(() => installLocalFormHandler((feedback) => localFormFeedback.set(feedback)));
 </script>
 
 <svelte:head>

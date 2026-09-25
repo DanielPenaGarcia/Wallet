@@ -4,18 +4,20 @@
 	import * as Tabs from '$lib/components/ui/tabs';
 	import SectionHeading from '$lib/modules/navigation/components/section-heading/SectionHeading.svelte';
 	import RecurringExpenseSection from '$lib/modules/recurring-expenses/components/recurring-expense-section/RecurringExpenseSection.svelte';
+	import { localFormFeedback } from '$lib/local/finance-db';
 	import type { RecurringExpenseFormFeedback } from '$lib/modules/recurring-expenses/types/recurring-expense-form-feedback.types';
 	import RecurringIncomeSection from '$lib/modules/recurring-incomes/components/recurring-income-section/RecurringIncomeSection.svelte';
 	import type { RecurringIncomeFormFeedback } from '$lib/modules/recurring-incomes/types/recurring-income-form-feedback.types';
-	import type { ActionData, PageData } from './$types';
+	import type { PageData } from './$types';
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
-	let defaultTab = $derived(form?.action?.endsWith('recurring-income') ? 'income' : 'expenses');
+	let { data }: { data: PageData } = $props();
+	let feedback = $derived($localFormFeedback);
+	let defaultTab = $derived(feedback?.action?.endsWith('recurring-income') ? 'income' : 'expenses');
 	let expenseFeedback = $derived(
-		form?.action?.endsWith('recurring-expense') ? (form as RecurringExpenseFormFeedback) : null
+		feedback?.action?.endsWith('recurring-expense') ? (feedback as RecurringExpenseFormFeedback) : null
 	);
 	let incomeFeedback = $derived(
-		form?.action?.endsWith('recurring-income') ? (form as RecurringIncomeFormFeedback) : null
+		feedback?.action?.endsWith('recurring-income') ? (feedback as RecurringIncomeFormFeedback) : null
 	);
 </script>
 
